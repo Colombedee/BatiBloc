@@ -333,6 +333,87 @@ public class MainWindow extends JFrame {
         rafraichirVue();
     }//GEN-LAST:event_btn_importerPdfActionPerformed
 
+    private void afficherPanneauSuppression() {
+    java.util.List<VueDTO> vues = controlleur.getToutesLesVues();
+    if (vues.isEmpty()) return;
+
+    panel_selectionVues = new javax.swing.JPanel();
+    panel_selectionVues.setLayout(new java.awt.BorderLayout());
+    panel_selectionVues.setBorder(javax.swing.BorderFactory.createTitledBorder("Sélectionner les vues à supprimer"));
+    panel_selectionVues.setBackground(new java.awt.Color(240, 240, 240));
+
+    panel_miniatures = new javax.swing.JPanel();
+    panel_miniatures.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
+    panel_miniatures.setBackground(new java.awt.Color(240, 240, 240));
+
+    checkboxes = new java.util.ArrayList<>();
+
+    for (int i = 0; i < vues.size(); i++) {
+        JPanel panelVue = new JPanel();
+        panelVue.setLayout(new java.awt.BorderLayout());
+        panelVue.setBackground(new java.awt.Color(240, 240, 240));
+
+        java.awt.image.BufferedImage img = vues.get(i).getImage();
+        java.awt.image.BufferedImage miniature = creerMiniature(img, 100, 80);
+        javax.swing.JLabel lblMiniature = new javax.swing.JLabel(new javax.swing.ImageIcon(miniature));
+        lblMiniature.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
+
+        javax.swing.JCheckBox cb = new javax.swing.JCheckBox(vues.get(i).getNomVue());
+        cb.setBackground(new java.awt.Color(240, 240, 240));
+        checkboxes.add(cb);
+
+        panelVue.add(lblMiniature, java.awt.BorderLayout.CENTER);
+        panelVue.add(cb, java.awt.BorderLayout.SOUTH);
+        panel_miniatures.add(panelVue);
+    }
+
+    JPanel panelBoutons = new JPanel();
+    btn_confirmerSuppression = new javax.swing.JButton("Confirmer");
+    btn_annulerSuppression = new javax.swing.JButton("Annuler");
+
+    btn_confirmerSuppression.addActionListener(e -> confirmerSuppression());
+    btn_annulerSuppression.addActionListener(e -> annulerSuppression());
+
+    panelBoutons.add(btn_confirmerSuppression);
+    panelBoutons.add(btn_annulerSuppression);
+
+    panel_selectionVues.add(new javax.swing.JScrollPane(panel_miniatures), java.awt.BorderLayout.CENTER);
+    panel_selectionVues.add(panelBoutons, java.awt.BorderLayout.SOUTH);
+    panel_selectionVues.setPreferredSize(new java.awt.Dimension(getWidth(), 180));
+
+    jPanel1.add(panel_selectionVues, java.awt.BorderLayout.SOUTH);
+    revalidate();
+    repaint();
+}
+
+private java.awt.image.BufferedImage creerMiniature(java.awt.image.BufferedImage original, int largeur, int hauteur) {
+    java.awt.image.BufferedImage miniature = new java.awt.image.BufferedImage(largeur, hauteur, java.awt.image.BufferedImage.TYPE_INT_RGB);
+    java.awt.Graphics2D g = miniature.createGraphics();
+    g.drawImage(original, 0, 0, largeur, hauteur, null);
+    g.dispose();
+    return miniature;
+}
+
+private void confirmerSuppression() {
+    java.util.List<Integer> indices = new java.util.ArrayList<>();
+    for (int i = 0; i < checkboxes.size(); i++) {
+        if (checkboxes.get(i).isSelected()) {
+            indices.add(i);
+        }
+    }
+    if (!indices.isEmpty()) {
+        controlleur.supprimerVues(indices);
+    }
+    annulerSuppression();
+    rafraichirVue();
+}
+
+private void annulerSuppression() {
+    jPanel1.remove(panel_selectionVues);
+    revalidate();
+    repaint();
+}
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -373,10 +454,7 @@ public class MainWindow extends JFrame {
         rafraichirVue();
     });
 
-    this.btn_supprimer.addActionListener(e -> {
-        controlleur.supprimerVueCourante();
-        rafraichirVue();
-    });
+   this.btn_supprimer.addActionListener(e -> afficherPanneauSuppression());
 
     }
     
@@ -384,6 +462,13 @@ public class MainWindow extends JFrame {
     VueDTO vue = controlleur.getVueCourante();
     drawingPanel.afficherVue(vue);
 }
+
+    // Attributs pour la suppression de vues
+    private javax.swing.JPanel panel_miniatures;
+    private javax.swing.JPanel panel_selectionVues;
+    private javax.swing.JButton btn_confirmerSuppression;
+    private javax.swing.JButton btn_annulerSuppression;
+    private java.util.List<javax.swing.JCheckBox> checkboxes;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_authentification;

@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -66,16 +67,10 @@ public class MainController {
     }
 
     public void supprimerVueCourante() {
-        if (indexVueCourante < 0 || indexVueCourante >= vues.size()) {
-            return;
-        }
-        vues.remove(indexVueCourante);
-        if (vues.isEmpty()) {
-            indexVueCourante = -1;
-        } else if (indexVueCourante >= vues.size()) {
-            indexVueCourante = vues.size() - 1;
-        }
+    if (indexVueCourante >= 0) {
+        supprimerVues(List.of(indexVueCourante));
     }
+}
 
     /** Rogner l'image de la vue courante selon un rectangle en pixels. */
     public void rognerVueCourante(Rectangle zone) {
@@ -105,6 +100,29 @@ public class MainController {
         String nom = "Vue " + (indexVueCourante + 1);
         return new VueDTO(nom, vues.get(indexVueCourante));
     }
+    
+    public List<VueDTO> getToutesLesVues() {
+    List<VueDTO> dtos = new ArrayList<>();
+    for (int i = 0; i < vues.size(); i++) {
+        dtos.add(new VueDTO("Vue " + (i + 1), vues.get(i)));
+    }
+    return dtos;
+}
+
+public void supprimerVues(List<Integer> indices) {
+    indices.stream()
+        .sorted(Comparator.reverseOrder())
+        .forEach(i -> {
+            if (i >= 0 && i < vues.size()) {
+                vues.remove((int) i);
+            }
+        });
+    if (vues.isEmpty()) {
+        indexVueCourante = -1;
+    } else if (indexVueCourante >= vues.size()) {
+        indexVueCourante = vues.size() - 1;
+    }
+}
 
     public boolean aDesVues() {
         return !vues.isEmpty();
