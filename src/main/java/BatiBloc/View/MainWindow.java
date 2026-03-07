@@ -3,15 +3,30 @@ package BatiBloc.View;
 import BatiBloc.Dto.FichierImporte;
 import BatiBloc.Utils.ImportationFichierPdfOuPng;
 import javax.swing.*;
+import BatiBloc.Controller.MainController;
+import BatiBloc.Dto.VueDTO;
 
 public class MainWindow extends JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainWindow.class.getName());
     
     private String mode;
+    
+    private final MainController controlleur;
+    private DrawingPanel drawingPanel;
             
-    public MainWindow() {
+    public MainWindow(MainController controlleur) {
+        this.controlleur = controlleur;
         initComponents();
+        drawingPanel = new DrawingPanel();
+        jPanel1.setLayout(new java.awt.BorderLayout());
+        jPanel1.add(drawingPanel, java.awt.BorderLayout.CENTER);
+        javax.swing.JPanel panelZoom = new javax.swing.JPanel();
+        panelZoom.setOpaque(false);
+        panelZoom.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+        panelZoom.add(btn_zoomer);
+        panelZoom.add(btn_dezoomer);
+        jPanel1.add(panelZoom, java.awt.BorderLayout.SOUTH);
         InitialisationFormulaire();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -314,18 +329,8 @@ public class MainWindow extends JFrame {
     }//GEN-LAST:event_btn_changerLangueActionPerformed
 
     private void btn_importerPdfActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_importerPdfActionPerformed
-        FichierImporte fichier = ImportationFichierPdfOuPng.fichierImporte();
-
-        if (fichier != null) {
-
-            if (fichier.isPDF()) {
-                System.out.println("PDF importé : " + fichier.getFileName());
-            }
-
-            if (fichier.isImage()) {
-                System.out.println("Image PNG importée : " + fichier.getFileName());                // traitement image ici
-            }
-        }
+        controlleur.importerFichier();
+        rafraichirVue();
     }//GEN-LAST:event_btn_importerPdfActionPerformed
 
     public static void main(String args[]) {
@@ -347,7 +352,7 @@ public class MainWindow extends JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new MainWindow().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new MainWindow(new MainController()).setVisible(true));
     }
     
     private void InitialisationFormulaire(){
@@ -357,7 +362,28 @@ public class MainWindow extends JFrame {
     private void InitialisationBoutons() {
         this.mode = "français";
         this.btn_changerLangue.setText("FR");
+        
+        this.btn_suivant.addActionListener(e -> {
+        controlleur.vueSuivante();
+        rafraichirVue();
+    });
+
+    this.btn_precedent.addActionListener(e -> {
+        controlleur.vuePrecedente();
+        rafraichirVue();
+    });
+
+    this.btn_supprimer.addActionListener(e -> {
+        controlleur.supprimerVueCourante();
+        rafraichirVue();
+    });
+
     }
+    
+    private void rafraichirVue() {
+    VueDTO vue = controlleur.getVueCourante();
+    drawingPanel.afficherVue(vue);
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_authentification;
