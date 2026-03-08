@@ -1,17 +1,14 @@
 package BatiBloc.View;
 
-import BatiBloc.Dto.FichierImporte;
-import BatiBloc.Utils.ImportationFichierPdfOuPng;
 import javax.swing.*;
 import BatiBloc.Controller.MainController;
 import BatiBloc.Dto.VueDTO;
+import BatiBloc.langue.Langue;
+import BatiBloc.langue.TrComponent;
 
 public class MainWindow extends JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainWindow.class.getName());
-    
-    private String mode;
-    
     private final MainController controlleur;
     private DrawingPanel drawingPanel;
             
@@ -44,7 +41,7 @@ public class MainWindow extends JFrame {
         btn_changerLangue = new javax.swing.JButton();
         btn_precedent = new javax.swing.JButton();
         btn_suivant = new javax.swing.JButton();
-        btn_importerPdf = new javax.swing.JButton();
+        btn_importer = new javax.swing.JButton();
         panel_blocs = new javax.swing.JPanel();
         lbl_largeurBloc = new javax.swing.JLabel();
         lbl_hauteurBloc = new javax.swing.JLabel();
@@ -62,8 +59,8 @@ public class MainWindow extends JFrame {
         cbo_typeZone = new javax.swing.JComboBox<>();
         lbl_forme = new javax.swing.JLabel();
         cbo_formeZone = new javax.swing.JComboBox<>();
-        btn_exporterPdf = new javax.swing.JButton();
-        lbl_nbrTotalDeBloc = new javax.swing.JLabel();
+        btn_exporter = new javax.swing.JButton();
+        lbl_nombreBloc = new javax.swing.JLabel();
         lbl_prixTotal = new javax.swing.JLabel();
         txt_nbrTotalDeBloc = new javax.swing.JTextField();
         txt_prixTotal = new javax.swing.JTextField();
@@ -73,8 +70,6 @@ public class MainWindow extends JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        btn_authentification.setIcon(new javax.swing.ImageIcon("C:\\Users\\willi\\OneDrive - Université Laval\\École\\Session hiver 2026\\Cours\\Analyse et conception des systèmes orientés objets IFT-2007\\Évaluations\\BatiBloc\\src\\main\\java\\Image\\logo_authentification.png")); // NOI18N
-
         btn_changerLangue.setName("btn_changerLangue"); // NOI18N
         btn_changerLangue.addActionListener(this::btn_changerLangueActionPerformed);
 
@@ -82,22 +77,29 @@ public class MainWindow extends JFrame {
 
         btn_suivant.setText(">");
 
-        btn_importerPdf.setText("Importer");
-        btn_importerPdf.addActionListener(this::btn_importerPdfActionPerformed);
+        btn_importer.setPreferredSize(new java.awt.Dimension(85, 25));
+        btn_importer.addActionListener(this::btn_importerActionPerformed);
 
         panel_blocs.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Blocs", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
+        panel_blocs.setPreferredSize(new java.awt.Dimension(150, 100));
 
-        lbl_largeurBloc.setText("Largeur :");
+        lbl_largeurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
 
-        lbl_hauteurBloc.setText("Hauteur :");
+        lbl_hauteurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
 
+        txt_largeurBloc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txt_largeurBloc.setText("0");
+        txt_largeurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
 
+        txt_hauteurBloc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txt_hauteurBloc.setText("0");
+        txt_hauteurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
 
-        lbl_prixParBloc.setText("Prix par bloc :");
+        lbl_prixParBloc.setPreferredSize(new java.awt.Dimension(95, 25));
 
+        txt_prixParBloc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txt_prixParBloc.setText("0");
+        txt_prixParBloc.setPreferredSize(new java.awt.Dimension(95, 25));
 
         javax.swing.GroupLayout panel_blocsLayout = new javax.swing.GroupLayout(panel_blocs);
         panel_blocs.setLayout(panel_blocsLayout);
@@ -106,9 +108,9 @@ public class MainWindow extends JFrame {
             .addGroup(panel_blocsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lbl_prixParBloc)
-                    .addComponent(lbl_largeurBloc)
-                    .addComponent(lbl_hauteurBloc))
+                    .addComponent(lbl_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -121,27 +123,30 @@ public class MainWindow extends JFrame {
             .addGroup(panel_blocsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_largeurBloc)
+                    .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_hauteurBloc)
+                    .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_prixParBloc)
+                    .addComponent(lbl_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txt_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         panel_vues.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Vues", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
+        panel_vues.setPreferredSize(new java.awt.Dimension(150, 100));
 
-        btn_supprimer.setText("Supprimer");
+        btn_supprimer.setPreferredSize(new java.awt.Dimension(95, 25));
 
-        btn_rogner.setText("Rogner");
+        btn_rogner.setPreferredSize(new java.awt.Dimension(95, 25));
 
         lbl_echelle.setLabelFor(spi_echelle);
-        lbl_echelle.setText("Échelle :");
+        lbl_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
+
+        spi_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
 
         javax.swing.GroupLayout panel_vuesLayout = new javax.swing.GroupLayout(panel_vues);
         panel_vues.setLayout(panel_vuesLayout);
@@ -150,12 +155,12 @@ public class MainWindow extends JFrame {
             .addGroup(panel_vuesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btn_supprimer)
-                    .addComponent(lbl_echelle))
+                    .addComponent(btn_supprimer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lbl_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(spi_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_rogner))
+                    .addComponent(btn_rogner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panel_vuesLayout.setVerticalGroup(
@@ -163,24 +168,21 @@ public class MainWindow extends JFrame {
             .addGroup(panel_vuesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btn_supprimer)
-                    .addComponent(btn_rogner))
+                    .addComponent(btn_supprimer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_rogner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_echelle)
+                    .addComponent(lbl_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(spi_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         panel_zones.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Zones", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
+        panel_zones.setPreferredSize(new java.awt.Dimension(150, 100));
 
-        lbl_type.setText("Type :");
+        lbl_type.setPreferredSize(new java.awt.Dimension(95, 25));
 
-        cbo_typeZone.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Armature classique", "Armatures en blocs", "Ouverture" }));
-
-        lbl_forme.setText("Forme :");
-
-        cbo_formeZone.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Rectangle", "Triangle", "Triangle tronqué" }));
+        lbl_forme.setPreferredSize(new java.awt.Dimension(95, 25));
 
         javax.swing.GroupLayout panel_zonesLayout = new javax.swing.GroupLayout(panel_zones);
         panel_zones.setLayout(panel_zonesLayout);
@@ -189,9 +191,9 @@ public class MainWindow extends JFrame {
             .addGroup(panel_zonesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lbl_forme)
-                    .addComponent(lbl_type))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
+                    .addComponent(lbl_forme, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lbl_type, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(cbo_typeZone, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(cbo_formeZone, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -202,24 +204,26 @@ public class MainWindow extends JFrame {
             .addGroup(panel_zonesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_type)
+                    .addComponent(lbl_type, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cbo_typeZone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_forme)
+                    .addComponent(lbl_forme, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cbo_formeZone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        btn_exporterPdf.setText("Exporter");
+        btn_exporter.setPreferredSize(new java.awt.Dimension(85, 25));
 
-        lbl_nbrTotalDeBloc.setText("Nombre total de bloc :");
+        lbl_nombreBloc.setPreferredSize(new java.awt.Dimension(120, 25));
 
-        lbl_prixTotal.setText("Prix total :");
+        lbl_prixTotal.setPreferredSize(new java.awt.Dimension(120, 25));
 
-        txt_nbrTotalDeBloc.setText("0");
+        txt_nbrTotalDeBloc.setEditable(false);
+        txt_nbrTotalDeBloc.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
-        txt_prixTotal.setText("0");
+        txt_prixTotal.setEditable(false);
+        txt_prixTotal.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
         jPanel1.setBackground(new java.awt.Color(153, 153, 153));
 
@@ -258,29 +262,29 @@ public class MainWindow extends JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btn_suivant)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btn_importerPdf)
+                .addComponent(btn_importer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(btn_exporterPdf)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 265, Short.MAX_VALUE)
+                .addComponent(btn_exporter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 232, Short.MAX_VALUE)
                 .addComponent(btn_changerLangue)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btn_authentification, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(panel_blocs, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(panel_zones, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(panel_vues, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(panel_blocs, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
+                        .addComponent(panel_vues, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
+                        .addComponent(panel_zones, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lbl_nbrTotalDeBloc)
-                            .addComponent(lbl_prixTotal))
+                            .addComponent(lbl_nombreBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lbl_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txt_nbrTotalDeBloc, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txt_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -292,8 +296,8 @@ public class MainWindow extends JFrame {
                         .addComponent(btn_authentification, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(btn_precedent, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(btn_suivant, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btn_importerPdf, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(btn_exporterPdf, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btn_importer, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btn_exporter, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -304,11 +308,11 @@ public class MainWindow extends JFrame {
                         .addComponent(panel_blocs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(24, 24, 24)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lbl_nbrTotalDeBloc)
+                            .addComponent(lbl_nombreBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txt_nbrTotalDeBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lbl_prixTotal)
+                            .addComponent(lbl_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txt_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(17, 17, 17)
@@ -319,19 +323,17 @@ public class MainWindow extends JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btn_changerLangueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_changerLangueActionPerformed
-        if (this.mode.equals("français")) {
-            this.btn_changerLangue.setText("EN");
-            this.mode = "anglais";
-        } else if (this.mode.equals("anglais")){
-            this.btn_changerLangue.setText("FR");
-            this.mode = "français";
-        }   
+        if (Langue.getLangageCourant() == Langue.Langage.FR) {
+                Langue.setLangage(Langue.Langage.EN);
+        } else {
+                Langue.setLangage(Langue.Langage.FR);
+        }
     }//GEN-LAST:event_btn_changerLangueActionPerformed
 
-    private void btn_importerPdfActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_importerPdfActionPerformed
+    private void btn_importerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_importerActionPerformed
         controlleur.importerFichier();
         rafraichirVue();
-    }//GEN-LAST:event_btn_importerPdfActionPerformed
+    }//GEN-LAST:event_btn_importerActionPerformed
 
     private void afficherPanneauSuppression() {
     java.util.List<VueDTO> vues = controlleur.getToutesLesVues();
@@ -440,28 +442,83 @@ private void annulerSuppression() {
         InitialisationBoutons();
     }
     
-    private void InitialisationBoutons() {
-        this.mode = "français";
-        this.btn_changerLangue.setText("FR");
-        
+    private void InitialisationBoutons() {      
         this.btn_suivant.addActionListener(e -> {
-        controlleur.vueSuivante();
-        rafraichirVue();
-    });
+            controlleur.vueSuivante();
+            rafraichirVue();
+        });
 
-    this.btn_precedent.addActionListener(e -> {
-        controlleur.vuePrecedente();
-        rafraichirVue();
-    });
+        this.btn_precedent.addActionListener(e -> {
+            controlleur.vuePrecedente();
+            rafraichirVue();
+        });
 
-   this.btn_supprimer.addActionListener(e -> afficherPanneauSuppression());
+        this.btn_supprimer.addActionListener(e -> afficherPanneauSuppression());
+        
+        new TrComponent<>(btn_importer, "button.import");
+        new TrComponent<>(btn_exporter, "button.export");
+        new TrComponent<>(btn_changerLangue, "button.changeLanguage");
+        new TrComponent<>(btn_supprimer, "button.delete");
+        new TrComponent<>(btn_rogner, "button.crop");
+        
+        //new TrComponent<>(panel_vues, "panel.view");
+        new TrComponent<>(lbl_echelle, "label.scale");
+        //new TrComponent<>(panel_zones, "panel.area");
+        new TrComponent<>(lbl_type, "label.type");
+        new TrComponent<>(lbl_forme, "label.form");
+        //new TrComponent<>(panel_blocs, "panel.block");
+        new TrComponent<>(lbl_largeurBloc, "label.width");
+        new TrComponent<>(lbl_hauteurBloc, "label.height");
+        new TrComponent<>(lbl_prixParBloc, "label.pricePerBloc");
+        new TrComponent<>(lbl_nombreBloc, "label.numberBlock");
+        new TrComponent<>(lbl_prixTotal, "label.totalPrice");
 
+        cbo_typeZone.addItem("button.type.classicFrame");
+        cbo_typeZone.addItem("button.type.reinforcementBlocks");
+        cbo_typeZone.addItem("button.type.opening");
+        
+        cbo_typeZone.setRenderer(new javax.swing.DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    javax.swing.JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof String key) {
+                    setText(Langue.tr(key));
+                }
+
+                return this;
+            }
+        });
+
+
+        cbo_formeZone.addItem("button.type.rectangle");
+        cbo_formeZone.addItem("button.type.triangle");
+        cbo_formeZone.addItem("button.type.truncatedTriangle");
+
+        cbo_formeZone.setRenderer(new javax.swing.DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    javax.swing.JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof String key) {
+                    setText(Langue.tr(key));
+                }
+
+                return this;
+            }
+        });
     }
     
     private void rafraichirVue() {
-    VueDTO vue = controlleur.getVueCourante();
-    drawingPanel.afficherVue(vue);
-}
+        VueDTO vue = controlleur.getVueCourante();
+        drawingPanel.afficherVue(vue);
+    }
 
     // Attributs pour la suppression de vues
     private javax.swing.JPanel panel_miniatures;
@@ -474,8 +531,8 @@ private void annulerSuppression() {
     private javax.swing.JButton btn_authentification;
     private javax.swing.JButton btn_changerLangue;
     private javax.swing.JButton btn_dezoomer;
-    private javax.swing.JButton btn_exporterPdf;
-    private javax.swing.JButton btn_importerPdf;
+    private javax.swing.JButton btn_exporter;
+    private javax.swing.JButton btn_importer;
     private javax.swing.JButton btn_precedent;
     private javax.swing.JButton btn_rogner;
     private javax.swing.JButton btn_suivant;
@@ -488,7 +545,7 @@ private void annulerSuppression() {
     private javax.swing.JLabel lbl_forme;
     private javax.swing.JLabel lbl_hauteurBloc;
     private javax.swing.JLabel lbl_largeurBloc;
-    private javax.swing.JLabel lbl_nbrTotalDeBloc;
+    private javax.swing.JLabel lbl_nombreBloc;
     private javax.swing.JLabel lbl_prixParBloc;
     private javax.swing.JLabel lbl_prixTotal;
     private javax.swing.JLabel lbl_type;

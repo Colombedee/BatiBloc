@@ -28,10 +28,10 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="btn_suivant" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-              <Component id="btn_importerPdf" min="-2" max="-2" attributes="0"/>
+              <Component id="btn_importer" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="btn_exporterPdf" min="-2" max="-2" attributes="0"/>
-              <EmptySpace pref="265" max="32767" attributes="0"/>
+              <Component id="btn_exporter" min="-2" max="-2" attributes="0"/>
+              <EmptySpace pref="232" max="32767" attributes="0"/>
               <Component id="btn_changerLangue" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="btn_authentification" min="-2" pref="34" max="-2" attributes="0"/>
@@ -39,14 +39,14 @@
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
-                      <Component id="panel_blocs" max="32767" attributes="0"/>
-                      <Component id="panel_zones" max="32767" attributes="0"/>
-                      <Component id="panel_vues" alignment="0" max="32767" attributes="0"/>
+                      <Component id="panel_blocs" pref="218" max="32767" attributes="0"/>
+                      <Component id="panel_vues" alignment="0" pref="218" max="32767" attributes="0"/>
+                      <Component id="panel_zones" alignment="0" pref="218" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="lbl_nbrTotalDeBloc" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="lbl_nombreBloc" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="lbl_prixTotal" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
@@ -56,7 +56,7 @@
                       </Group>
                   </Group>
               </Group>
-              <EmptySpace type="separate" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Component id="jPanel1" max="32767" attributes="0"/>
           </Group>
       </Group>
@@ -70,9 +70,9 @@
                       <Component id="btn_authentification" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
                       <Component id="btn_precedent" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
                       <Component id="btn_suivant" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
-                      <Component id="btn_importerPdf" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
+                      <Component id="btn_importer" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="btn_exporterPdf" min="-2" pref="34" max="-2" attributes="0"/>
+                  <Component id="btn_exporter" min="-2" pref="34" max="-2" attributes="0"/>
               </Group>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
@@ -84,7 +84,7 @@
                       <Component id="panel_blocs" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="lbl_nbrTotalDeBloc" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="lbl_nombreBloc" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="txt_nbrTotalDeBloc" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -104,11 +104,6 @@
   </Layout>
   <SubComponents>
     <Component class="javax.swing.JButton" name="btn_authentification">
-      <Properties>
-        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="2" name="C:\Users\willi\OneDrive - Universit&#xe9; Laval\&#xc9;cole\Session hiver 2026\Cours\Analyse et conception des syst&#xe8;mes orient&#xe9;s objets IFT-2007\&#xc9;valuations\BatiBloc\src\main\java\Image\logo_authentification.png"/>
-        </Property>
-      </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="btn_changerLangue">
       <Properties>
@@ -128,12 +123,14 @@
         <Property name="text" type="java.lang.String" value="&gt;"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JButton" name="btn_importerPdf">
+    <Component class="javax.swing.JButton" name="btn_importer">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Importer"/>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[85, 25]"/>
+        </Property>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_importerPdfActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_importerActionPerformed"/>
       </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="panel_blocs">
@@ -144,6 +141,9 @@
               <Font PropertyName="font" name="Segoe UI" size="18" style="1"/>
             </TitledBorder>
           </Border>
+        </Property>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[150, 100]"/>
         </Property>
       </Properties>
 
@@ -193,32 +193,50 @@
       <SubComponents>
         <Component class="javax.swing.JLabel" name="lbl_largeurBloc">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Largeur :"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="lbl_hauteurBloc">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Hauteur :"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="txt_largeurBloc">
           <Properties>
+            <Property name="horizontalAlignment" type="int" value="4"/>
             <Property name="text" type="java.lang.String" value="0"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="txt_hauteurBloc">
           <Properties>
+            <Property name="horizontalAlignment" type="int" value="4"/>
             <Property name="text" type="java.lang.String" value="0"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="lbl_prixParBloc">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Prix par bloc :"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="txt_prixParBloc">
           <Properties>
+            <Property name="horizontalAlignment" type="int" value="4"/>
             <Property name="text" type="java.lang.String" value="0"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
       </SubComponents>
@@ -231,6 +249,9 @@
               <Font PropertyName="font" name="Segoe UI" size="18" style="1"/>
             </TitledBorder>
           </Border>
+        </Property>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[150, 100]"/>
         </Property>
       </Properties>
 
@@ -273,12 +294,16 @@
       <SubComponents>
         <Component class="javax.swing.JButton" name="btn_supprimer">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Supprimer"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JButton" name="btn_rogner">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Rogner"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="lbl_echelle">
@@ -286,10 +311,17 @@
             <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
               <ComponentRef name="spi_echelle"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="&#xc9;chelle :"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JSpinner" name="spi_echelle">
+          <Properties>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
@@ -302,6 +334,9 @@
             </TitledBorder>
           </Border>
         </Property>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[150, 100]"/>
+        </Property>
       </Properties>
 
       <Layout>
@@ -313,7 +348,7 @@
                       <Component id="lbl_forme" min="-2" max="-2" attributes="0"/>
                       <Component id="lbl_type" alignment="0" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="12" max="32767" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
                   <Group type="103" groupAlignment="0" max="-2" attributes="0">
                       <Component id="cbo_typeZone" max="32767" attributes="0"/>
                       <Component id="cbo_formeZone" max="32767" attributes="0"/>
@@ -343,17 +378,15 @@
       <SubComponents>
         <Component class="javax.swing.JLabel" name="lbl_type">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Type :"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JComboBox" name="cbo_typeZone">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="3">
-                <StringItem index="0" value="Armature classique"/>
-                <StringItem index="1" value="Armatures en blocs"/>
-                <StringItem index="2" value="Ouverture"/>
-              </StringArray>
+              <StringArray count="0"/>
             </Property>
           </Properties>
           <AuxValues>
@@ -362,17 +395,15 @@
         </Component>
         <Component class="javax.swing.JLabel" name="lbl_forme">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Forme :"/>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[95, 25]"/>
+            </Property>
           </Properties>
         </Component>
         <Component class="javax.swing.JComboBox" name="cbo_formeZone">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="3">
-                <StringItem index="0" value="Rectangle"/>
-                <StringItem index="1" value="Triangle"/>
-                <StringItem index="2" value="Triangle tronqu&#xe9;"/>
-              </StringArray>
+              <StringArray count="0"/>
             </Property>
           </Properties>
           <AuxValues>
@@ -381,29 +412,37 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JButton" name="btn_exporterPdf">
+    <Component class="javax.swing.JButton" name="btn_exporter">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Exporter"/>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[85, 25]"/>
+        </Property>
       </Properties>
     </Component>
-    <Component class="javax.swing.JLabel" name="lbl_nbrTotalDeBloc">
+    <Component class="javax.swing.JLabel" name="lbl_nombreBloc">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Nombre total de bloc :"/>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[120, 25]"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lbl_prixTotal">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Prix total :"/>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[120, 25]"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txt_nbrTotalDeBloc">
       <Properties>
-        <Property name="text" type="java.lang.String" value="0"/>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="0"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txt_prixTotal">
       <Properties>
-        <Property name="text" type="java.lang.String" value="0"/>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="0"/>
       </Properties>
     </Component>
     <Container class="javax.swing.JPanel" name="jPanel1">
