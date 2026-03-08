@@ -104,11 +104,6 @@
   </Layout>
   <SubComponents>
     <Component class="javax.swing.JButton" name="btn_authentification">
-      <Properties>
-        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="2" name="C:\Users\willi\OneDrive - Universit&#xe9; Laval\&#xc9;cole\Session hiver 2026\Cours\Analyse et conception des syst&#xe8;mes orient&#xe9;s objets IFT-2007\&#xc9;valuations\BatiBloc\src\main\java\Image\logo_authentification.png"/>
-        </Property>
-      </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="btn_changerLangue">
       <Properties>
