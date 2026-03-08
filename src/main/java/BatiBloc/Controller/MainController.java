@@ -3,6 +3,7 @@ package BatiBloc.Controller;
 import BatiBloc.Dto.FichierImporte;
 import BatiBloc.Dto.VueDTO;
 import BatiBloc.Utils.ImportationFichierPdfOuPng;
+import BatiBloc.dto.RognerVueDTO;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -72,27 +73,28 @@ public class MainController {
     }
 }
 
-    /** Rogner l'image de la vue courante selon un rectangle en pixels. */
-    public void rognerVueCourante(Rectangle zone) {
-        if (indexVueCourante < 0 || indexVueCourante >= vues.size()) {
-            return;
-        }
-
-        BufferedImage originale = vues.get(indexVueCourante);
-        int x = Math.max(0, zone.x);
-        int y = Math.max(0, zone.y);
-        int w = Math.min(zone.width,  originale.getWidth()  - x);
-        int h = Math.min(zone.height, originale.getHeight() - y);
-
-        if (w <= 0 || h <= 0) {
-            return;
-        }
-
-        BufferedImage rognee = originale.getSubimage(x, y, w, h);
-        vues.set(indexVueCourante, rognee);
+    /** Rogner l'image de la vue courante selon un rectangle en pixels. */  //Modifier par @roneh  
+public void rognerVueCourante(RognerVueDTO zone) {
+    if (indexVueCourante < 0 || indexVueCourante >= vues.size() || zone == null) {
+        return;
     }
 
-    /** DTO pour que la vue affiche l'image courante. */
+    BufferedImage originale = vues.get(indexVueCourante);
+
+    int x = Math.max(0, zone.getX());
+    int y = Math.max(0, zone.getY());
+    int w = Math.min(zone.getLargeur(), originale.getWidth() - x);
+    int h = Math.min(zone.getHauteur(), originale.getHeight() - y);
+
+    if (w <= 0 || h <= 0) {
+        return;
+    }
+
+    BufferedImage rognee = originale.getSubimage(x, y, w, h);
+    vues.set(indexVueCourante, rognee);
+}
+
+    /** DTO pour que la vue affiche l'image courante. */ //@
     public VueDTO getVueCourante() {
         if (indexVueCourante < 0 || indexVueCourante >= vues.size()) {
             return null;
@@ -108,6 +110,7 @@ public class MainController {
     }
     return dtos;
 }
+
 
 public void supprimerVues(List<Integer> indices) {
     indices.stream()

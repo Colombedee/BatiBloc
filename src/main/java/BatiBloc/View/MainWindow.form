@@ -305,6 +305,9 @@
               <Dimension value="[95, 25]"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_rognerActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="lbl_echelle">
           <Properties>

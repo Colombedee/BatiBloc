@@ -5,17 +5,22 @@ import BatiBloc.Controller.MainController;
 import BatiBloc.Dto.VueDTO;
 import BatiBloc.langue.Langue;
 import BatiBloc.langue.TrComponent;
+import BatiBloc.dto.RognerVueDTO;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 
 public class MainWindow extends JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainWindow.class.getName());
     private final MainController controlleur;
     private DrawingPanel drawingPanel;
+    private boolean modeRognage = false; //@roneh
             
     public MainWindow(MainController controlleur) {
         this.controlleur = controlleur;
         initComponents();
         drawingPanel = new DrawingPanel();
+        drawingPanel.setRognageListener(this::appliquerRognageInteractif); //@roneh
         jPanel1.setLayout(new java.awt.BorderLayout());
         jPanel1.add(drawingPanel, java.awt.BorderLayout.CENTER);
         javax.swing.JPanel panelZoom = new javax.swing.JPanel();
@@ -141,7 +146,12 @@ public class MainWindow extends JFrame {
 
         btn_supprimer.setPreferredSize(new java.awt.Dimension(95, 25));
 
+<<<<<<< HEAD
         btn_rogner.setPreferredSize(new java.awt.Dimension(95, 25));
+=======
+        btn_rogner.setText("Rogner");
+        btn_rogner.addActionListener(this::btn_rognerActionPerformed);
+>>>>>>> origin/main
 
         lbl_echelle.setLabelFor(spi_echelle);
         lbl_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
@@ -335,6 +345,13 @@ public class MainWindow extends JFrame {
         rafraichirVue();
     }//GEN-LAST:event_btn_importerActionPerformed
 
+    private void btn_rognerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_rognerActionPerformed
+        // Active le mode rognage @roneh
+        modeRognage = !modeRognage;
+        drawingPanel.setModeRognage(modeRognage);
+        btn_rogner.setText(modeRognage ? "Rognage actif" : "Rogner");
+    }//GEN-LAST:event_btn_rognerActionPerformed
+
     private void afficherPanneauSuppression() {
     java.util.List<VueDTO> vues = controlleur.getToutesLesVues();
     if (vues.isEmpty()) return;
@@ -526,6 +543,60 @@ private void annulerSuppression() {
     private javax.swing.JButton btn_confirmerSuppression;
     private javax.swing.JButton btn_annulerSuppression;
     private java.util.List<javax.swing.JCheckBox> checkboxes;
+    
+    // La methode qui perment de faire le rognage @ronheh
+    private void appliquerRognageInteractif(Rectangle zoneAffichage) {
+    VueDTO vue = controlleur.getVueCourante();
+
+    if (vue == null || vue.getImage() == null) {
+        return;
+    }
+
+    BufferedImage imageCourante = vue.getImage();
+
+    int largeurPanel = drawingPanel.getWidth();
+    int hauteurPanel = drawingPanel.getHeight();
+
+    int largeurImage = imageCourante.getWidth();
+    int hauteurImage = imageCourante.getHeight();
+
+    if (largeurPanel <= 0 || hauteurPanel <= 0) {
+        return;
+    }
+
+    double scaleX = (double) largeurImage / largeurPanel;
+    double scaleY = (double) hauteurImage / hauteurPanel;
+
+    int xImage = (int) Math.round(zoneAffichage.x * scaleX);
+    int yImage = (int) Math.round(zoneAffichage.y * scaleY);
+    int largeurCrop = (int) Math.round(zoneAffichage.width * scaleX);
+    int hauteurCrop = (int) Math.round(zoneAffichage.height * scaleY);
+
+    xImage = Math.max(0, xImage);
+    yImage = Math.max(0, yImage);
+
+    if (xImage + largeurCrop > largeurImage) {
+        largeurCrop = largeurImage - xImage;
+    }
+
+    if (yImage + hauteurCrop > hauteurImage) {
+        hauteurCrop = hauteurImage - yImage;
+    }
+
+    if (largeurCrop <= 0 || hauteurCrop <= 0) {
+        return;
+    }
+
+    controlleur.rognerVueCourante(
+            new RognerVueDTO(xImage, yImage, largeurCrop, hauteurCrop)
+    );
+
+    modeRognage = false;
+    drawingPanel.setModeRognage(false);
+    btn_rogner.setText("Rogner");
+
+    rafraichirVue();
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_authentification;
