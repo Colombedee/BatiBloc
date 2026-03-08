@@ -20,13 +20,13 @@ public class Langue {
         add("button.delete", "Supprimer", "Delete");
         add("button.crop", "Rogner", "Crop");
 
-        add("combo.type.classicFrame", "Armature classique", "Classic frame");
-        add("combo.type.reinforcementBlocks", "Armatures en blocs", "Reinforcement Blocks");
-        add("combo.type.opening", "Ouverture", "Opening");
+        add("button.type.classicFrame", "Armature classique", "Classic frame");
+        add("button.type.reinforcementBlocks", "Armatures en blocs", "Reinforcement Blocks");
+        add("button.type.opening", "Ouverture", "Opening");
 
-        add("combo.form.rectangle", "Rectangle", "Rectangle");
-        add("combo.form.triangle", "Triangle", "Triangle");
-        add("combo.form.truncatedTriangle", "Triangle tronqué", "Truncated Triangle");
+        add("button.form.rectangle", "Rectangle", "Rectangle");
+        add("button.form.triangle", "Triangle", "Triangle");
+        add("button.form.truncatedTriangle", "Triangle tronqué", "Truncated Triangle");
 
         add("panel.view", "Vues", "Views");
         add("label.scale", "Échelle" + " :", "Scale" + " :");

@@ -146,12 +146,8 @@ public class MainWindow extends JFrame {
 
         btn_supprimer.setPreferredSize(new java.awt.Dimension(95, 25));
 
-<<<<<<< HEAD
         btn_rogner.setPreferredSize(new java.awt.Dimension(95, 25));
-=======
-        btn_rogner.setText("Rogner");
         btn_rogner.addActionListener(this::btn_rognerActionPerformed);
->>>>>>> origin/main
 
         lbl_echelle.setLabelFor(spi_echelle);
         lbl_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
@@ -511,9 +507,9 @@ private void annulerSuppression() {
         });
 
 
-        cbo_formeZone.addItem("button.type.rectangle");
-        cbo_formeZone.addItem("button.type.triangle");
-        cbo_formeZone.addItem("button.type.truncatedTriangle");
+        cbo_formeZone.addItem("button.form.rectangle");
+        cbo_formeZone.addItem("button.form.triangle");
+        cbo_formeZone.addItem("button.form.truncatedTriangle");
 
         cbo_formeZone.setRenderer(new javax.swing.DefaultListCellRenderer() {
             @Override
