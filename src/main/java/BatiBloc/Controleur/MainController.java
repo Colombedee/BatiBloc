@@ -18,7 +18,7 @@ public class MainController {
     private final List<BufferedImage> vues = new ArrayList<>();
     private int indexVueCourante = -1;
 
-    public void importerFichier() {
+    public void importerFichierPdf() {
         FichierImporteDTO fichier = ImportFichierPdf.importer();
         if (fichier == null) {
             return;
@@ -49,6 +49,10 @@ public class MainController {
         if (!vues.isEmpty()) {
             indexVueCourante = 0;
         }
+    }
+    
+    public void exporterFichierPdf(){
+        
     }
 
     public void naviguerVueSuivante() {

@@ -12,12 +12,12 @@ import java.awt.image.BufferedImage;
 public class MainWindow extends JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainWindow.class.getName());
-    private final MainController controlleur;
+    private final MainController controleur;
     private DrawingPanel drawingPanel;
     private boolean modeRognage = false;
             
-    public MainWindow(MainController controlleur) {
-        this.controlleur = controlleur;
+    public MainWindow(MainController controleur) {
+        this.controleur = controleur;
         initComponents();
         drawingPanel = new DrawingPanel();
         drawingPanel.setRognageListener(this::appliquerRognageInteractif); //@roneh
@@ -220,6 +220,7 @@ public class MainWindow extends JFrame {
         );
 
         btn_exporter.setPreferredSize(new java.awt.Dimension(85, 25));
+        btn_exporter.addActionListener(this::btn_exporterActionPerformed);
 
         lbl_nombreBloc.setPreferredSize(new java.awt.Dimension(120, 25));
 
@@ -336,19 +337,22 @@ public class MainWindow extends JFrame {
     }//GEN-LAST:event_btn_changerLangueActionPerformed
 
     private void btn_importerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_importerActionPerformed
-        controlleur.importerFichier();
+        controleur.importerFichierPdf();
         rafraichirVue();
     }//GEN-LAST:event_btn_importerActionPerformed
 
     private void btn_rognerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_rognerActionPerformed
-        // Active le mode rognage @roneh
         modeRognage = !modeRognage;
         drawingPanel.setModeRognage(modeRognage);
         btn_rogner.setText(modeRognage ? "Rognage actif" : "Rogner");
     }//GEN-LAST:event_btn_rognerActionPerformed
 
+    private void btn_exporterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_exporterActionPerformed
+        controleur.exporterFichierPdf();
+    }//GEN-LAST:event_btn_exporterActionPerformed
+
     private void afficherPanneauDesVues(String titre) {
-        java.util.List<VueDTO> vues = controlleur.getVues();
+        java.util.List<VueDTO> vues = controleur.getVues();
         if (vues.isEmpty()) return;
 
         panel_selectionVues = new javax.swing.JPanel();
@@ -434,7 +438,7 @@ public class MainWindow extends JFrame {
             }
         }
         if (!indices.isEmpty()) {
-            controlleur.supprimerVues(indices);
+            controleur.supprimerVues(indices);
         }
         annulerModification();
         rafraichirVue();
@@ -474,12 +478,12 @@ public class MainWindow extends JFrame {
     
     private void InitialisationBoutons() {      
         this.btn_suivant.addActionListener(e -> {
-            controlleur.naviguerVueSuivante();
+            controleur.naviguerVueSuivante();
             rafraichirVue();
         });
 
         this.btn_precedent.addActionListener(e -> {
-            controlleur.naviguerVuePrecedente();
+            controleur.naviguerVuePrecedente();
             rafraichirVue();
         });
 
@@ -507,29 +511,16 @@ public class MainWindow extends JFrame {
         cbo_typeZone.addItem("button.type.classicFrame");
         cbo_typeZone.addItem("button.type.reinforcementBlocks");
         cbo_typeZone.addItem("button.type.opening");
-        
-        cbo_typeZone.setRenderer(new javax.swing.DefaultListCellRenderer() {
-            @Override
-            public java.awt.Component getListCellRendererComponent(
-                    javax.swing.JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-                if (value instanceof String key) {
-                    setText(Langue.tr(key));
-                }
-
-                return this;
-            }
-        });
-
-
         cbo_formeZone.addItem("button.form.rectangle");
         cbo_formeZone.addItem("button.form.triangle");
         cbo_formeZone.addItem("button.form.truncatedTriangle");
-
-        cbo_formeZone.setRenderer(new javax.swing.DefaultListCellRenderer() {
+        
+        this.ajouterRendererComboBox(cbo_typeZone);
+        this.ajouterRendererComboBox(cbo_formeZone);
+    }
+    
+    private void ajouterRendererComboBox(JComboBox comboBox){
+        comboBox.setRenderer(new javax.swing.DefaultListCellRenderer() {
             @Override
             public java.awt.Component getListCellRendererComponent(
                     javax.swing.JList<?> list, Object value, int index,
@@ -547,11 +538,10 @@ public class MainWindow extends JFrame {
     }
     
     private void rafraichirVue() {
-        VueDTO vue = controlleur.getVueCourante();
+        VueDTO vue = controleur.getVueCourante();
         drawingPanel.afficherVue(vue);
     }
 
-    // Attributs pour la suppression de vues
     private javax.swing.JPanel panel_miniatures;
     private javax.swing.JPanel panel_selectionVues;
     private javax.swing.JCheckBox btn_toutSelectionner;
@@ -559,59 +549,59 @@ public class MainWindow extends JFrame {
     private javax.swing.JButton btn_annulerModification;
     private java.util.List<javax.swing.JCheckBox> checkboxes;
     
-    // La methode qui perment de faire le rognage @ronheh
     private void appliquerRognageInteractif(Rectangle zoneAffichage) {
-    VueDTO vue = controlleur.getVueCourante();
+        VueDTO vue = controleur.getVueCourante();
 
-    if (vue == null || vue.getImage() == null) {
-        return;
+        if (vue == null || vue.getImage() == null) {
+            return;
+        }
+        
+        if (drawingPanel.getWidth() <= 0 || drawingPanel.getHeight() <= 0) {
+            return;
+        }
+
+        BufferedImage imageCourante = vue.getImage();
+
+        int largeurPanel = drawingPanel.getWidth();
+        int hauteurPanel = drawingPanel.getHeight();
+        int largeurImage = imageCourante.getWidth();
+        int hauteurImage = imageCourante.getHeight();
+
+
+
+        double scaleX = (double) largeurImage / largeurPanel;
+        double scaleY = (double) hauteurImage / hauteurPanel;
+
+        int xImage = (int) Math.round(zoneAffichage.x * scaleX);
+        int yImage = (int) Math.round(zoneAffichage.y * scaleY);
+        int largeurCrop = (int) Math.round(zoneAffichage.width * scaleX);
+        int hauteurCrop = (int) Math.round(zoneAffichage.height * scaleY);
+
+        xImage = Math.max(0, xImage);
+        yImage = Math.max(0, yImage);
+
+        if (xImage + largeurCrop > largeurImage) {
+            largeurCrop = largeurImage - xImage;
+        }
+
+        if (yImage + hauteurCrop > hauteurImage) {
+            hauteurCrop = hauteurImage - yImage;
+        }
+
+        if (largeurCrop <= 0 || hauteurCrop <= 0) {
+            return;
+        }
+
+        controleur.rognerVueCourante(
+                new RognerVueDTO(xImage, yImage, largeurCrop, hauteurCrop)
+        );
+
+        modeRognage = false;
+        drawingPanel.setModeRognage(false);
+        btn_rogner.setText("Rogner");
+
+        rafraichirVue();
     }
-
-    BufferedImage imageCourante = vue.getImage();
-
-    int largeurPanel = drawingPanel.getWidth();
-    int hauteurPanel = drawingPanel.getHeight();
-
-    int largeurImage = imageCourante.getWidth();
-    int hauteurImage = imageCourante.getHeight();
-
-    if (largeurPanel <= 0 || hauteurPanel <= 0) {
-        return;
-    }
-
-    double scaleX = (double) largeurImage / largeurPanel;
-    double scaleY = (double) hauteurImage / hauteurPanel;
-
-    int xImage = (int) Math.round(zoneAffichage.x * scaleX);
-    int yImage = (int) Math.round(zoneAffichage.y * scaleY);
-    int largeurCrop = (int) Math.round(zoneAffichage.width * scaleX);
-    int hauteurCrop = (int) Math.round(zoneAffichage.height * scaleY);
-
-    xImage = Math.max(0, xImage);
-    yImage = Math.max(0, yImage);
-
-    if (xImage + largeurCrop > largeurImage) {
-        largeurCrop = largeurImage - xImage;
-    }
-
-    if (yImage + hauteurCrop > hauteurImage) {
-        hauteurCrop = hauteurImage - yImage;
-    }
-
-    if (largeurCrop <= 0 || hauteurCrop <= 0) {
-        return;
-    }
-
-    controlleur.rognerVueCourante(
-            new RognerVueDTO(xImage, yImage, largeurCrop, hauteurCrop)
-    );
-
-    modeRognage = false;
-    drawingPanel.setModeRognage(false);
-    btn_rogner.setText("Rogner");
-
-    rafraichirVue();
-}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_authentification;
