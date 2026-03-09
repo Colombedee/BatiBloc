@@ -5,7 +5,7 @@
  * puis modifier/changer par @author roneh le 07 mars 2026
  */
 
-package BatiBloc.View;
+package BatiBloc.Vues;
 
 import BatiBloc.Dto.VueDTO;
 import java.awt.BasicStroke;

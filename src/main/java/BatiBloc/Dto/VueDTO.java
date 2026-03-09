@@ -3,6 +3,7 @@ package BatiBloc.Dto;
 import java.awt.image.BufferedImage;
 
 public class VueDTO {
+    
     private final String nomVue;
     private final BufferedImage image;
 

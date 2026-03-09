@@ -1,5 +1,6 @@
 package BatiBloc.langue;
 
+import BatiBloc.Services.Observers.LangueObserver;
 import java.lang.reflect.Method;
 
 public class TrComponent<T> implements LangueObserver {

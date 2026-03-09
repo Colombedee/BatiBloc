@@ -1,8 +1,3 @@
-/**
- *
- * @author roneh
- */
-
 package BatiBloc.dto;
 
 public class RognerVueDTO {

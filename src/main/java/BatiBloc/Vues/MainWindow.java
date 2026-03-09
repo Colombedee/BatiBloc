@@ -1,7 +1,7 @@
-package BatiBloc.View;
+package BatiBloc.Vues;
 
 import javax.swing.*;
-import BatiBloc.Controller.MainController;
+import BatiBloc.Controleur.MainController;
 import BatiBloc.Dto.VueDTO;
 import BatiBloc.langue.Langue;
 import BatiBloc.langue.TrComponent;
@@ -14,7 +14,7 @@ public class MainWindow extends JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainWindow.class.getName());
     private final MainController controlleur;
     private DrawingPanel drawingPanel;
-    private boolean modeRognage = false; //@roneh
+    private boolean modeRognage = false;
             
     public MainWindow(MainController controlleur) {
         this.controlleur = controlleur;
@@ -245,18 +245,17 @@ public class MainWindow extends JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btn_zoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_dezoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addComponent(btn_zoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btn_dezoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(336, Short.MAX_VALUE)
-                .addComponent(btn_zoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btn_dezoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(20, 20, 20))
+                .addGap(0, 392, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btn_dezoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_zoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -348,86 +347,104 @@ public class MainWindow extends JFrame {
         btn_rogner.setText(modeRognage ? "Rognage actif" : "Rogner");
     }//GEN-LAST:event_btn_rognerActionPerformed
 
-    private void afficherPanneauSuppression() {
-    java.util.List<VueDTO> vues = controlleur.getToutesLesVues();
-    if (vues.isEmpty()) return;
+    private void afficherPanneauDesVues(String titre) {
+        java.util.List<VueDTO> vues = controlleur.getVues();
+        if (vues.isEmpty()) return;
 
-    panel_selectionVues = new javax.swing.JPanel();
-    panel_selectionVues.setLayout(new java.awt.BorderLayout());
-    panel_selectionVues.setBorder(javax.swing.BorderFactory.createTitledBorder("Sélectionner les vues à supprimer"));
-    panel_selectionVues.setBackground(new java.awt.Color(240, 240, 240));
+        panel_selectionVues = new javax.swing.JPanel();
+        panel_selectionVues.setLayout(new java.awt.BorderLayout());
+        panel_selectionVues.setBorder(javax.swing.BorderFactory.createTitledBorder("Sélectionner les vues à " + titre));
+        panel_selectionVues.setBackground(new java.awt.Color(240, 240, 240));
 
-    panel_miniatures = new javax.swing.JPanel();
-    panel_miniatures.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
-    panel_miniatures.setBackground(new java.awt.Color(240, 240, 240));
+        panel_miniatures = new javax.swing.JPanel();
+        panel_miniatures.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
+        panel_miniatures.setBackground(new java.awt.Color(240, 240, 240));
 
-    checkboxes = new java.util.ArrayList<>();
+        checkboxes = new java.util.ArrayList<>();
 
-    for (int i = 0; i < vues.size(); i++) {
-        JPanel panelVue = new JPanel();
-        panelVue.setLayout(new java.awt.BorderLayout());
-        panelVue.setBackground(new java.awt.Color(240, 240, 240));
+        for (int i = 0; i < vues.size(); i++) {
+            JPanel panelVue = new JPanel();
+            panelVue.setLayout(new java.awt.BorderLayout());
+            panelVue.setBackground(new java.awt.Color(240, 240, 240));
 
-        java.awt.image.BufferedImage img = vues.get(i).getImage();
-        java.awt.image.BufferedImage miniature = creerMiniature(img, 100, 80);
-        javax.swing.JLabel lblMiniature = new javax.swing.JLabel(new javax.swing.ImageIcon(miniature));
-        lblMiniature.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
+            java.awt.image.BufferedImage img = vues.get(i).getImage();
+            java.awt.image.BufferedImage miniature = creerMiniature(img, 100, 80);
+            javax.swing.JLabel lblMiniature = new javax.swing.JLabel(new javax.swing.ImageIcon(miniature));
+            lblMiniature.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
 
-        javax.swing.JCheckBox cb = new javax.swing.JCheckBox(vues.get(i).getNomVue());
-        cb.setBackground(new java.awt.Color(240, 240, 240));
-        checkboxes.add(cb);
+            javax.swing.JCheckBox cb = new javax.swing.JCheckBox(vues.get(i).getNomVue());
+            cb.addActionListener(e -> mettreAJourBoutonToutSelectionner());
+            cb.setBackground(new java.awt.Color(240, 240, 240));
+            checkboxes.add(cb);
 
-        panelVue.add(lblMiniature, java.awt.BorderLayout.CENTER);
-        panelVue.add(cb, java.awt.BorderLayout.SOUTH);
-        panel_miniatures.add(panelVue);
+            panelVue.add(lblMiniature, java.awt.BorderLayout.CENTER);
+            panelVue.add(cb, java.awt.BorderLayout.SOUTH);
+            panel_miniatures.add(panelVue);
+        }
+
+        JPanel panelBoutons = new JPanel();
+        btn_toutSelectionner = new javax.swing.JCheckBox("Tout sélectionner");
+        btn_confirmerModification = new javax.swing.JButton("Confirmer");
+        btn_annulerModification = new javax.swing.JButton("Annuler");
+
+        btn_toutSelectionner.addActionListener(e -> toutSelectionner());
+        btn_confirmerModification.addActionListener(e -> confirmerModification());
+        btn_annulerModification.addActionListener(e -> annulerModification());
+
+        panelBoutons.add(btn_toutSelectionner);
+        panelBoutons.add(btn_confirmerModification);
+        panelBoutons.add(btn_annulerModification);
+
+        panel_selectionVues.add(new javax.swing.JScrollPane(panel_miniatures), java.awt.BorderLayout.CENTER);
+        panel_selectionVues.add(panelBoutons, java.awt.BorderLayout.SOUTH);
+        panel_selectionVues.setPreferredSize(new java.awt.Dimension(getWidth(), 180));
+
+        jPanel1.add(panel_selectionVues, java.awt.BorderLayout.SOUTH);
+        revalidate();
+        repaint();
     }
 
-    JPanel panelBoutons = new JPanel();
-    btn_confirmerSuppression = new javax.swing.JButton("Confirmer");
-    btn_annulerSuppression = new javax.swing.JButton("Annuler");
+    private java.awt.image.BufferedImage creerMiniature(java.awt.image.BufferedImage original, int largeur, int hauteur) {
+        java.awt.image.BufferedImage miniature = new java.awt.image.BufferedImage(largeur, hauteur, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D g = miniature.createGraphics();
+        g.drawImage(original, 0, 0, largeur, hauteur, null);
+        g.dispose();
+        return miniature;
+    }
+    
+    private void mettreAJourBoutonToutSelectionner() {
+        boolean tousCoches = checkboxes.stream().allMatch(JCheckBox::isSelected);
+        btn_toutSelectionner.setSelected(tousCoches);
+    }
 
-    btn_confirmerSuppression.addActionListener(e -> confirmerSuppression());
-    btn_annulerSuppression.addActionListener(e -> annulerSuppression());
 
-    panelBoutons.add(btn_confirmerSuppression);
-    panelBoutons.add(btn_annulerSuppression);
+    private void toutSelectionner(){
+        boolean etat = btn_toutSelectionner.isSelected();
 
-    panel_selectionVues.add(new javax.swing.JScrollPane(panel_miniatures), java.awt.BorderLayout.CENTER);
-    panel_selectionVues.add(panelBoutons, java.awt.BorderLayout.SOUTH);
-    panel_selectionVues.setPreferredSize(new java.awt.Dimension(getWidth(), 180));
-
-    jPanel1.add(panel_selectionVues, java.awt.BorderLayout.SOUTH);
-    revalidate();
-    repaint();
-}
-
-private java.awt.image.BufferedImage creerMiniature(java.awt.image.BufferedImage original, int largeur, int hauteur) {
-    java.awt.image.BufferedImage miniature = new java.awt.image.BufferedImage(largeur, hauteur, java.awt.image.BufferedImage.TYPE_INT_RGB);
-    java.awt.Graphics2D g = miniature.createGraphics();
-    g.drawImage(original, 0, 0, largeur, hauteur, null);
-    g.dispose();
-    return miniature;
-}
-
-private void confirmerSuppression() {
-    java.util.List<Integer> indices = new java.util.ArrayList<>();
-    for (int i = 0; i < checkboxes.size(); i++) {
-        if (checkboxes.get(i).isSelected()) {
-            indices.add(i);
+        for (JCheckBox cb : checkboxes) {
+            cb.setSelected(etat);
         }
     }
-    if (!indices.isEmpty()) {
-        controlleur.supprimerVues(indices);
-    }
-    annulerSuppression();
-    rafraichirVue();
-}
 
-private void annulerSuppression() {
-    jPanel1.remove(panel_selectionVues);
-    revalidate();
-    repaint();
-}
+    private void confirmerModification() {
+        java.util.List<Integer> indices = new java.util.ArrayList<>();
+        for (int i = 0; i < checkboxes.size(); i++) {
+            if (checkboxes.get(i).isSelected()) {
+                indices.add(i);
+            }
+        }
+        if (!indices.isEmpty()) {
+            controlleur.supprimerVues(indices);
+        }
+        annulerModification();
+        rafraichirVue();
+    }
+
+    private void annulerModification() {
+        jPanel1.remove(panel_selectionVues);
+        revalidate();
+        repaint();
+    }
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -457,16 +474,17 @@ private void annulerSuppression() {
     
     private void InitialisationBoutons() {      
         this.btn_suivant.addActionListener(e -> {
-            controlleur.vueSuivante();
+            controlleur.naviguerVueSuivante();
             rafraichirVue();
         });
 
         this.btn_precedent.addActionListener(e -> {
-            controlleur.vuePrecedente();
+            controlleur.naviguerVuePrecedente();
             rafraichirVue();
         });
 
-        this.btn_supprimer.addActionListener(e -> afficherPanneauSuppression());
+        this.btn_supprimer.addActionListener(e -> afficherPanneauDesVues("supprimer"));
+        this.btn_exporter.addActionListener(e -> afficherPanneauDesVues("exporter"));
         
         new TrComponent<>(btn_importer, "button.import");
         new TrComponent<>(btn_exporter, "button.export");
@@ -536,8 +554,9 @@ private void annulerSuppression() {
     // Attributs pour la suppression de vues
     private javax.swing.JPanel panel_miniatures;
     private javax.swing.JPanel panel_selectionVues;
-    private javax.swing.JButton btn_confirmerSuppression;
-    private javax.swing.JButton btn_annulerSuppression;
+    private javax.swing.JCheckBox btn_toutSelectionner;
+    private javax.swing.JButton btn_confirmerModification;
+    private javax.swing.JButton btn_annulerModification;
     private java.util.List<javax.swing.JCheckBox> checkboxes;
     
     // La methode qui perment de faire le rognage @ronheh
