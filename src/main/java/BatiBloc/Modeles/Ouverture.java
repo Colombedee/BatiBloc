@@ -1,18 +1,18 @@
 package BatiBloc.Modeles;
 
-import java.awt.Point;
+public class Ouverture extends Zone {
 
-public class Ouverture {
-    
-    private enum TypeOuverture {
-        Porte,
-        Fenetre
+    public enum Type { PORTE, FENETRE }
+
+    private Type type;
+
+    public Ouverture(double largeur, double hauteur, double largeurBloc, Type type) {
+        super(largeur, hauteur, largeurBloc);
+        this.type = type;
     }
-    
-    private TypeOuverture typeOuverture;
-    
-    public Ouverture(Point position, Dimension dimensions, TypeOuverture typeOuverture){
 
-        this.typeOuverture = typeOuverture;
+    @Override
+    public double getHauteurBloc() {
+        return 0;
     }
 }
