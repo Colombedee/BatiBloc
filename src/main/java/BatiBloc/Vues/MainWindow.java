@@ -41,13 +41,14 @@ public class MainWindow extends JFrame {
         this.controleur = controleur;
         this.initComponents();
         this.initialisationFormulaire();
+        
         LangueManager.addObserver(() -> {
-            mettreAJourLangueFenetre();
-            if (panel_selectionVues != null && panel_selectionVues.isShowing()) {
-                afficherPanneauDesVues(actionCourante);
+            changerLangueFenetreVues();
+            if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
+                afficherPanelVues(this.actionCourante);
             }
         });
-
+        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
@@ -60,7 +61,7 @@ public class MainWindow extends JFrame {
     
     private void configurationPanel3D(){
         this.drawingPanel = new DrawingPanel();
-        this.drawingPanel.setRognageListener(this::appliquerRognageInteractif);
+        this.drawingPanel.setRognageListener(this::rognerVueCourante);
         
         this.jPanel1.setLayout(new BorderLayout());
         this.jPanel1.add(drawingPanel, BorderLayout.CENTER);
@@ -77,16 +78,16 @@ public class MainWindow extends JFrame {
     private void configurerActionBoutons() {      
         this.btn_precedent.addActionListener(e -> {
             this.controleur.naviguerVuePrecedente();
-            this.rafraichirVue();
+            this.rafraichirVueCourante();
         });
         
         this.btn_suivant.addActionListener(e -> {
             this.controleur.naviguerVueSuivante();
-            this.rafraichirVue();
+            this.rafraichirVueCourante();
         });
 
-        this.btn_supprimer.addActionListener(e -> this.afficherPanneauDesVues("panel.delete"));
-        this.btn_exporter.addActionListener(e -> this.afficherPanneauDesVues("panel.export"));
+        this.btn_supprimer.addActionListener(e -> this.afficherPanelVues("panel.delete"));
+        this.btn_exporter.addActionListener(e -> this.afficherPanelVues("panel.export"));
     }
     
     private void configurationLiaisonsTraduction(){
@@ -134,7 +135,7 @@ public class MainWindow extends JFrame {
         });
     }
     
-    private void mettreAJourLangueFenetre() {
+    private void changerLangueFenetreVues() {
         if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
             String action = LangueManager.tr(this.actionCourante);
             String titre = MessageFormat.format(
@@ -150,10 +151,10 @@ public class MainWindow extends JFrame {
             this.btn_confirmerModification.setText(LangueManager.tr("panel.confirm"));
             this.btn_annulerModification.setText(LangueManager.tr("panel.cancel"));
         }
-        this.mettreAJourTitre();
+        this.changerLangueTitreFenetreVues();
     }
     
-    private void mettreAJourTitre() {
+    private void changerLangueTitreFenetreVues() {
         if (this.panel_selectionVues == null || !this.panel_selectionVues.isShowing() || this.actionCourante == null) {
             return;
         }
@@ -462,7 +463,7 @@ public class MainWindow extends JFrame {
 
     private void btn_importerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_importerActionPerformed
         this.controleur.importerFichierPdf();
-        this.rafraichirVue();
+        this.rafraichirVueCourante();
     }//GEN-LAST:event_btn_importerActionPerformed
 
     private void btn_rognerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_rognerActionPerformed
@@ -479,10 +480,10 @@ public class MainWindow extends JFrame {
         this.controleur.changerLangue();
     }//GEN-LAST:event_btn_changerLangueActionPerformed
 
-    private void afficherPanneauDesVues(String actionKey) {
+    private void afficherPanelVues(String actionKey) {
         this.actionCourante = actionKey;
         
-        if (panel_selectionVues != null) {
+        if (this.panel_selectionVues != null) {
             this.jPanel1.remove(this.panel_selectionVues);
             this.panel_selectionVues = null;
         }
@@ -510,7 +511,7 @@ public class MainWindow extends JFrame {
 
         for (int i = 0; i < vues.size(); i++) {
             JPanel panelVue = new JPanel();
-            panelVue.setLayout(new java.awt.BorderLayout());
+            panelVue.setLayout(new BorderLayout());
             panelVue.setBackground(new Color(240, 240, 240));
 
             BufferedImage img = vues.get(i).getImage();
@@ -521,7 +522,7 @@ public class MainWindow extends JFrame {
             lblMiniature.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
             JCheckBox cb = new JCheckBox(vues.get(i).getNomVue());
-            cb.addActionListener(e -> mettreAJourBoutonToutSelectionner());
+            cb.addActionListener(e -> majBoutonToutSelectionnerVues());
             cb.setBackground(new Color(240, 240, 240));
             this.checkboxes.add(cb);
 
@@ -535,10 +536,9 @@ public class MainWindow extends JFrame {
         this.btn_confirmerModification = new JButton(LangueManager.tr("panel.confirm"));
         this.btn_annulerModification = new JButton(LangueManager.tr("panel.cancel"));
 
-
-        this.btn_toutSelectionner.addActionListener(e -> toutSelectionner());
-        this.btn_confirmerModification.addActionListener(e -> confirmerModification());
-        this.btn_annulerModification.addActionListener(e -> annulerModification());
+        this.btn_toutSelectionner.addActionListener(e -> this.onToggleSelectionnerVues());
+        this.btn_confirmerModification.addActionListener(e -> this.confirmerSupressionOuExportVues());
+        this.btn_annulerModification.addActionListener(e -> this.annulerSupressionOuExportVues());
 
         panelBoutons.add(this.btn_toutSelectionner);
         panelBoutons.add(this.btn_confirmerModification);
@@ -548,25 +548,25 @@ public class MainWindow extends JFrame {
         this.panel_selectionVues.add(panelBoutons, BorderLayout.SOUTH);
         this.panel_selectionVues.setPreferredSize(new Dimension(getWidth(), 180));
 
-        jPanel1.add(panel_selectionVues, BorderLayout.SOUTH);
+        this.jPanel1.add(this.panel_selectionVues, BorderLayout.SOUTH);
         revalidate();
         repaint();
     }
 
-    private BufferedImage creerMiniature(BufferedImage original, int largeur, int hauteur) {
+    private BufferedImage creerMiniature(BufferedImage imageOriginal, int largeur, int hauteur) {
         BufferedImage miniature = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = miniature.createGraphics();
-        g.drawImage(original, 0, 0, largeur, hauteur, null);
+        g.drawImage(imageOriginal, 0, 0, largeur, hauteur, null);
         g.dispose();
         return miniature;
     }
     
-    private void mettreAJourBoutonToutSelectionner() {
+    private void majBoutonToutSelectionnerVues() {
         boolean tousCoches = checkboxes.stream().allMatch(JCheckBox::isSelected);
         this.btn_toutSelectionner.setSelected(tousCoches);
     }
 
-    private void toutSelectionner(){
+    private void onToggleSelectionnerVues(){
         boolean etat = this.btn_toutSelectionner.isSelected();
 
         for (JCheckBox cb : checkboxes) {
@@ -574,7 +574,7 @@ public class MainWindow extends JFrame {
         }
     }
 
-    private void confirmerModification() {
+    private void confirmerSupressionOuExportVues() {
         List<Integer> indices = new ArrayList<>();
         for (int i = 0; i < checkboxes.size(); i++) {
             if (checkboxes.get(i).isSelected()) {
@@ -584,11 +584,11 @@ public class MainWindow extends JFrame {
         if (!indices.isEmpty()) {
             this.controleur.supprimerVues(indices);
         }
-        this.annulerModification();
-        this.rafraichirVue();
+        this.annulerSupressionOuExportVues();
+        this.rafraichirVueCourante();
     }
 
-    private void annulerModification() {
+    private void annulerSupressionOuExportVues() {
         this.jPanel1.remove(this.panel_selectionVues);
         revalidate();
         repaint();
@@ -616,26 +616,26 @@ public class MainWindow extends JFrame {
         java.awt.EventQueue.invokeLater(() -> new MainWindow(new MainController()).setVisible(true));
     }
     
-    private void rafraichirVue() {
+    private void rafraichirVueCourante() {
         VueDTO vue = this.controleur.getVueCourante();
         this.drawingPanel.afficherVue(vue);
     }
     
-    private void appliquerRognageInteractif(Rectangle zoneAffichage) {
-        VueDTO vue = controleur.getVueCourante();
+    private void rognerVueCourante(Rectangle zoneAffichage) {
+        VueDTO vue = this.controleur.getVueCourante();
 
         if (vue == null || vue.getImage() == null) {
             return;
         }
         
-        if (drawingPanel.getWidth() <= 0 || drawingPanel.getHeight() <= 0) {
+        if (this.drawingPanel.getWidth() <= 0 || this.drawingPanel.getHeight() <= 0) {
             return;
         }
 
         BufferedImage imageCourante = vue.getImage();
 
-        int largeurPanel = drawingPanel.getWidth();
-        int hauteurPanel = drawingPanel.getHeight();
+        int largeurPanel = this.drawingPanel.getWidth();
+        int hauteurPanel = this.drawingPanel.getHeight();
         int largeurImage = imageCourante.getWidth();
         int hauteurImage = imageCourante.getHeight();
 
@@ -666,11 +666,11 @@ public class MainWindow extends JFrame {
                 new RognerVueDTO(xImage, yImage, largeurCrop, hauteurCrop)
         );
 
-        modeRognage = false;
-        drawingPanel.setModeRognage(false);
-        btn_rogner.setText("Rogner");
+        this.modeRognage = false;
+        this.drawingPanel.setModeRognage(false);
+        this.btn_rogner.setText("Rogner");
 
-        rafraichirVue();
+        this.rafraichirVueCourante();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
