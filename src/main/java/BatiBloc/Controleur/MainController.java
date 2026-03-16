@@ -4,6 +4,8 @@ import BatiBloc.Dto.FichierImporteDTO;
 import BatiBloc.Dto.VueDTO;
 import BatiBloc.Services.ImportFichierPdf;
 import BatiBloc.dto.RognerVueDTO;
+import BatiBloc.langue.Langage;
+import BatiBloc.langue.LangueManager;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,119 +17,125 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 
 public class MainController {
 
-    private final List<BufferedImage> vues = new ArrayList<>();
+    private final List<BufferedImage> listeVues = new ArrayList<>();
     private int indexVueCourante = -1;
 
     public void importerFichierPdf() {
         FichierImporteDTO fichier = ImportFichierPdf.importer();
+        
         if (fichier == null) {
             return;
         }
 
-        vues.clear();
-        indexVueCourante = -1;
+        this.listeVues.clear();
+        this.indexVueCourante = -1;
 
         if (fichier.isPDF()) {
-            PDDocument doc = (PDDocument) fichier.getContent();
+            PDDocument documentPdf = (PDDocument) fichier.getContent();
             try {
-                PDFRenderer renderer = new PDFRenderer(doc);
-                for (int i = 0; i < doc.getNumberOfPages(); i++) {
+                PDFRenderer renderer = new PDFRenderer(documentPdf);
+                for (int i = 0; i < documentPdf.getNumberOfPages(); i++) {
                     BufferedImage img = renderer.renderImageWithDPI(i, 150, ImageType.RGB);
-                    vues.add(img);
+                    listeVues.add(img);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 try {
-                    doc.close();
+                    documentPdf.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        if (!vues.isEmpty()) {
-            indexVueCourante = 0;
+        if (!this.listeVues.isEmpty()) {
+            this.indexVueCourante = 0;
         }
     }
     
     public void exporterFichierPdf(){
         
     }
-
-    public void naviguerVueSuivante() {
-        if (indexVueCourante >= 0 && indexVueCourante < vues.size() - 1) {
-            indexVueCourante++;
+    
+    public void changerLangue() {
+        if (LangueManager.getLangageCourant() == Langage.FR) {
+            this.setLangue(Langage.EN);
+        } else {
+            this.setLangue(Langage.FR);
         }
     }
 
+    public void setLangue(Langage langue) {
+        LangueManager.setLangage(langue);
+    }
+    
     public void naviguerVuePrecedente() {
-        if (indexVueCourante > 0) {
-            indexVueCourante--;
+        if (this.indexVueCourante > 0) {
+            this.indexVueCourante--;
+        }
+    }
+
+    public void naviguerVueSuivante() {
+        if (this.indexVueCourante >= 0 && this.indexVueCourante < this.listeVues.size() - 1) {
+            this.indexVueCourante++;
         }
     }
 
     public void supprimerVueCourante() {
-        if (indexVueCourante >= 0) {
-            supprimerVues(List.of(indexVueCourante));
+        if (this.indexVueCourante >= 0) {
+            this.supprimerVues(List.of(this.indexVueCourante));
+        }
+    }
+    
+    public void supprimerVues(List<Integer> indices) {
+        indices.stream()
+            .sorted(Comparator.reverseOrder())
+            .forEach(i -> {
+                if (i >= 0 && i < this.listeVues.size()) {
+                    this.listeVues.remove((int) i);
+                }
+            });
+
+        if (this.listeVues.isEmpty()) {
+            this.indexVueCourante = -1;
+        } else if (this.indexVueCourante >= this.listeVues.size()) {
+            this.indexVueCourante = this.listeVues.size() - 1;
         }
     }
  
     public void rognerVueCourante(RognerVueDTO zone) {
-        if (indexVueCourante < 0 || indexVueCourante >= vues.size() || zone == null) {
+        if (this.indexVueCourante < 0 || this.indexVueCourante >= this.listeVues.size() || zone == null) {
             return;
         }
 
-        BufferedImage originale = vues.get(indexVueCourante);
+        BufferedImage imageOrigine = this.listeVues.get(this.indexVueCourante);
 
         int x = Math.max(0, zone.getX());
         int y = Math.max(0, zone.getY());
-        int w = Math.min(zone.getLargeur(), originale.getWidth() - x);
-        int h = Math.min(zone.getHauteur(), originale.getHeight() - y);
+        int w = Math.min(zone.getLargeur(), imageOrigine.getWidth() - x);
+        int h = Math.min(zone.getHauteur(), imageOrigine.getHeight() - y);
 
         if (w <= 0 || h <= 0) {
             return;
         }
 
-        BufferedImage rognee = originale.getSubimage(x, y, w, h);
-        vues.set(indexVueCourante, rognee);
+        BufferedImage imageRognee = imageOrigine.getSubimage(x, y, w, h);
+        this.listeVues.set(this.indexVueCourante, imageRognee);
     }
 
-
     public VueDTO getVueCourante() {
-        if (indexVueCourante < 0 || indexVueCourante >= vues.size()) {
+        if (this.indexVueCourante < 0 || this.indexVueCourante >= this.listeVues.size()) {
             return null;
         }
-        
-        String nom = "Vue " + (indexVueCourante + 1);
-        return new VueDTO(nom, vues.get(indexVueCourante));
+        return new VueDTO(this.indexVueCourante, this.listeVues.get(this.indexVueCourante));
     }
     
     public List<VueDTO> getVues() {
-        List<VueDTO> dtos = new ArrayList<>();
-        for (int i = 0; i < vues.size(); i++) {
-            dtos.add(new VueDTO("Vue " + (i + 1), vues.get(i)));
+        List<VueDTO> listeVuesDto = new ArrayList<>();
+        for (int i = 0; i < this.listeVues.size(); i++) {
+            listeVuesDto.add(new VueDTO(i, this.listeVues.get(i)));
         }
-        return dtos;
-    }
-
-    public void supprimerVues(List<Integer> indices) {
-        indices.stream()
-            .sorted(Comparator.reverseOrder())
-            .forEach(i -> {
-                if (i >= 0 && i < vues.size()) {
-                    vues.remove((int) i);
-                }
-            });
-
-        if (vues.isEmpty()) {
-            indexVueCourante = -1;
-        } else if (indexVueCourante >= vues.size()) {
-            indexVueCourante = vues.size() - 1;
-        }
-    }
-
-    public boolean aDesVues() {
-        return !vues.isEmpty();
+        return listeVuesDto;
     }
 }

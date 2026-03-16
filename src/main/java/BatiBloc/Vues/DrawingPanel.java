@@ -1,10 +1,3 @@
-/*
- *Class Drawing Panel
- * @author Emmanuella Iris Andréa Lehe
- * crée le 06 mars 2026 à 12h52
- * puis modifier/changer par @author roneh le 07 mars 2026
- */
-
 package BatiBloc.Vues;
 
 import BatiBloc.Dto.VueDTO;
@@ -22,15 +15,13 @@ public class DrawingPanel extends JPanel {
 
     private VueDTO vueCourante;
     private boolean modeRognage = false;
-
     private Point pointDepart;
     private Point pointFin;
     private Rectangle selection;
-
     private RognageListener rognageListener;
 
     public DrawingPanel() {
-        setBackground(new java.awt.Color(153, 153, 153));
+        setBackground(new Color(153, 153, 153));
 
         MouseAdapter mouseHandler = new MouseAdapter() {
             @Override
@@ -75,9 +66,8 @@ public class DrawingPanel extends JPanel {
                 pointFin = null;
             }
         };
-
-        addMouseListener(mouseHandler);
-        addMouseMotionListener(mouseHandler);
+        this.addMouseListener(mouseHandler);
+        this.addMouseMotionListener(mouseHandler);
     }
 
     public void afficherVue(VueDTO vue) {
@@ -90,9 +80,9 @@ public class DrawingPanel extends JPanel {
         this.modeRognage = modeRognage;
 
         if (!modeRognage) {
-            selection = null;
-            pointDepart = null;
-            pointFin = null;
+            this.selection = null;
+            this.pointDepart = null;
+            this.pointFin = null;
             repaint();
         }
     }
@@ -102,28 +92,28 @@ public class DrawingPanel extends JPanel {
     }
 
     private void updateSelection() {
-        int x = Math.min(pointDepart.x, pointFin.x);
-        int y = Math.min(pointDepart.y, pointFin.y);
-        int width = Math.abs(pointDepart.x - pointFin.x);
-        int height = Math.abs(pointDepart.y - pointFin.y);
+        int x = Math.min(this.pointDepart.x, this.pointFin.x);
+        int y = Math.min(this.pointDepart.y, this.pointFin.y);
+        int largeur = Math.abs(this.pointDepart.x - this.pointFin.x);
+        int hauteur = Math.abs(this.pointDepart.y - this.pointFin.y);
 
-        selection = new Rectangle(x, y, width, height);
+        this.selection = new Rectangle(x, y, largeur, hauteur);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (vueCourante != null && vueCourante.getImage() != null) {
-            g.drawImage(vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
+        if (this.vueCourante != null && this.vueCourante.getImage() != null) {
+            g.drawImage(this.vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
         }
 
-        if (modeRognage && selection != null) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setColor(Color.RED);
-            g2.setStroke(new BasicStroke(2));
-            g2.draw(selection);
-            g2.dispose();
+        if (this.modeRognage && this.selection != null) {
+            Graphics2D graphique2D = (Graphics2D) g.create();
+            graphique2D.setColor(Color.RED);
+            graphique2D.setStroke(new BasicStroke(2));
+            graphique2D.draw(this.selection);
+            graphique2D.dispose();
         }
     }
 

@@ -15,18 +15,18 @@ public class RognerVueDTO {
     }
 
     public int getX() {
-        return x;
+        return this.x;
     }
 
     public int getY() {
-        return y;
+        return this.y;
     }
 
     public int getLargeur() {
-        return largeur;
+        return this.largeur;
     }
 
     public int getHauteur() {
-        return hauteur;
+        return this.hauteur;
     }
 }

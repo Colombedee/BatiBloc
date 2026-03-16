@@ -5,7 +5,6 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.IOException;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 public class ImportFichierPdf {
@@ -18,13 +17,13 @@ public class ImportFichierPdf {
         int resultat = fichierChoisi.showOpenDialog(null);
 
         if(resultat == JFileChooser.APPROVE_OPTION) {
-            File file = fichierChoisi.getSelectedFile();
-            String extension = getExtension(file);
+            File fichier = fichierChoisi.getSelectedFile();
+            String extension = getExtension(fichier);
             
             try {            
                 if (extension.equalsIgnoreCase("pdf")) {
-                    PDDocument document = PDDocument.load(file);
-                    return new FichierImporteDTO(file.getName(), document);
+                    PDDocument documentPdf = PDDocument.load(fichier);
+                    return new FichierImporteDTO(fichier.getName(), documentPdf);
                 }
                 else {
                     throw new IllegalArgumentException("Type de fichier non supporté.");

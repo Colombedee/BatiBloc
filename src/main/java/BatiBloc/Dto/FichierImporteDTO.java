@@ -1,5 +1,7 @@
 package BatiBloc.Dto;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+
 public class FichierImporteDTO {
 
     private final String nomFichier;
@@ -11,10 +13,10 @@ public class FichierImporteDTO {
     }
 
     public Object getContent() {
-        return contenu;
+        return this.contenu;
     }
 
     public boolean isPDF() {
-        return contenu instanceof org.apache.pdfbox.pdmodel.PDDocument;
+        return this.contenu instanceof PDDocument;
     }
 }
