@@ -1,5 +1,8 @@
 package BatiBloc.Vues;
 
+import javax.swing.ImageIcon; 
+import javax.swing.JLabel;
+
 import javax.swing.*;
 import BatiBloc.Controleur.MainController;
 import BatiBloc.Dto.VueDTO;
@@ -27,7 +30,7 @@ public class MainWindow extends JFrame {
     
     private static final Logger logger = Logger.getLogger(MainWindow.class.getName());
     private final MainController controleur;
-    private DrawingPanel drawingPanel;
+    private private IPanelAffichage drawingPanel;
     private boolean modeRognage = false;
     private String actionCourante = null;
     private JPanel panel_miniatures;
@@ -55,16 +58,38 @@ public class MainWindow extends JFrame {
     private void initialisationFormulaire(){
         this.controleur.setLangue(Langage.FR);
         this.configurationPanel3D();
+        this.configurerSpinnerEchelle(); //Ajouter par Emmanuella 
         this.configurerActionBoutons();
         this.configurationLiaisonsTraduction();
     }
     
+    //Ajouter par Emmnanuella - Cette fonction permet d'initialiser et de configurer 
+    // le spinner au démarrage de projet 
+    private void configurationSpinnerEchelle(){
+        SpinnerNumberModel modeEchelle = new SpinnerNumberModel{
+        1.0 / 96.0,
+        null,
+        null,
+        0.001
+        
+    };
+    this.spi_echelle.setModel(modeleEchelle);
+
+    this.spi_echelle.addChangeListener(e -> {
+        double nouvelleEchelle =((Number) this.spi_echelle..getValue()).doubleValue();
+            if (nouvelleEchelle > 0) {
+                this.controleur.setEchelleCourante(nouvelleEchelle);
+                this.rafraichirVueCourante();
+            }
+        });
+    }
+    
     private void configurationPanel3D(){
         this.drawingPanel = new DrawingPanel();
-        this.drawingPanel.setRognageListener(this::rognerVueCourante);
+        this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         
         this.jPanel1.setLayout(new BorderLayout());
-        this.jPanel1.add(drawingPanel, BorderLayout.CENTER);
+        this.jPanel1.add((java.awt.Component) this.drawingPanel, BorderLayout.CENTER);
         
         JPanel panelZoom = new JPanel();
         panelZoom.setOpaque(false);
@@ -134,6 +159,16 @@ public class MainWindow extends JFrame {
             }
         });
     }
+        
+        private void rafraichirVueCourante() {
+        VueDTO vue = this.controleur.getVueCourante();
+        if (this.drawingPanel != null) {
+            this.drawingPanel.afficherVue(vue);
+        }
+        // Mettre à jour le Sipnner avec l'echelle courante ( en pouces par pixel)
+        double echelle = this.controleur.getEchelleCourante();
+        this.spi_echelle.setValue(echelle);
+    }
     
     private void changerLangueFenetreVues() {
         if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
@@ -142,8 +177,9 @@ public class MainWindow extends JFrame {
                     LangueManager.tr("panel.selectViews"), action
             );
             
-            TitledBorder border = (TitledBorder) this.panel_selectionVues.getBorder();
-            border.setTitle(titre);
+            if (this.panel_selectionVues.getBorder() instanceof TitledBorder border) {
+                border.setTitle(titre);
+            }
             
             this.panel_selectionVues.repaint();
             
@@ -616,10 +652,7 @@ public class MainWindow extends JFrame {
         java.awt.EventQueue.invokeLater(() -> new MainWindow(new MainController()).setVisible(true));
     }
     
-    private void rafraichirVueCourante() {
-        VueDTO vue = this.controleur.getVueCourante();
-        this.drawingPanel.afficherVue(vue);
-    }
+
     
     private void rognerVueCourante(Rectangle zoneAffichage) {
         VueDTO vue = this.controleur.getVueCourante();
@@ -668,7 +701,7 @@ public class MainWindow extends JFrame {
 
         this.modeRognage = false;
         this.drawingPanel.setModeRognage(false);
-        this.btn_rogner.setText("Rogner");
+        this.btn_rogner.setText(LangueManager.tr("button.crop"));
 
         this.rafraichirVueCourante();
     }
