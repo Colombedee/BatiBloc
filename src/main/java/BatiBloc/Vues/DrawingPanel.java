@@ -97,32 +97,43 @@ public class DrawingPanel extends JPanel {
 
     public void afficherVue(VueDTO vue) {
         this.vueCourante = vue;
-        this.selection = null;
         repaint();
     }
+    
+    public void setOnRognageTermine(Consumer<Rectangle> callback) {
+        this.onRognageTermine = callback;
+    }
 
-    public void setModeRognage(boolean modeRognage) {
-        this.modeRognage = modeRognage;
 
-        if (!modeRognage) {
-            this.selection = null;
-            this.pointDepart = null;
-            this.pointFin = null;
+    public void setModeRognage(Consumer<Rectangle> callback) {
+        this.onRognageTermine = callback;
+
+        //Modification par Emmanuella
+        this.modeRognage = actif;
+        this.modeCalibration = false;
+        this.modeAjoutZone = false;
             repaint();
         }
     }
 
-    public void setRognageListener(RognageListener rognageListener) {
-        this.rognageListener = rognageListener;
+      
+      //Emmanuella - Ajout d'une nouvelle fonction
+      // Permet à l'utilisateur au logiciel d'estimer l'echelle 
+      // du plan lorsque l'utilisateur forme un zone par exemple 
+
+      public void setModeCalibration(boolean actif) {
+        this.modeCalibration = actif;
+        this.modeRognage = false;
+        this.modeAjoutZone = false;
+        repaint();
     }
 
-    private void updateSelection() {
-        int x = Math.min(this.pointDepart.x, this.pointFin.x);
-        int y = Math.min(this.pointDepart.y, this.pointFin.y);
-        int largeur = Math.abs(this.pointDepart.x - this.pointFin.x);
-        int hauteur = Math.abs(this.pointDepart.y - this.pointFin.y);
-
-        this.selection = new Rectangle(x, y, largeur, hauteur);
+      
+      public void setModeAjoutZone(boolean actif) {
+        this.modeAjoutZone = actif;
+        this.modeRognage = false;
+        this.modeCalibration = false;
+        repaint();
     }
 
     @Override
@@ -130,19 +141,41 @@ public class DrawingPanel extends JPanel {
         super.paintComponent(g);
 
         if (this.vueCourante != null && this.vueCourante.getImage() != null) {
-            g.drawImage(this.vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
+            return;
+        }
+        
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        //Dessiner le PDF
+        g.drawImage(this.vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
+
+        // 2. Dessiner les zones
+        List<ZoneDTO> zones = this.vueCourante.getZones();
+        for (ZoneDTO zone : zones) {
+            g2d.setColor(new Color(34, 139, 34, 100));
+            g2d.fill(zone.getFormeAEcran());
+            g2d.setColor(new Color(34, 139, 34));
+            g2d.draw(zone.getFormeAEcran());
         }
 
-        if (this.modeRognage && this.selection != null) {
-            Graphics2D graphique2D = (Graphics2D) g.create();
-            graphique2D.setColor(Color.RED);
-            graphique2D.setStroke(new BasicStroke(2));
-            graphique2D.draw(this.selection);
-            graphique2D.dispose();
+        // 3. Dessiner l'action en cours
+        if (pointDepart != null && pointFin != null) {
+            if (modeCalibration) {
+                g2d.setColor(Color.BLUE);
+                g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
+                        0, new float[]{5}, 0));
+                g2d.drawLine(pointDepart.x, pointDepart.y, pointFin.x, pointFin.y);
+            } else {
+                g2d.setColor(Color.RED);
+                int x = Math.min(pointDepart.x, pointFin.x);
+                int y = Math.min(pointDepart.y, pointFin.y);
+                int w = Math.abs(pointDepart.x - pointFin.x);
+                int h = Math.abs(pointDepart.y - pointFin.y);
+                g2d.drawRect(x, y, w, h);
+            }
         }
-    }
 
-    public interface RognageListener {
-        void onZoneSelectionnee(Rectangle zone);
+        g2d.dispose();
     }
 }
