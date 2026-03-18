@@ -1,4 +1,6 @@
 package BatiBloc.Vues;
+import BatiBloc.Controleur.MainController;
+import BatiBloc.Dto.ZoneDTO; //AJouter par Emmanuella 
 
 import BatiBloc.Dto.VueDTO;
 import java.awt.BasicStroke;
@@ -7,63 +9,86 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+
+import java.awt.RenderingHints; // Ajouter par Emmanuella
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List; // Ajouter par Emmanuella
+import java.util.function.Consumer; //Ajouter par Emmanuella
 import javax.swing.JPanel;
 
 public class DrawingPanel extends JPanel {
 
+    private final MainController controller;
+
     private VueDTO vueCourante;
     private boolean modeRognage = false;
+    private boolean modeCalibration = false;
+    private boolean modeAjoutZone = false; // Ajouter par Emmanuella 
+
+
     private Point pointDepart;
     private Point pointFin;
-    private Rectangle selection;
-    private RognageListener rognageListener;
+    
+    private Consumer<Rectangle> onRognageTermine; // C'est une variable qui stock une fonction qui prend un rectangle en paramètre 
+                                                  
 
-    public DrawingPanel() {
+
+    public DrawingPanel(MainController controller) //Ajouter par Emmanuella -prend MainController en paramètre {
+        this.controller = controller;
+ 
         setBackground(new Color(153, 153, 153));
 
         MouseAdapter mouseHandler = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (!modeRognage || vueCourante == null || vueCourante.getImage() == null) {
+                if (vueCourante == null ) {
                     return;
                 }
 
                 pointDepart = e.getPoint();
                 pointFin = e.getPoint();
-                selection = new Rectangle(pointDepart);
                 repaint();
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (!modeRognage || pointDepart == null) {
+                if (pointDepart == null) {
                     return;
                 }
 
                 pointFin = e.getPoint();
-                updateSelection();
                 repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (!modeRognage || pointDepart == null) {
+                if (pointDepart == null) {
                     return;
                 }
 
                 pointFin = e.getPoint();
-                updateSelection();
-                repaint();
-
-                if (rognageListener != null && selection != null
-                        && selection.width > 0 && selection.height > 0) {
-                    rognageListener.onZoneSelectionnee(selection);
+                
+                
+                //Modification Emmmanuella - Mode Rognage : on va calculer le rectangle 
+                // sélectionner par l'utilisateur et on envoie le rectangle à MainWIndow via le callback
+                if (modeRognage && onRognageTermine != null) {
+                    int x = Math.min(pointDepart.x, pointFin.x);
+                    int y = Math.min(pointDepart.y, pointFin.y);
+                    int w = Math.abs(pointDepart.x - pointFin.x);
+                    int h = Math.abs(pointDepart.y - pointFin.y);
+                    onRognageTermine.accept(new Rectangle(x, y, w, h));
+                    
+                } else if (modeCalibration) {
+                    double distance = pointDepart.distance(pointFin);
+                    
+                } else if (modeAjoutZone) {
+                    controller.ajouterZoneRectangle(pointDepart, pointFin, true);
                 }
-
+                
                 pointDepart = null;
                 pointFin = null;
+                repaint();
             }
         };
         this.addMouseListener(mouseHandler);
