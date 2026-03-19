@@ -84,7 +84,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
                     //TODO : Il faudrait le connecter à CalibrerEchelle() plus tard
                     
                 } else if (modeAjoutZone) {
-                    controller.ajouterZoneRectangle(pointDepart, pointFin, true);
+                    /*controller.ajouterZoneRectangle(pointDepart, pointFin, true);*/
                 }
                 
                 pointDepart = null;
@@ -155,14 +155,15 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
         //Dessiner le PDF
         g2d.drawImage(this.vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
 
-        // 2. Dessiner les zones
-        List<ZoneDTO> zones = this.vueCourante.getZones();
+        // 2. Dessiner les zones        
+        //Activer cette aprtie lorsque ZoneDTO sera implementé
+        /*List<ZoneDTO> zones = this.vueCourante.getZones();
         for (ZoneDTO zone : zones) {
             g2d.setColor(new Color(34, 139, 34, 100));
             g2d.fill(zone.getFormeAEcran());
             g2d.setColor(new Color(34, 139, 34));
             g2d.draw(zone.getFormeAEcran());
-        }
+        }*/
 
         // 3. Dessiner l'action en cours
         if (pointDepart != null && pointFin != null) {
