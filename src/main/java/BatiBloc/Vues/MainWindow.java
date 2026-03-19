@@ -30,7 +30,7 @@ public class MainWindow extends JFrame {
     
     private static final Logger logger = Logger.getLogger(MainWindow.class.getName());
     private final MainController controleur;
-    private private IPanelAffichage drawingPanel;
+    private IPanelAffichage drawingPanel;
     private boolean modeRognage = false;
     private String actionCourante = null;
     private JPanel panel_miniatures;
@@ -65,18 +65,18 @@ public class MainWindow extends JFrame {
     
     //Ajouter par Emmnanuella - Cette fonction permet d'initialiser et de configurer 
     // le spinner au démarrage de projet 
-    private void configurationSpinnerEchelle(){
-        SpinnerNumberModel modeEchelle = new SpinnerNumberModel{
+    private void configurerSpinnerEchelle(){
+        SpinnerNumberModel modeleEchelle = new SpinnerNumberModel(
         1.0 / 96.0,
         null,
         null,
         0.001
         
-    };
-    this.spi_echelle.setModel(modeleEchelle);
+        );
+     this.spi_echelle.setModel(modeleEchelle);
 
-    this.spi_echelle.addChangeListener(e -> {
-        double nouvelleEchelle =((Number) this.spi_echelle..getValue()).doubleValue();
+        this.spi_echelle.addChangeListener(e -> {
+            double nouvelleEchelle = ((Number) this.spi_echelle.getValue()).doubleValue();
             if (nouvelleEchelle > 0) {
                 this.controleur.setEchelleCourante(nouvelleEchelle);
                 this.rafraichirVueCourante();
@@ -85,7 +85,8 @@ public class MainWindow extends JFrame {
     }
     
     private void configurationPanel3D(){
-        this.drawingPanel = new DrawingPanel();
+        //Urilise IPanelAffichage pour faciliter l'intégration de la 3D
+        this.drawingPanel = new DrawingPanel(this.controleur);
         this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         
         this.jPanel1.setLayout(new BorderLayout());
@@ -661,14 +662,15 @@ public class MainWindow extends JFrame {
             return;
         }
         
-        if (this.drawingPanel.getWidth() <= 0 || this.drawingPanel.getHeight() <= 0) {
+        if (((java.awt.Component) this.drawingPanel).getWidth() <= 0 
+            || ((java.awt.Component) this.drawingPanel).getHeight() <= 0) {
             return;
         }
 
         BufferedImage imageCourante = vue.getImage();
 
-        int largeurPanel = this.drawingPanel.getWidth();
-        int hauteurPanel = this.drawingPanel.getHeight();
+        int largeurPanel = ((java.awt.Component) this.drawingPanel).getWidth();
+        int hauteurPanel = ((java.awt.Component) this.drawingPanel).getHeight();
         int largeurImage = imageCourante.getWidth();
         int hauteurImage = imageCourante.getHeight();
 
@@ -695,7 +697,7 @@ public class MainWindow extends JFrame {
             return;
         }
 
-        controleur.rognerVueCourante(
+        this.controleur.rognerVueCourante(
                 new RognerVueDTO(xImage, yImage, largeurCrop, hauteurCrop)
         );
 

@@ -84,7 +84,7 @@ public class MainController {
         } catch (Exception e) {
             return ECHELLE_DEFAUT;
             
-    public void exporterFichierPdf(){
+    //public void exporterFichierPdf(){
         
         // À implementer
     }
