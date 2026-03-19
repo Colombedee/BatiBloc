@@ -200,11 +200,13 @@ public class MainController {
         
         Vue modeleVue = this.projetVues.get(indexVueCourante);
         double echelle = modeleVue.getEchelle();
-        
+        //Activer cette partie lorsqu'on aura mis getForme dans zone.java
+        /*
         List<ZoneDTO> zoneDtos = new ArrayList<>();
         for (Zone z : modeleVue.getZones()) {
             zoneDtos.add(new ZoneDTO(z.getForme(), echelle));
         }
+        */
                 
         return new VueDTO(this.indexVueCourante, modeleVue.getImage(), ZoneDtos);
     }
