@@ -22,9 +22,11 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 public class MainController {
     
     private static final double DPI_RENDU = 150.0; // Échelle par défaut 1 pixel = 1/150 pouce
+    private static final double DPI_ECRAN = 96.0;
+    private static final double ECHELLE_DEFAUT = 1.0 / DPI_ECRAN;
 
 
-    private final List<Vue> ProjetVues = new ArrayList<>();
+    private final List<Vue> projetVues = new ArrayList<>();
     private int indexVueCourante = -1;
     private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut
 
@@ -48,7 +50,7 @@ public class MainController {
                     BufferedImage img = renderer.renderImageWithDPI(i, 150, ImageType.RGB);
                     
                     //Ajouter par Emmanuella
-                    Vue vue = new(ing);
+                    Vue vue = new Vue(img);
                     double echelle = lireEchellePdf(documentPdf, i); // Lire échelle du PDF si disponible 
                     vue.setEchelle(echelle);                         // sinon on utilise la valeur par défaut 
                     
@@ -89,12 +91,12 @@ public class MainController {
         
     }
 
-    // ---GESTION DE L'ÉCHELLE ---
+    // ---GESTION DE L'ÉCHELLE --- (Ajouter Par Emmanuella)
     public void calibrerEchelle(double distancePixels, int pieds, double pouces) {
         if (indexVueCourante >= 0 && distancePixels > 0) {
-            double totalInches = (pieds * 12) + pouces;
-            double ratio = totalInches / distancePixels;
-            projetVues.get(indexVueCourante).setEchelle(ratio);
+            double totalPouces = (pieds * 12) + pouces;
+            double echelle = totalPouces / distancePixels;
+            projetVues.get(indexVueCourante).setEchelle(echelle);
         }
     }
     
@@ -174,7 +176,7 @@ public class MainController {
         }
         
         Vue vue = this.projetVues.get(this.indexVueCourante);
-        BufferedImage imageOrigine = vue.getImageDeFond();
+        BufferedImage imageOrigine = vue.getImage();
 
         int x = Math.max(0, zone.getX());
         int y = Math.max(0, zone.getY());
@@ -183,7 +185,7 @@ public class MainController {
 
        if (w > 0 && h > 0) {
             BufferedImage imageRognee = imageOrigine.getSubimage(x, y, w, h);
-            vue.setImageDeFond(imageRognee);
+            vue.setImage(imageRognee);
         }
     }
     
@@ -204,14 +206,14 @@ public class MainController {
             zoneDtos.add(new ZoneDTO(z.getForme(), echelle));
         }
                 
-        return new VueDTO(this.indexVueCourante, modeleVue.getImageDeFond(), ZoneDtos);
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), ZoneDtos);
     }
     
     public List<VueDTO> getVues() {
         List<VueDTO> dtos = new ArrayList<>();
         for (int i = 0; i < this.projetVues.size(); i++) {
             Vue v = projetVues.get(i);
-            dtos.add(new VueDTO(i, v.getImageDeFond(), new ArrayList<>()));
+            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>()));
         
         }
         return dtos;
