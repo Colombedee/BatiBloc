@@ -85,7 +85,7 @@ public class MainWindow extends JFrame {
     }
     
     private void configurationPanel3D(){
-        //Urilise IPanelAffichage pour faciliter l'intégration de la 3D
+        //Utilise IPanelAffichage pour faciliter l'intégration de la 3D
         this.drawingPanel = new DrawingPanel(this.controleur);
         this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         
@@ -510,7 +510,8 @@ public class MainWindow extends JFrame {
     }//GEN-LAST:event_btn_rognerActionPerformed
 
     private void btn_exporterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_exporterActionPerformed
-        this.controleur.exporterFichierPdf();
+        //this.controleur.exporterFichierPdf(); -- À décommenter quand exporter sera implémenter 
+        //TODO : à implémenter quand exporter sera implementer 
     }//GEN-LAST:event_btn_exporterActionPerformed
 
     private void btn_changerLangueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_changerLangueActionPerformed

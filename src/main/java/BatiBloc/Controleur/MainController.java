@@ -136,7 +136,7 @@ public class MainController {
     }
 
     public void naviguerVueSuivante() {
-        if (this.indexVueCourante >= 0 && this.indexVueCourante < this.listeVues.size() - 1) {
+        if (this.indexVueCourante >= 0 && this.indexVueCourante < this.projetVues.size() - 1) {
             this.indexVueCourante++;
         }
     }
