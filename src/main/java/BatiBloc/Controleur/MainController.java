@@ -195,16 +195,23 @@ public class MainController {
         }
         
         Vue modeleVue = this.projetVues.get(indexVueCourante);
-        double echelle = modeleVue.getEchelle()
+        double echelle = modeleVue.getEchelle();
+        
+        List<ZoneDTO> zoneDtos = new ArrayList<>();
+        for (Zone z : modeleVue.getZones()) {
+            zoneDtos.add(new ZoneDTO(z.getForme(), echelle));
+        }
                 
-        return new VueDTO(this.indexVueCourante, this.listeVues.get(this.indexVueCourante));
+        return new VueDTO(this.indexVueCourante, modeleVue.getImageDeFond(), ZoneDtos);
     }
     
     public List<VueDTO> getVues() {
-        List<VueDTO> listeVuesDto = new ArrayList<>();
-        for (int i = 0; i < this.listeVues.size(); i++) {
-            listeVuesDto.add(new VueDTO(i, this.listeVues.get(i)));
+        List<VueDTO> projetVuesDto = new ArrayList<>();
+        for (int i = 0; i < this.projetVues.size(); i++) {
+            Vue v = projetues.get(i);
+            dtos.add(new VueDTO(i, v.getImageDeFond(), new ArrayList<>()));
+        
         }
-        return listeVuesDto;
+        return dtos;
     }
 }
