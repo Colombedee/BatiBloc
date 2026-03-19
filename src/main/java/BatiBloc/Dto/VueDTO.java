@@ -9,9 +9,11 @@ public class VueDTO {
     private final int index;
     private final BufferedImage image;
 
-    public VueDTO(int index, BufferedImage image) {
+    //Construsteur -- Décocher quand ZoneDTO sera implémenter
+    public VueDTO(int index, BufferedImage image /*,List<ZoneDTO> zones*/) {
         this.index = index;
         this.image = image;
+        //this.zones = zones;//
     }
 
     public String getNomVue() {

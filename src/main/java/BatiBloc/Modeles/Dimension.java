@@ -42,4 +42,4 @@ public class Dimension {
     public String GetHauteur(){
         return this.hauteurPieds + "'" + this.hauteurPouces + "\"" + this.hauteurFractionnaire;
     }
-}
+} 

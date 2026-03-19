@@ -119,6 +119,10 @@ public class MainController {
             this.setLangue(Langage.FR);
         }
     }
+    
+    // --- GESTION DES ZONES ---
+    //TODO
+
 
     public void setLangue(Langage langue) {
         LangueManager.setLangage(langue);
@@ -200,16 +204,19 @@ public class MainController {
         
         Vue modeleVue = this.projetVues.get(indexVueCourante);
         double echelle = modeleVue.getEchelle();
-        //Activer cette partie lorsqu'on aura mis getForme dans zone.java
+        //Activer quand ZoneDTO sera implémenté
         /*
         List<ZoneDTO> zoneDtos = new ArrayList<>();
         for (Zone z : modeleVue.getZones()) {
             zoneDtos.add(new ZoneDTO(z.getForme(), echelle));
         }
-        */
+        
                 
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), ZoneDtos);
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);*/
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage());
+
     }
+    
     
     public List<VueDTO> getVues() {
         List<VueDTO> dtos = new ArrayList<>();
