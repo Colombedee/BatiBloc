@@ -17,7 +17,7 @@ import java.util.List; // Ajouter par Emmanuella
 import java.util.function.Consumer; //Ajouter par Emmanuella
 import javax.swing.JPanel;
 
-public class DrawingPanel extends JPanel {
+public class DrawingPanel extends JPanel implements IPanelAffichage{
 
     private final MainController controller;
 
@@ -34,7 +34,7 @@ public class DrawingPanel extends JPanel {
                                                   
 
 
-    public DrawingPanel(MainController controller) //Ajouter par Emmanuella -prend MainController en paramètre {
+    public DrawingPanel(MainController controller){ //Ajouter par Emmanuella -prend MainController en paramètre {
         this.controller = controller;
  
         setBackground(new Color(153, 153, 153));
@@ -81,6 +81,7 @@ public class DrawingPanel extends JPanel {
                     
                 } else if (modeCalibration) {
                     double distance = pointDepart.distance(pointFin);
+                    //TODO : Il faudrait le connecter à CalibrerEchelle() plus tard
                     
                 } else if (modeAjoutZone) {
                     controller.ajouterZoneRectangle(pointDepart, pointFin, true);
@@ -95,52 +96,56 @@ public class DrawingPanel extends JPanel {
         this.addMouseMotionListener(mouseHandler);
     }
 
+    @Override
     public void afficherVue(VueDTO vue) {
         this.vueCourante = vue;
         repaint();
     }
     
+    @Override
     public void setOnRognageTermine(Consumer<Rectangle> callback) {
         this.onRognageTermine = callback;
     }
 
-
-    public void setModeRognage(Consumer<Rectangle> callback) {
-        this.onRognageTermine = callback;
-
+    @Override
+    public void setModeRognage(boolean actif) {
+        
         //Modification par Emmanuella
         this.modeRognage = actif;
         this.modeCalibration = false;
         this.modeAjoutZone = false;
             repaint();
         }
-    }
+    
 
       
       //Emmanuella - Ajout d'une nouvelle fonction
       // Permet à l'utilisateur au logiciel d'estimer l'echelle 
       // du plan lorsque l'utilisateur forme un zone par exemple 
 
-      public void setModeCalibration(boolean actif) {
-        this.modeCalibration = actif;
-        this.modeRognage = false;
-        this.modeAjoutZone = false;
-        repaint();
+      
+    @Override
+    public void setModeCalibration(boolean actif){
+      this.modeCalibration = actif;
+      this.modeRognage = false;
+      this.modeAjoutZone = false;
+      repaint();
     }
 
       
-      public void setModeAjoutZone(boolean actif) {
-        this.modeAjoutZone = actif;
-        this.modeRognage = false;
-        this.modeCalibration = false;
-        repaint();
+    @Override
+    public void setModeAjoutZone(boolean actif) {
+      this.modeAjoutZone = actif;
+      this.modeRognage = false;
+      this.modeCalibration = false;
+      repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (this.vueCourante != null && this.vueCourante.getImage() != null) {
+        if (this.vueCourante != null || this.vueCourante.getImage() == null) {
             return;
         }
         
@@ -148,7 +153,7 @@ public class DrawingPanel extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         //Dessiner le PDF
-        g.drawImage(this.vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
+        g2d.drawImage(this.vueCourante.getImage(), 0, 0, getWidth(), getHeight(), this);
 
         // 2. Dessiner les zones
         List<ZoneDTO> zones = this.vueCourante.getZones();
