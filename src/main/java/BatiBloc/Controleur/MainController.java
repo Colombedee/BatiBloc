@@ -222,7 +222,7 @@ public class MainController {
         List<VueDTO> dtos = new ArrayList<>();
         for (int i = 0; i < this.projetVues.size(); i++) {
             Vue v = projetVues.get(i);
-            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>()));
+            dtos.add(new VueDTO(i, v.getImage()));
         
         }
         return dtos;
