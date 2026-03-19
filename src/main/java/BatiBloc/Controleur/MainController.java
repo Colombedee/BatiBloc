@@ -109,7 +109,7 @@ public class MainController {
         }
     }
     
-    
+    //--- LANGUE --
     public void changerLangue() {
         if (LangueManager.getLangageCourant() == Langage.FR) {
             this.setLangue(Langage.EN);
@@ -148,6 +148,7 @@ public class MainController {
       
     
     // --- SUPPRIMER_VUES ---
+    
     public void supprimerVues(List<Integer> indices) {
         indices.stream()
             .sorted(Comparator.reverseOrder())
@@ -166,28 +167,29 @@ public class MainController {
     
     
     // --- ROGNER_VUE_COURANTE --
+    
     public void rognerVueCourante(RognerVueDTO zone) {
         if (this.indexVueCourante < 0 || zone == null) {
             return;
         }
         
         Vue vue = this.projetVues.get(this.indexVueCourante);
-        BufferedImage imageOrigine = this.listeVues.get(this.indexVueCourante);
+        BufferedImage imageOrigine = vue.getImageDeFond();
 
         int x = Math.max(0, zone.getX());
         int y = Math.max(0, zone.getY());
         int w = Math.min(zone.getLargeur(), imageOrigine.getWidth() - x);
         int h = Math.min(zone.getHauteur(), imageOrigine.getHeight() - y);
 
-        if (w <= 0 || h <= 0) {
-            return;
+       if (w > 0 && h > 0) {
+            BufferedImage imageRognee = imageOrigine.getSubimage(x, y, w, h);
+            vue.setImageDeFond(imageRognee);
         }
-
-        BufferedImage imageRognee = imageOrigine.getSubimage(x, y, w, h);
-        this.listeVues.set(this.indexVueCourante, imageRognee);
     }
     
-    //---DTO --
+    
+    
+    //---DTO ---
 
     public VueDTO getVueCourante() {
         if (this.indexVueCourante < 0) {
@@ -206,9 +208,9 @@ public class MainController {
     }
     
     public List<VueDTO> getVues() {
-        List<VueDTO> projetVuesDto = new ArrayList<>();
+        List<VueDTO> dtos = new ArrayList<>();
         for (int i = 0; i < this.projetVues.size(); i++) {
-            Vue v = projetues.get(i);
+            Vue v = projetVues.get(i);
             dtos.add(new VueDTO(i, v.getImageDeFond(), new ArrayList<>()));
         
         }
