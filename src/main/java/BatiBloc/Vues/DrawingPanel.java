@@ -145,7 +145,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (this.vueCourante != null || this.vueCourante.getImage() == null) {
+        if (this.vueCourante == null || this.vueCourante.getImage() == null) {
             return;
         }
         
