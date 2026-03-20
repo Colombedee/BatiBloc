@@ -3,9 +3,9 @@ package BatiBloc.Modeles;
 import java.awt.Point;
 import java.util.List;
 
-public class Rectangle extends Forme {
+public class RectangleForme extends Forme {
 
-    public Rectangle(List<Point> listePoints) {
+    public RectangleForme(List<Point> listePoints) {
         super(listePoints);
         if (listePoints.size() != 4) {
             throw new IllegalArgumentException("Un rectangle doit avoir exactement 4 sommets.");

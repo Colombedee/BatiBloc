@@ -1,12 +1,22 @@
 package BatiBloc.Controleur;
 
+<<<<<<< Updated upstream
 import BatiBloc.Modeles.*;
+=======
+import BatiBloc.Modeles.*; // Ajouté par Emmanuella 
+>>>>>>> Stashed changes
 import BatiBloc.Dto.*;
 import BatiBloc.Services.ExportFichierPdfService;
 import BatiBloc.Services.ImportFichierPdfService;
 import BatiBloc.dto.RognerVueDTO;
 import BatiBloc.langue.Langage;
 import BatiBloc.langue.LangueManager;
+<<<<<<< Updated upstream
+=======
+import java.awt.Point; // Ajouté par Emmanuella 
+import java.awt.geom.Point2D; // Ajouté par Emmanuella 
+
+>>>>>>> Stashed changes
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
