@@ -19,4 +19,7 @@ public interface IPanelAffichage {
     void setModeAjoutZone(boolean actif);
     void setOnRognageTermine(Consumer<Rectangle> callback);
     
+    void zoomInCenter();  //@roneh
+    void zoomOutCenter(); //@roneh
+    
 }

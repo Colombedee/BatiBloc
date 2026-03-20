@@ -406,9 +406,11 @@ public class MainWindow extends JFrame {
 
         btn_zoomer.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         btn_zoomer.setText("+");
+        btn_zoomer.addActionListener(this::btn_zoomerActionPerformed);
 
         btn_dezoomer.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         btn_dezoomer.setText("-");
+        btn_dezoomer.addActionListener(this::btn_dezoomerActionPerformed);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -517,6 +519,16 @@ public class MainWindow extends JFrame {
     private void btn_changerLangueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_changerLangueActionPerformed
         this.controleur.changerLangue();
     }//GEN-LAST:event_btn_changerLangueActionPerformed
+
+    private void btn_zoomerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_zoomerActionPerformed
+        // @ roneh . Zoomer avec le bouton +
+        drawingPanel.zoomInCenter();
+    }//GEN-LAST:event_btn_zoomerActionPerformed
+
+    private void btn_dezoomerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_dezoomerActionPerformed
+        //@roneh pour dezoomer avec le bouton -
+         drawingPanel.zoomOutCenter();
+    }//GEN-LAST:event_btn_dezoomerActionPerformed
 
     private void afficherPanelVues(String actionKey) {
         this.actionCourante = actionKey;
@@ -655,59 +667,38 @@ public class MainWindow extends JFrame {
     }
     
 
-    
-    private void rognerVueCourante(Rectangle zoneAffichage) {
-        VueDTO vue = this.controleur.getVueCourante();
+   //@roneh  Methode du rognage de la vue Courante 
+   private void rognerVueCourante(Rectangle zoneAffichage) {
+    VueDTO vue = this.controleur.getVueCourante();
 
-        if (vue == null || vue.getImage() == null) {
-            return;
-        }
-        
-        if (((java.awt.Component) this.drawingPanel).getWidth() <= 0 
-            || ((java.awt.Component) this.drawingPanel).getHeight() <= 0) {
-            return;
-        }
-
-        BufferedImage imageCourante = vue.getImage();
-
-        int largeurPanel = ((java.awt.Component) this.drawingPanel).getWidth();
-        int hauteurPanel = ((java.awt.Component) this.drawingPanel).getHeight();
-        int largeurImage = imageCourante.getWidth();
-        int hauteurImage = imageCourante.getHeight();
-
-        double scaleX = (double) largeurImage / largeurPanel;
-        double scaleY = (double) hauteurImage / hauteurPanel;
-
-        int xImage = (int) Math.round(zoneAffichage.x * scaleX);
-        int yImage = (int) Math.round(zoneAffichage.y * scaleY);
-        int largeurCrop = (int) Math.round(zoneAffichage.width * scaleX);
-        int hauteurCrop = (int) Math.round(zoneAffichage.height * scaleY);
-
-        xImage = Math.max(0, xImage);
-        yImage = Math.max(0, yImage);
-
-        if (xImage + largeurCrop > largeurImage) {
-            largeurCrop = largeurImage - xImage;
-        }
-
-        if (yImage + hauteurCrop > hauteurImage) {
-            hauteurCrop = hauteurImage - yImage;
-        }
-
-        if (largeurCrop <= 0 || hauteurCrop <= 0) {
-            return;
-        }
-
-        this.controleur.rognerVueCourante(
-                new RognerVueDTO(xImage, yImage, largeurCrop, hauteurCrop)
-        );
-
-        this.modeRognage = false;
-        this.drawingPanel.setModeRognage(false);
-        this.btn_rogner.setText(LangueManager.tr("button.crop"));
-
-        this.rafraichirVueCourante();
+    if (vue == null || vue.getImage() == null) {
+        return;
     }
+
+    if (!(this.drawingPanel instanceof DrawingPanel panel)) {
+        return;
+    }
+
+    Rectangle zoneImage = panel.convertirSelectionEcranVersImage(zoneAffichage);
+    if (zoneImage == null) {
+        return;
+    }
+
+    this.controleur.rognerVueCourante(
+            new RognerVueDTO(
+                    zoneImage.x,
+                    zoneImage.y,
+                    zoneImage.width,
+                    zoneImage.height
+            )
+    );
+
+    this.modeRognage = false;
+    this.drawingPanel.setModeRognage(false);
+    this.btn_rogner.setText(LangueManager.tr("button.crop"));
+
+    this.rafraichirVueCourante();
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_authentification;
