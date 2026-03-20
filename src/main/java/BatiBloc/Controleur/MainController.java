@@ -1,22 +1,14 @@
 package BatiBloc.Controleur;
 
-<<<<<<< Updated upstream
-import BatiBloc.Modeles.*;
-=======
 import BatiBloc.Modeles.*; // Ajouté par Emmanuella 
->>>>>>> Stashed changes
 import BatiBloc.Dto.*;
 import BatiBloc.Services.ExportFichierPdfService;
 import BatiBloc.Services.ImportFichierPdfService;
 import BatiBloc.dto.RognerVueDTO;
 import BatiBloc.langue.Langage;
 import BatiBloc.langue.LangueManager;
-<<<<<<< Updated upstream
-=======
 import java.awt.Point; // Ajouté par Emmanuella 
 import java.awt.geom.Point2D; // Ajouté par Emmanuella 
-
->>>>>>> Stashed changes
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -207,31 +199,111 @@ public class MainController {
             vue.setImage(imageRognee);
         }
     }
+
+    // ---GESTION DES ZONES --- (Ajoutée Par Colombe)
+    public void ajouterZone(TypeZone type, TypeForme forme, List<Point> points)
+    {
+        if (indexVueCourante < 0) return;
+        Forme formeModele = creerForme(forme, points);
+
+        if (formeModele == null) return;
+        Zone zone = creerZone(type, formeModele);
+
+        if (zone == null) return;
+        projetVues.get(indexVueCourante).ajouterZone(zone);
+    }
     
-    public VueDTO getVueCourante() {
-        if (this.indexVueCourante < 0) {
+    public void supprimerZone(int indexZone)
+    {
+        if (indexVueCourante < 0) return;
+        projetVues.get(indexVueCourante).supprimerZone(indexZone);
+    }
+    
+    public void selectionnerZone(Point point)
+    {
+        if (indexVueCourante < 0) return;
+        projetVues.get(indexVueCourante).selectionnerZone(point);
+    }
+    
+    public void deplacerZoneSelectionnee(int dx, int dy)
+    {
+        if (indexVueCourante < 0) return;
+        projetVues.get(indexVueCourante).deplacerZoneSelectionnee(dx, dy);
+    }
+    
+    private Forme creerForme(TypeForme type, List<Point> points)
+    {
+        switch (type)
+        {
+            case RECTANGLE: return new RectangleForme(points);
+            case TRIANGLE: return new Triangle(points);
+            case TRIANGLE_TRONQUE: return new TriangleTronque(points);
+            default: return null;   
+        }
+    }
+              
+    private Zone creerZone(TypeZone type, Forme forme)
+    {
+        switch (type)
+        {
+            case ARMATURE_CLASSIQUE: return new ArmatureClassique(forme, largeurBlocDefaut);
+            case ARMATURE_BLOCS: return new ArmatureEnBlocs(forme, largeurBlocDefaut);
+            default: return null;
+        }
+     }
+            
+    private TypeZone getTypeZone(Zone zone)      
+    {
+        if (zone instanceof ArmatureClassique) 
+        {
+            return TypeZone.ARMATURE_CLASSIQUE;
+        }
+        if (zone instanceof ArmatureEnBlocs)
+        {
+            return TypeZone.ARMATURE_BLOCS;
+        }
+        return TypeZone.OUVERTURE;
+    }
+    
+    private TypeForme getTypeForme(Forme forme)
+    {
+        if (forme instanceof RectangleForme)
+        {
+            return TypeForme.RECTANGLE;
+        }
+        if (forme instanceof Triangle)
+        {
+            return TypeForme.TRIANGLE;
+        }
+        return TypeForme.TRIANGLE_TRONQUE;
+    }
+    
+    public VueDTO getVueCourante() 
+    {
+        if (this.indexVueCourante < 0) 
+        {
             return null;
         }
         
         Vue modeleVue = this.projetVues.get(indexVueCourante);
-        double echelle = modeleVue.getEchelle();
-        //Activer quand ZoneDTO sera implémenté
-        /*
         List<ZoneDTO> zoneDtos = new ArrayList<>();
-        for (Zone z : modeleVue.getZones()) {
-            zoneDtos.add(new ZoneDTO(z.getForme(), echelle));
-        }
-        
-                
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);*/
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage());
+        for (Zone z : modeleVue.getZones()) 
+        {
+            TypeZone type = getTypeZone(z);
+            TypeForme forme = getTypeForme(z.getForme());
+            zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(), 
+                    z == modeleVue.getZoneSelectionnee()));
+        }        
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);
     }
     
-    public List<VueDTO> getVues() {
+    public List<VueDTO> getVues() 
+    {
         List<VueDTO> dtos = new ArrayList<>();
-        for (int i = 0; i < this.projetVues.size(); i++) {
+        for (int i = 0; i < this.projetVues.size(); i++) 
+        {
             Vue v = projetVues.get(i);
-            dtos.add(new VueDTO(i, v.getImage()));
+            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>()));
         }
         return dtos;
     }
