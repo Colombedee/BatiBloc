@@ -234,12 +234,10 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
       repaint();
     }
     
-    @Override
     public void zoomInCenter() {
         appliquerZoom(1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
 
-    @Override
     public void zoomOutCenter() {
         appliquerZoom(1.0 / 1.1, getWidth() / 2.0, getHeight() / 2.0);
     }

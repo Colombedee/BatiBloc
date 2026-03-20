@@ -2,7 +2,6 @@ package BatiBloc.Vues;
 
 import javax.swing.ImageIcon; 
 import javax.swing.JLabel;
-
 import javax.swing.*;
 import BatiBloc.Controleur.MainController;
 import BatiBloc.Dto.VueDTO;
@@ -17,6 +16,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -43,38 +44,47 @@ public class MainWindow extends JFrame {
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
         this.initComponents();
-        this.initialisationFormulaire();
-        
-        LangueManager.addObserver(() -> {
-            changerLangueFenetreVues();
-            if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
-                afficherPanelVues(this.actionCourante);
-            }
-        });
-        
+        this.initialisationFormulaire();        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
     private void initialisationFormulaire(){
-        this.controleur.setLangue(Langage.FR);
+        this.controleur.changerLangue();
         this.configurationPanel3D();
-        this.configurerSpinnerEchelle(); //Ajouter par Emmanuella 
+        this.configurerSpinnerEchelle();
         this.configurerActionBoutons();
         this.configurationLiaisonsTraduction();
+        
+        LangueManager.addObserver(() -> {
+            this.changerLangueFenetreVues();
+            if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
+                List<Integer> indicesCochesAvant = new ArrayList<>();
+                for (int i = 0; i < this.checkboxes.size(); i++) {
+                    if (this.checkboxes.get(i).isSelected()) {
+                        indicesCochesAvant.add(i);
+                    }
+                }
+
+                this.afficherPanelVues(this.actionCourante);
+
+                for (int index : indicesCochesAvant) {
+                    if (index < this.checkboxes.size()) {
+                        this.checkboxes.get(index).setSelected(true);
+                    }
+                }
+            }
+        });
     }
     
-    //Ajouter par Emmnanuella - Cette fonction permet d'initialiser et de configurer 
-    // le spinner au démarrage de projet 
     private void configurerSpinnerEchelle(){
         SpinnerNumberModel modeleEchelle = new SpinnerNumberModel(
         1.0 / 96.0,
         null,
         null,
         0.001
-        
         );
-     this.spi_echelle.setModel(modeleEchelle);
-
+        
+        this.spi_echelle.setModel(modeleEchelle);
         this.spi_echelle.addChangeListener(e -> {
             double nouvelleEchelle = ((Number) this.spi_echelle.getValue()).doubleValue();
             if (nouvelleEchelle > 0) {
@@ -85,12 +95,11 @@ public class MainWindow extends JFrame {
     }
     
     private void configurationPanel3D(){
-        //Utilise IPanelAffichage pour faciliter l'intégration de la 3D
         this.drawingPanel = new DrawingPanel(this.controleur);
         this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         
         this.jPanel1.setLayout(new BorderLayout());
-        this.jPanel1.add((java.awt.Component) this.drawingPanel, BorderLayout.CENTER);
+        this.jPanel1.add((Component) this.drawingPanel, BorderLayout.CENTER);
         
         JPanel panelZoom = new JPanel();
         panelZoom.setOpaque(false);
@@ -111,9 +120,21 @@ public class MainWindow extends JFrame {
             this.controleur.naviguerVueSuivante();
             this.rafraichirVueCourante();
         });
-
-        this.btn_supprimer.addActionListener(e -> this.afficherPanelVues("panel.delete"));
+        
+        this.btn_importer.addActionListener(e -> {
+            this.controleur.importerFichierPdf();
+            this.rafraichirVueCourante();
+        });
+        
+        this.btn_rogner.addActionListener(e -> {
+            this.modeRognage = !this.modeRognage;
+            this.drawingPanel.setModeRognage(this.modeRognage);
+            this.btn_rogner.setText(this.modeRognage ? "Rognage actif" : "button.crop");
+        });
+        
+        this.btn_changerLangue.addActionListener(e -> this.controleur.changerLangue());
         this.btn_exporter.addActionListener(e -> this.afficherPanelVues("panel.export"));
+        this.btn_supprimer.addActionListener(e -> this.afficherPanelVues("panel.delete"));
     }
     
     private void configurationLiaisonsTraduction(){
@@ -161,12 +182,12 @@ public class MainWindow extends JFrame {
         });
     }
         
-        private void rafraichirVueCourante() {
+    private void rafraichirVueCourante() {
         VueDTO vue = this.controleur.getVueCourante();
         if (this.drawingPanel != null) {
             this.drawingPanel.afficherVue(vue);
         }
-        // Mettre à jour le Sipnner avec l'echelle courante ( en pouces par pixel)
+        
         double echelle = this.controleur.getEchelleCourante();
         this.spi_echelle.setValue(echelle);
     }
@@ -246,14 +267,12 @@ public class MainWindow extends JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         btn_changerLangue.setName("btn_changerLangue"); // NOI18N
-        btn_changerLangue.addActionListener(this::btn_changerLangueActionPerformed);
 
         btn_precedent.setText("<");
 
         btn_suivant.setText(">");
 
         btn_importer.setPreferredSize(new java.awt.Dimension(85, 25));
-        btn_importer.addActionListener(this::btn_importerActionPerformed);
 
         panel_blocs.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Blocs", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
         panel_blocs.setPreferredSize(new java.awt.Dimension(150, 100));
@@ -317,7 +336,6 @@ public class MainWindow extends JFrame {
         btn_supprimer.setPreferredSize(new java.awt.Dimension(95, 25));
 
         btn_rogner.setPreferredSize(new java.awt.Dimension(95, 25));
-        btn_rogner.addActionListener(this::btn_rognerActionPerformed);
 
         lbl_echelle.setLabelFor(spi_echelle);
         lbl_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
@@ -390,7 +408,6 @@ public class MainWindow extends JFrame {
         );
 
         btn_exporter.setPreferredSize(new java.awt.Dimension(85, 25));
-        btn_exporter.addActionListener(this::btn_exporterActionPerformed);
 
         lbl_nombreBloc.setPreferredSize(new java.awt.Dimension(120, 25));
 
@@ -406,11 +423,9 @@ public class MainWindow extends JFrame {
 
         btn_zoomer.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         btn_zoomer.setText("+");
-        btn_zoomer.addActionListener(this::btn_zoomerActionPerformed);
 
         btn_dezoomer.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         btn_dezoomer.setText("-");
-        btn_dezoomer.addActionListener(this::btn_dezoomerActionPerformed);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -500,34 +515,14 @@ public class MainWindow extends JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btn_importerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_importerActionPerformed
-        this.controleur.importerFichierPdf();
-        this.rafraichirVueCourante();
-    }//GEN-LAST:event_btn_importerActionPerformed
-
-    private void btn_rognerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_rognerActionPerformed
-        this.modeRognage = !this.modeRognage;
-        this.drawingPanel.setModeRognage(this.modeRognage);
-        this.btn_rogner.setText(this.modeRognage ? "Rognage actif" : "Rogner");
-    }//GEN-LAST:event_btn_rognerActionPerformed
-
-    private void btn_exporterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_exporterActionPerformed
-        //this.controleur.exporterFichierPdf(); -- À décommenter quand exporter sera implémenter 
-        //TODO : à implémenter quand exporter sera implementer 
-    }//GEN-LAST:event_btn_exporterActionPerformed
-
-    private void btn_changerLangueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_changerLangueActionPerformed
-        this.controleur.changerLangue();
-    }//GEN-LAST:event_btn_changerLangueActionPerformed
-
     private void btn_zoomerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_zoomerActionPerformed
         // @ roneh . Zoomer avec le bouton +
-        drawingPanel.zoomInCenter();
+        //drawingPanel.zoomInCenter();
     }//GEN-LAST:event_btn_zoomerActionPerformed
 
     private void btn_dezoomerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_dezoomerActionPerformed
         //@roneh pour dezoomer avec le bouton -
-         drawingPanel.zoomOutCenter();
+         //drawingPanel.zoomOutCenter();
     }//GEN-LAST:event_btn_dezoomerActionPerformed
 
     private void afficherPanelVues(String actionKey) {
@@ -575,10 +570,20 @@ public class MainWindow extends JFrame {
             cb.addActionListener(e -> majBoutonToutSelectionnerVues());
             cb.setBackground(new Color(240, 240, 240));
             this.checkboxes.add(cb);
+            
+            int indexFinal = i;
+            lblMiniature.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    JCheckBox check = checkboxes.get(indexFinal);
+                    check.setSelected(!check.isSelected());
+                    majBoutonToutSelectionnerVues();
+                }
+            });
 
             panelVue.add(lblMiniature, BorderLayout.CENTER);
             panelVue.add(cb, BorderLayout.SOUTH);
-            panel_miniatures.add(panelVue);
+            this.panel_miniatures.add(panelVue);
         }
 
         JPanel panelBoutons = new JPanel();
@@ -631,9 +636,13 @@ public class MainWindow extends JFrame {
                 indices.add(i);
             }
         }
-        if (!indices.isEmpty()) {
+        if (!indices.isEmpty() && this.actionCourante.equalsIgnoreCase("panel.delete")) {
             this.controleur.supprimerVues(indices);
         }
+        else if (!indices.isEmpty() && this.actionCourante.equalsIgnoreCase("panel.export")){
+            this.controleur.exporterVues(indices);
+        }
+        
         this.annulerSupressionOuExportVues();
         this.rafraichirVueCourante();
     }

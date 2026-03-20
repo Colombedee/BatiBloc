@@ -109,9 +109,6 @@
       <Properties>
         <Property name="name" type="java.lang.String" value="btn_changerLangue" noResource="true"/>
       </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_changerLangueActionPerformed"/>
-      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btn_precedent">
       <Properties>
@@ -129,9 +126,6 @@
           <Dimension value="[85, 25]"/>
         </Property>
       </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_importerActionPerformed"/>
-      </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="panel_blocs">
       <Properties>
@@ -305,9 +299,6 @@
               <Dimension value="[95, 25]"/>
             </Property>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_rognerActionPerformed"/>
-          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="lbl_echelle">
           <Properties>
@@ -421,9 +412,6 @@
           <Dimension value="[85, 25]"/>
         </Property>
       </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_exporterActionPerformed"/>
-      </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="lbl_nombreBloc">
       <Properties>
@@ -489,9 +477,6 @@
             </Property>
             <Property name="text" type="java.lang.String" value="+"/>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_zoomerActionPerformed"/>
-          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="btn_dezoomer">
           <Properties>
@@ -500,9 +485,6 @@
             </Property>
             <Property name="text" type="java.lang.String" value="-"/>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_dezoomerActionPerformed"/>
-          </Events>
         </Component>
       </SubComponents>
     </Container>

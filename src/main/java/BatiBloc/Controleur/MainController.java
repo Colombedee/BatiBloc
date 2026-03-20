@@ -1,21 +1,24 @@
 package BatiBloc.Controleur;
 
-import BatiBloc.Modeles.*; // Ajouter par Emmanuella 
+import BatiBloc.Modeles.*;
 import BatiBloc.Dto.*;
-
-import BatiBloc.Services.ImportFichierPdf;
+import BatiBloc.Services.ExportFichierPdfService;
+import BatiBloc.Services.ImportFichierPdfService;
 import BatiBloc.dto.RognerVueDTO;
 import BatiBloc.langue.Langage;
 import BatiBloc.langue.LangueManager;
-import java.awt.Point; // Ajouter par Emmanuella 
-import java.awt.geom.Point2D; // Ajouter par Emmanuella 
-
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
@@ -24,16 +27,12 @@ public class MainController {
     private static final double DPI_RENDU = 150.0; // Échelle par défaut 1 pixel = 1/150 pouce
     private static final double DPI_ECRAN = 96.0;
     private static final double ECHELLE_DEFAUT = 1.0 / DPI_ECRAN;
-
-
     private final List<Vue> projetVues = new ArrayList<>();
     private int indexVueCourante = -1;
     private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut
 
-
-    // IMPORTATION PDF
     public void importerFichierPdf() {
-        FichierImporteDTO fichier = ImportFichierPdf.importer();
+        FichierImporteDTO fichier = ImportFichierPdfService.importer();
         
         if (fichier == null) {
             return;
@@ -48,16 +47,12 @@ public class MainController {
                 PDFRenderer renderer = new PDFRenderer(documentPdf);
                 for (int i = 0; i < documentPdf.getNumberOfPages(); i++) {
                     BufferedImage img = renderer.renderImageWithDPI(i, 150, ImageType.RGB);
-                    
-                    //Ajouter par Emmanuella
+
                     Vue vue = new Vue(img);
                     double echelle = lireEchellePdf(documentPdf, i); // Lire échelle du PDF si disponible 
                     vue.setEchelle(echelle);                         // sinon on utilise la valeur par défaut 
-                    
                     projetVues.add(new Vue(img));
-                    
-                }
-                
+                }  
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -77,18 +72,44 @@ public class MainController {
         //  Ajouter par Emmanuella 
         // 1 unité PDF = 1/72 pouce
         // Rendu à 150 DPI donc 1 pixel = (1/150) pouce
-        private double lireEchellePdf(PDDocument doc, int pageIndex) {
+    private double lireEchellePdf(PDDocument doc, int pageIndex) {
         try {
-            
             return 1.0 / DPI_RENDU;
         } catch (Exception e) {
             return ECHELLE_DEFAUT;
-            
-    //public void exporterFichierPdf(){
-        
-        // À implementer
+        }
     }
-        
+            
+    public void exporterVues(List<Integer> indices) {
+        if (indices == null || indices.isEmpty()) {
+            return;
+        }
+
+        File fichierSortie = ExportFichierPdfService.fichierExporteDTO();
+        if (fichierSortie == null) {
+            return;
+        }
+
+        try (PDDocument document = new PDDocument()) {
+
+            for (int index : indices) {
+                if (index < 0 || index >= projetVues.size()) continue;
+
+                BufferedImage image = projetVues.get(index).getImage();
+
+                PDPage page = new PDPage(new PDRectangle(image.getWidth(), image.getHeight()));
+                document.addPage(page);
+
+                PDImageXObject pdImage = LosslessFactory.createFromImage(document, image);
+
+                try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
+                    cs.drawImage(pdImage, 0, 0, image.getWidth(), image.getHeight());
+                }
+            }
+            document.save(fichierSortie);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // ---GESTION DE L'ÉCHELLE --- (Ajouter Par Emmanuella)
@@ -111,24 +132,14 @@ public class MainController {
         }
     }
     
-    //--- LANGUE --
     public void changerLangue() {
-        if (LangueManager.getLangageCourant() == Langage.FR) {
-            this.setLangue(Langage.EN);
+        if (LangueManager.getLangageCourant().equals(Langage.EN) || LangueManager.getLangageCourant().equals(null)) {
+            LangueManager.setLangage(Langage.FR);
         } else {
-            this.setLangue(Langage.FR);
+            LangueManager.setLangage(Langage.EN);
         }
     }
     
-    // --- GESTION DES ZONES ---
-    //TODO
-
-
-    public void setLangue(Langage langue) {
-        LangueManager.setLangage(langue);
-    }
-    
-    // ---NAVIGATION---
     public void naviguerVuePrecedente() {
         if (this.indexVueCourante > 0) {
             this.indexVueCourante--;
@@ -143,7 +154,7 @@ public class MainController {
 
     public void supprimerVueCourante() {
         if (this.indexVueCourante >= 0) {
-        this.projetVues.remove(this.indexVueCourante);
+            this.projetVues.remove(this.indexVueCourante);
             if (this.projetVues.isEmpty()) {
                 this.indexVueCourante = -1;
             } else if (this.indexVueCourante >= this.projetVues.size()) {
@@ -151,9 +162,6 @@ public class MainController {
             }
         }
     }   
-      
-    
-    // --- SUPPRIMER_VUES ---
     
     public void supprimerVues(List<Integer> indices) {
         indices.stream()
@@ -170,9 +178,6 @@ public class MainController {
             this.indexVueCourante = this.projetVues.size() - 1;
         }
     }
-    
-    
-    // --- ROGNER_VUE_COURANTE --
     
     public void rognerVueCourante(RognerVueDTO zone) {
         if (this.indexVueCourante < 0 || zone == null) {
@@ -193,10 +198,6 @@ public class MainController {
         }
     }
     
-    
-    
-    //---DTO ---
-
     public VueDTO getVueCourante() {
         if (this.indexVueCourante < 0) {
             return null;
@@ -214,16 +215,13 @@ public class MainController {
                 
         return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);*/
         return new VueDTO(this.indexVueCourante, modeleVue.getImage());
-
     }
-    
     
     public List<VueDTO> getVues() {
         List<VueDTO> dtos = new ArrayList<>();
         for (int i = 0; i < this.projetVues.size(); i++) {
             Vue v = projetVues.get(i);
             dtos.add(new VueDTO(i, v.getImage()));
-        
         }
         return dtos;
     }

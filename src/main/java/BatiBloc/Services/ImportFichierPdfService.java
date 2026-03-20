@@ -7,12 +7,20 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
-public class ImportFichierPdf {
+public class ImportFichierPdfService {
     
     public static FichierImporteDTO importer() {
-        JFileChooser fichierChoisi = new JFileChooser();
+        
+        File repertoire = new File("C:\\");
+
+        JFileChooser fichierChoisi = new JFileChooser((File) null);
+
+        if (repertoire.exists()) {
+            fichierChoisi.setCurrentDirectory(repertoire);
+        }
+
         FileNameExtensionFilter filtre = new FileNameExtensionFilter("PDF", "pdf");
-        fichierChoisi.setFileFilter(filtre);   
+        fichierChoisi.setFileFilter(filtre);
         
         int resultat = fichierChoisi.showOpenDialog(null);
 

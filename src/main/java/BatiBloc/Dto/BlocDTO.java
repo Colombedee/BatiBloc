@@ -1,6 +1,7 @@
 package BatiBloc.Dto;
 
 public class BlocDTO {
+    
     public final double x;
     public final double y;
     public final double largeur;
