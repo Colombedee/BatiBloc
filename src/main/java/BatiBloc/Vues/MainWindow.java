@@ -99,6 +99,10 @@ public class MainWindow extends JFrame {
         this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         
         this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
+        if (this.drawingPanel instanceof DrawingPanel dp) //Colombe
+        {
+            dp.setModeAjoutZone(true);
+        }
         
         this.jPanel1.setLayout(new BorderLayout());
         this.jPanel1.add((Component) this.drawingPanel, BorderLayout.CENTER);

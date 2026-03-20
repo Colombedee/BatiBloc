@@ -21,7 +21,8 @@ import java.awt.Cursor; //@roneh
 import java.awt.geom.Point2D; //@roneh
 import java.awt.event.MouseWheelEvent; //@roneh
 
-public class DrawingPanel extends JPanel implements IPanelAffichage{
+public class DrawingPanel extends JPanel implements IPanelAffichage
+{
 
     private final MainController controller;
 
@@ -54,7 +55,8 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
                                                   
 
 
-    public DrawingPanel(MainController controller){ //Ajouter par Emmanuella -prend MainController en paramètre {
+    public DrawingPanel(MainController controller){ //Ajouter par Emmanuella -prend MainController en paramètre 
+    
         this.controller = controller;
  
         setBackground(new Color(153, 153, 153));
@@ -150,19 +152,51 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
                     Point2D imgDepart = screenToImage(pointDepart.x, pointDepart.y);
                     Point2D imgFin = screenToImage(pointFin.x, pointFin.y);
                     
+                    int x1 = (int) imgDepart.getX();
+                    int y1 = (int) imgDepart.getY();
+                    int x2 = (int) imgFin.getX();
+                    int y2 = (int) imgFin.getY();
+                    
+                    int xMin = Math.min(x1, x2);
+                    int xMax = Math.max(x1, x2);
+                    int yMin = Math.min(y1, y2);
+                    int yMax = Math.max(y1, y2);
+                    int xCentre = (xMin + xMax) /2;
+                    
+                    java.util.List<Point> pts = null;
+                    
                     if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE)
                     {
-                        int x1 = (int) imgDepart.getX();
-                        int y1 = (int) imgDepart.getY();
-                        int x2 = (int) imgFin.getX();
-                        int y2 = (int) imgFin.getY();
-                        java.util.List<Point> pts = java.util.List.of
+                        pts = java.util.List.of
                         (
-                          new Point(x1,y1),
-                          new Point(x2, y1),
-                          new Point(x2, y2),
-                          new Point(x1, y2)
+                          new Point(xMin, yMin),
+                          new Point(xMax, yMin),
+                          new Point(xMax, yMax),
+                          new Point(xMin, yMax)
                         );
+                    }
+                    else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE)
+                    {
+                        pts = java.util.List.of
+                        (
+                            new Point(xMin, yMax),
+                            new Point(xMax, yMax),
+                            new Point(xCentre, yMin)
+                        );
+                    }
+                    else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE_TRONQUE)
+                    {
+                        int largeurSommet = (xMax - xMin) /3;
+                        pts = java.util.List.of
+                        (
+                            new Point(xMin, yMax),
+                            new Point(xMax, yMax),
+                            new Point(xCentre + largeurSommet, yMin),
+                            new Point(xCentre - largeurSommet, yMin)
+                        );
+                    }
+                    if (pts != null)
+                    {
                         controller.ajouterZone(typeEnCours, formeEnCours, pts);
                         if (onZoneAjoutee != null) onZoneAjoutee.run();
                         repaint();
@@ -184,26 +218,27 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
                 appliquerZoom(facteur, e.getX(), e.getY());
             }
             
-            //Colombe
-            public void mouseClicked(MouseEvent e)
-            {
-                if (vueCourante == null || !modeAjoutZone) return;
-                if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE) return;
-                if (!SwingUtilities.isLeftMouseButton(e)) return;
-                
-                Point2D imgPoint = screenToImage(e.getX(), e.getY());
-                pointsEnCours.add(new Point((int) imgPoint.getX(), (int) imgPoint.getY()));
-                
-                int nbPointsRequis = (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE) ? 3 : 4;
-                
-                if (pointsEnCours.size() == nbPointsRequis)
-                {
-                    controller.ajouterZone(typeEnCours, formeEnCours, new java.util.ArrayList<>(pointsEnCours));
-                    if (onZoneAjoutee != null) onZoneAjoutee.run();
-                    pointsEnCours.clear();
-                    repaint();
-                }
-            }        
+//            //Colombe
+//            public void mouseClicked(MouseEvent e)
+//            {
+//                if (vueCourante == null || !modeAjoutZone) return;
+//                if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE) return;
+//                if (!SwingUtilities.isLeftMouseButton(e)) return;
+//                
+//                Point2D imgPoint = screenToImage(e.getX(), e.getY());
+//                pointsEnCours.add(new Point((int) imgPoint.getX(), (int) imgPoint.getY()));
+//                
+//                int nbPointsRequis = (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE) ? 3 : 4;
+//                
+//                if (pointsEnCours.size() == nbPointsRequis)
+//                {
+//                    controller.ajouterZone(typeEnCours, formeEnCours, new java.util.ArrayList<>(pointsEnCours));
+//                    if (onZoneAjoutee != null) onZoneAjoutee.run();
+//                    pointsEnCours.clear();
+//                    repaint();
+//                }
+//            }   
+            
         };
         
         this.addMouseListener(mouseHandler);
@@ -446,25 +481,45 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
         g2d.dispose();
 
         // 3. Dessiner l'action en cours
-        if (pointDepart != null && pointFin != null) {
+        if (pointDepart != null && pointFin != null && modeAjoutZone) {
             Graphics2D overlay = (Graphics2D) g.create();
-
+            overlay.setColor(Color.RED);
             
-            if (modeCalibration) {
-                overlay.setColor(Color.BLUE);
-                overlay.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
-                        0, new float[]{5}, 0));
-                overlay.drawLine(pointDepart.x, pointDepart.y, pointFin.x, pointFin.y);
-            } else {
+            int x1 = Math.min(pointDepart.x, pointFin.x);
+            int y1 = Math.min(pointDepart.y, pointFin.y);
+            int x2 = Math.max(pointDepart.x, pointFin.x);
+            int y2 = Math.max(pointDepart.y, pointFin.y);
+            int xCentre = (x1 + x2) / 2;
+            
+            if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE)
+            {
+                overlay.drawRect(x1, y1, x2 - x1, y2 - y1);
+            }
+            else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE)
+            {
+                int[] xs = {x1, x2, xCentre};
+                int[] ys = {y2, y2, y1};
+                overlay.drawPolygon(xs, ys, 3);
+            }
+            else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE_TRONQUE)
+            {
+                int largeurSommet = (x2 - x1) / 3;
+                int[] xs = {x1, x2, xCentre + largeurSommet, xCentre - largeurSommet};
+                int[] ys = {y2, y2, y1, y1};
+                overlay.drawPolygon(xs, ys, 4);
+            }
+            overlay.dispose();
+        } 
+        else if (pointDepart != null && pointFin != null && modeRognage)
+        {
+                Graphics2D overlay = (Graphics2D) g.create();
                 overlay.setColor(Color.RED);
                 int x = Math.min(pointDepart.x, pointFin.x);
                 int y = Math.min(pointDepart.y, pointFin.y);
                 int w = Math.abs(pointDepart.x - pointFin.x);
                 int h = Math.abs(pointDepart.y - pointFin.y);
                 overlay.drawRect(x, y, w, h);
-            }
-            overlay.dispose();  
+                overlay.dispose();
+            } 
         }
-
     }
-}
