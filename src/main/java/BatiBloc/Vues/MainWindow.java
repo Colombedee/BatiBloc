@@ -98,6 +98,8 @@ public class MainWindow extends JFrame {
         this.drawingPanel = new DrawingPanel(this.controleur);
         this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         
+        this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
+        
         this.jPanel1.setLayout(new BorderLayout());
         this.jPanel1.add((Component) this.drawingPanel, BorderLayout.CENTER);
         
@@ -135,6 +137,33 @@ public class MainWindow extends JFrame {
         this.btn_changerLangue.addActionListener(e -> this.controleur.changerLangue());
         this.btn_exporter.addActionListener(e -> this.afficherPanelVues("panel.export"));
         this.btn_supprimer.addActionListener(e -> this.afficherPanelVues("panel.delete"));
+    
+    this.cbo_typeZone.addActionListener(e -> {
+        int index = this.cbo_typeZone.getSelectedIndex();
+        BatiBloc.Dto.TypeZone type;
+        switch (index) {
+            case 1: type = BatiBloc.Dto.TypeZone.ARMATURE_BLOCS; break;
+            case 2: type = BatiBloc.Dto.TypeZone.OUVERTURE; break;
+            default: type = BatiBloc.Dto.TypeZone.ARMATURE_CLASSIQUE; break;        
+        }
+        if (this.drawingPanel instanceof DrawingPanel dp){
+            dp.setTypeZoneEnCours(type);
+        }
+    });
+    
+    this.cbo_formeZone.addActionListener(e -> {
+        int index = this.cbo_formeZone.getSelectedIndex();
+        BatiBloc.Dto.TypeForme forme;
+        switch (index) {
+            case 1: forme = BatiBloc.Dto.TypeForme.TRIANGLE; break;
+            case 2: forme = BatiBloc.Dto.TypeForme.TRIANGLE_TRONQUE; break;
+            default: forme = BatiBloc.Dto.TypeForme.RECTANGLE; break;        
+        }
+        if (this.drawingPanel instanceof DrawingPanel dp) {
+            dp.setFormeEnCours(forme);
+            dp.setModeAjoutZone(true);
+        }
+    });
     }
     
     private void configurationLiaisonsTraduction(){

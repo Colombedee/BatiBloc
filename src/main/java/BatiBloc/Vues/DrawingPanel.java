@@ -29,12 +29,18 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
     private boolean modeRognage = false;
     private boolean modeCalibration = false;
     private boolean modeAjoutZone = false; // Ajouter par Emmanuella 
+    
+    //Colombe
+    private BatiBloc.Dto.TypeForme formeEnCours = BatiBloc.Dto.TypeForme.RECTANGLE;
+    private BatiBloc.Dto.TypeZone typeEnCours = BatiBloc.Dto.TypeZone.ARMATURE_CLASSIQUE;
+    private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
 
 
     private Point pointDepart;
     private Point pointFin;
     
     private Consumer<Rectangle> onRognageTermine; // C'est une variable qui stock une fonction qui prend un rectangle en paramètre 
+    private Runnable onZoneAjoutee;
     
     // @roneh Attributs pour la navigation(comportement map) et zoom
     private boolean enDeplacement = false;
@@ -139,8 +145,28 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
                     double distance = pointDepart.distance(pointFin);
                     //TODO : Il faudrait le connecter à CalibrerEchelle() plus tard
                     
-                } else if (modeAjoutZone) {
-                    /*controller.ajouterZoneRectangle(pointDepart, pointFin, true);*/
+                } else if (modeAjoutZone) //Colombe
+                {
+                    Point2D imgDepart = screenToImage(pointDepart.x, pointDepart.y);
+                    Point2D imgFin = screenToImage(pointFin.x, pointFin.y);
+                    
+                    if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE)
+                    {
+                        int x1 = (int) imgDepart.getX();
+                        int y1 = (int) imgDepart.getY();
+                        int x2 = (int) imgFin.getX();
+                        int y2 = (int) imgFin.getY();
+                        java.util.List<Point> pts = java.util.List.of
+                        (
+                          new Point(x1,y1),
+                          new Point(x2, y1),
+                          new Point(x2, y2),
+                          new Point(x1, y2)
+                        );
+                        controller.ajouterZone(typeEnCours, formeEnCours, pts);
+                        if (onZoneAjoutee != null) onZoneAjoutee.run();
+                        repaint();
+                    }
                 }
                 
                 pointDepart = null;
@@ -157,6 +183,27 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
                 double facteur = (e.getPreciseWheelRotation() < 0) ? 1.1 : (1.0 / 1.1);
                 appliquerZoom(facteur, e.getX(), e.getY());
             }
+            
+            //Colombe
+            public void mouseClicked(MouseEvent e)
+            {
+                if (vueCourante == null || !modeAjoutZone) return;
+                if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE) return;
+                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                
+                Point2D imgPoint = screenToImage(e.getX(), e.getY());
+                pointsEnCours.add(new Point((int) imgPoint.getX(), (int) imgPoint.getY()));
+                
+                int nbPointsRequis = (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE) ? 3 : 4;
+                
+                if (pointsEnCours.size() == nbPointsRequis)
+                {
+                    controller.ajouterZone(typeEnCours, formeEnCours, new java.util.ArrayList<>(pointsEnCours));
+                    if (onZoneAjoutee != null) onZoneAjoutee.run();
+                    pointsEnCours.clear();
+                    repaint();
+                }
+            }        
         };
         
         this.addMouseListener(mouseHandler);
@@ -199,6 +246,10 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
     public void setOnRognageTermine(Consumer<Rectangle> callback) {
         this.onRognageTermine = callback;
     }
+    
+    public void setOnZoneAjoutee(Runnable callback){ //Colombe
+        this.onZoneAjoutee = callback;
+    }
 
     @Override
     public void setModeRognage(boolean actif) {
@@ -234,6 +285,20 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
       repaint();
     }
     
+    //Colombe
+    public void setFormeEnCours(BatiBloc.Dto.TypeForme forme)
+    {
+        this.formeEnCours = forme;
+        this.pointsEnCours.clear();
+        repaint();
+    }
+    
+    public void setTypeZoneEnCours(BatiBloc.Dto.TypeZone type)
+    {
+        this.typeEnCours = type;
+    }
+    
+    
     public void zoomInCenter() {
         appliquerZoom(1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
@@ -242,7 +307,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
         appliquerZoom(1.0 / 1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
     
-     public Rectangle convertirSelectionEcranVersImage(Rectangle zoneEcran) {
+    public Rectangle convertirSelectionEcranVersImage(Rectangle zoneEcran) {
         if (vueCourante == null || vueCourante.getImage() == null || zoneEcran == null) {
             return null;
         }
@@ -360,14 +425,24 @@ public class DrawingPanel extends JPanel implements IPanelAffichage{
         g2d.drawImage(this.vueCourante.getImage(), 0, 0, this);  // modifier par @roneh en supprimant {getWidth() et getHeignt()}
 
         // 2. Dessiner les zones        
-        //Activer cette aprtie lorsque ZoneDTO sera implementé
-        /*List<ZoneDTO> zones = this.vueCourante.getZones();
-        for (ZoneDTO zone : zones) {
-            g2d.setColor(new Color(34, 139, 34, 100));
-            g2d.fill(zone.getFormeAEcran());
-            g2d.setColor(new Color(34, 139, 34));
-            g2d.draw(zone.getFormeAEcran());
-        }*/
+        List<ZoneDTO> zones = this.vueCourante.getZones();
+        for (ZoneDTO zone : zones) 
+        {
+            java.util.List<Point> pts = zone.getPoints();
+            int[] xs = pts.stream().mapToInt(p -> (int) p.getX()).toArray();
+            int[] ys = pts.stream().mapToInt(p -> (int) p.getY()).toArray();
+            
+            Color couleur = zone.getType() == BatiBloc.Dto.TypeZone.ARMATURE_CLASSIQUE
+                    ? new Color (34, 139, 34, 80)
+                    : new Color (0, 0, 255, 80);
+            
+            g2d.setColor(couleur);
+            g2d.fillPolygon(xs, ys, pts.size());
+            
+            g2d.setColor(zone.isSelectionnee() ? Color.YELLOW : couleur.darker());
+            g2d.setStroke(new BasicStroke(2));
+            g2d.drawPolygon(xs, ys, pts.size());
+        }
         g2d.dispose();
 
         // 3. Dessiner l'action en cours
