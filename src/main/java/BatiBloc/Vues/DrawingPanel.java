@@ -68,13 +68,26 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     return;
                 }
 
-                // Rognage / calibration / ajout zone au clic gauche
+                // Rognage / calibration / ajout zone / sélection au clic gauche
                 if (SwingUtilities.isLeftMouseButton(e)) {
+
+                    // Si on n’est dans aucun mode spécial → sélection de zone
+                    if (!modeRognage && !modeAjoutZone && !modeCalibration) {
+                        controller.selectionnerZone(e.getPoint());
+                        vueCourante = controller.getVueCourante();
+                        dernierPointSouris = e.getPoint();
+                        repaint();
+                        return;
+                    }
+
+                    // Sinon, comportement existant (rognage / ajout / calibration)
                     pointDepart = e.getPoint();
                     pointFin = e.getPoint();
                     repaint();
                     return;
                 }
+
+
 
                 // Déplacement avec clic molette
                 if (SwingUtilities.isMiddleMouseButton(e)) {
@@ -89,7 +102,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 if (vueCourante == null || vueCourante.getImage() == null) {
                     return;
                 }
-                                                                                   // deplacemnt avec le clic de la molette
+                // deplacemnt avec le clic de la molette
                 if (enDeplacement && dernierPointSouris != null) {
                     int dx = e.getX() - dernierPointSouris.x;
                     int dy = e.getY() - dernierPointSouris.y;
@@ -102,6 +115,25 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     return;
                 }
 
+                // déplacement d’une zone sélectionnée (si pas en mode spécial)
+                if (!modeRognage && !modeAjoutZone && !modeCalibration && dernierPointSouris != null) {
+
+                    ZoneDTO zoneSel = vueCourante.getZones().stream()
+                            .filter(ZoneDTO::isSelectionnee)
+                            .findFirst()
+                            .orElse(null);
+
+                    if (zoneSel != null) {
+                        int dx = e.getX() - dernierPointSouris.x;
+                        int dy = e.getY() - dernierPointSouris.y;
+
+                        controller.deplacerZoneSelectionnee(dx, dy);
+                        vueCourante = controller.getVueCourante();
+                        dernierPointSouris = e.getPoint();
+                        repaint();
+                        return;
+                    }
+                }
                 
                 if (pointDepart == null) {
                     return;
@@ -116,7 +148,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 if (vueCourante == null || vueCourante.getImage() == null) { 
                     enDeplacement = false;
                     dernierPointSouris = null;
-                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));                            //@roneh
+                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));//@roneh
                     return;
                 }
 

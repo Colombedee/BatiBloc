@@ -1,5 +1,7 @@
 package BatiBloc.Controleur;
 
+import BatiBloc.Services.SimulationService; // Ajouté par Nicky-Davis 
+import BatiBloc.Dto.SimulationDTO; // Ajouté par Nicky-Davis 
 import BatiBloc.Modeles.*; // Ajouté par Emmanuella 
 import BatiBloc.Dto.*;
 import BatiBloc.Services.ExportFichierPdfService;
@@ -53,7 +55,7 @@ public class MainController {
                     Vue vue = new Vue(img);
                     double echelle = lireEchellePdf(documentPdf, i); // Lire échelle du PDF si disponible 
                     vue.setEchelle(echelle);                         // sinon on utilise la valeur par défaut 
-                    projetVues.add(new Vue(img));
+                    projetVues.add(vue);
                 }  
             } catch (IOException e) {
                 e.printStackTrace();
@@ -264,6 +266,22 @@ public class MainController {
         }
         return TypeZone.OUVERTURE;
     }
+    
+    public SimulationDTO simulerZoneSelectionnee() {
+    if (indexVueCourante < 0) {
+        return null;
+    }
+
+    Vue vue = this.projetVues.get(indexVueCourante);
+    Zone zone = vue.getZoneSelectionnee();
+    if (zone == null) {
+        return null;
+    }
+
+    return SimulationService.simuler(zone);
+}
+
+
     
     private TypeForme getTypeForme(Forme forme)
     {

@@ -7,7 +7,6 @@ import BatiBloc.langue.LangueManager;
 
 public class VueDTO 
 {
-
     private final int index;
     private final BufferedImage image;
     private final List<ZoneDTO> zones;
@@ -16,7 +15,12 @@ public class VueDTO
     {
         this.index = index;
         this.image = image;
-        this.zones = zones != null? List.copyOf(zones) : List.of();
+        this.zones = zones != null ? List.copyOf(zones) : List.of();
+    }
+
+    public int getIndex()
+    {
+        return this.index;
     }
 
     public String getNomVue() 
