@@ -40,6 +40,12 @@ public class MainWindow extends JFrame {
     private JButton btn_confirmerModification;
     private JButton btn_annulerModification;
     private List<JCheckBox> checkboxes;
+    //pour le rognage inverse @roneh
+    private Rectangle selectionRognageEnAttente = null;
+    private JPanel panelChoixRognage;
+    private JButton btn_appliquerRognageNormal;
+    private JButton btn_appliquerRognageInverse;
+    private JButton btn_annulerRognage;
             
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
@@ -96,7 +102,8 @@ public class MainWindow extends JFrame {
     
     private void configurationPanel3D(){
         this.drawingPanel = new DrawingPanel(this.controleur);
-        this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
+        //this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
+        this.drawingPanel.setOnRognageTermine(rect -> this.preparerChoixRognage(rect));  // @roneh
         
         this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
         if (this.drawingPanel instanceof DrawingPanel dp) //Colombe
@@ -114,6 +121,7 @@ public class MainWindow extends JFrame {
         panelZoom.add(this.btn_dezoomer);
         
         this.jPanel1.add(panelZoom, BorderLayout.SOUTH);
+        this.initialiserPanelChoixRognage(); // @roneh
     }
     
     private void configurerActionBoutons() {      
@@ -740,6 +748,103 @@ public class MainWindow extends JFrame {
     this.btn_rogner.setText(LangueManager.tr("button.crop"));
 
     this.rafraichirVueCourante();
+}
+   
+   // @roneh pour le rognage inverse
+    private void initialiserPanelChoixRognage() {
+    this.panelChoixRognage = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    this.panelChoixRognage.setOpaque(false);
+
+    this.btn_appliquerRognageNormal = new JButton("Rognage normal");
+    this.btn_appliquerRognageInverse = new JButton("Rognage inverse");
+    this.btn_annulerRognage = new JButton("Annuler");
+
+    this.btn_appliquerRognageNormal.addActionListener(e -> appliquerRognageNormalEnAttente());
+    this.btn_appliquerRognageInverse.addActionListener(e -> appliquerRognageInverseEnAttente());
+    this.btn_annulerRognage.addActionListener(e -> annulerRognageEnAttente());
+
+    this.panelChoixRognage.add(this.btn_appliquerRognageNormal);
+    this.panelChoixRognage.add(this.btn_appliquerRognageInverse);
+    this.panelChoixRognage.add(this.btn_annulerRognage);
+
+    this.panelChoixRognage.setVisible(false);
+    this.jPanel1.add(this.panelChoixRognage, BorderLayout.NORTH);
+}
+   
+   private void preparerChoixRognage(Rectangle zoneAffichage) {
+    if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {
+        return;
+    }
+
+    this.selectionRognageEnAttente = zoneAffichage;
+    this.panelChoixRognage.setVisible(true);
+
+    this.jPanel1.revalidate();
+    this.jPanel1.repaint();
+}
+
+private void appliquerRognageNormalEnAttente() {
+    if (this.selectionRognageEnAttente == null) {
+        return;
+    }
+
+    Rectangle zoneAffichage = this.selectionRognageEnAttente;
+    this.selectionRognageEnAttente = null;
+    this.panelChoixRognage.setVisible(false);
+
+    this.rognerVueCourante(zoneAffichage);
+}
+
+private void appliquerRognageInverseEnAttente() {
+    if (this.selectionRognageEnAttente == null) {
+        return;
+    }
+
+    VueDTO vue = this.controleur.getVueCourante();
+    if (vue == null || vue.getImage() == null) {
+        return;
+    }
+
+    if (!(this.drawingPanel instanceof DrawingPanel panel)) {
+        return;
+    }
+
+    Rectangle zoneAffichage = this.selectionRognageEnAttente;
+    Rectangle zoneImage = panel.convertirSelectionEcranVersImage(zoneAffichage);
+
+    if (zoneImage == null) {
+        return;
+    }
+
+    this.controleur.rognerInverseVueCourante(
+        new RognerVueDTO(
+            zoneImage.x,
+            zoneImage.y,
+            zoneImage.width,
+            zoneImage.height
+        )
+    );
+
+    this.selectionRognageEnAttente = null;
+    this.panelChoixRognage.setVisible(false);
+
+    this.modeRognage = false;
+    this.drawingPanel.setModeRognage(false);
+    this.btn_rogner.setText(LangueManager.tr("button.crop"));
+
+    this.rafraichirVueCourante();
+}
+
+private void annulerRognageEnAttente() {
+    this.selectionRognageEnAttente = null;
+    this.panelChoixRognage.setVisible(false);
+
+    this.modeRognage = false;
+    this.drawingPanel.setModeRognage(false);
+    this.btn_rogner.setText(LangueManager.tr("button.crop"));
+
+    this.jPanel1.revalidate();
+    this.jPanel1.repaint();
 }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
