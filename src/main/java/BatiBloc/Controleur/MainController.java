@@ -36,6 +36,35 @@ public class MainController {
     private final List<Vue> projetVues = new ArrayList<>();
     private int indexVueCourante = -1;
     private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut
+    
+    private BufferedImage genererImageAvecZones(Vue vue) //Colombe
+    {
+        BufferedImage original = vue.getImage();
+        BufferedImage resultat = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
+
+        Graphics2D g = resultat.createGraphics();
+        g.drawImage(original, 0, 0, null);
+
+        for (Zone z : vue.getZones()) 
+        {
+            java.util.List<java.awt.Point> pts = z.getForme().getPosition();
+            int[] xs = pts.stream().mapToInt(p -> p.x).toArray();
+            int[] ys = pts.stream().mapToInt(p -> p.y).toArray();
+
+            TypeZone type = getTypeZone(z);
+            java.awt.Color couleur = type == TypeZone.ARMATURE_CLASSIQUE
+                ? new java.awt.Color(34, 139, 34, 80)
+                : new java.awt.Color(0, 0, 255, 80);
+
+            g.setColor(couleur);
+            g.fillPolygon(xs, ys, pts.size());
+            g.setColor(couleur.darker());
+            g.setStroke(new java.awt.BasicStroke(2));
+            g.drawPolygon(xs, ys, pts.size());
+        }
+        g.dispose();
+        return resultat;
+    }
 
     public void importerFichierPdf() {
         FichierImporteDTO fichier = ImportFichierPdfService.importer();
@@ -101,7 +130,7 @@ public class MainController {
             for (int index : indices) {
                 if (index < 0 || index >= projetVues.size()) continue;
 
-                BufferedImage image = projetVues.get(index).getImage();
+                BufferedImage image = genererImageAvecZones(projetVues.get(index));
 
                 PDPage page = new PDPage(new PDRectangle(image.getWidth(), image.getHeight()));
                 document.addPage(page);
