@@ -1,18 +1,15 @@
 package BatiBloc.Controleur;
 
-import BatiBloc.Services.SimulationService; // Ajouté par Nicky-Davis 
-import BatiBloc.Dto.SimulationDTO; // Ajouté par Nicky-Davis 
-import BatiBloc.Modeles.*; // Ajouté par Emmanuella 
+import BatiBloc.Services.SimulationService;
+import BatiBloc.Dto.SimulationDTO;
+import BatiBloc.Modeles.*;
 import BatiBloc.Dto.*;
 import BatiBloc.Services.ExportFichierPdfService;
 import BatiBloc.Services.ImportFichierPdfService;
 import BatiBloc.dto.RognerVueDTO;
-import BatiBloc.langue.Langage;
-import BatiBloc.langue.LangueManager;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point; // Ajouté par Emmanuella 
-import java.awt.geom.Point2D; // Ajouté par Emmanuella 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -65,8 +62,20 @@ public class MainController {
         g.dispose();
         return resultat;
     }
+    
+    public void annulerAction(){
+        
+    }
+    
+    public void retablirAction(){
+        
+    }
+    
+    public void ajouterVue(){
+        
+    }
 
-    public void importerFichierPdf() {
+    public void importerPdf() {
         FichierImporteDTO fichier = ImportFichierPdfService.importer();
         
         if (fichier == null) {
@@ -164,14 +173,6 @@ public class MainController {
     public void setEchelleCourante(double echelle) {
         if (indexVueCourante >= 0 && echelle > 0) {
             projetVues.get(indexVueCourante).setEchelle(echelle);
-        }
-    }
-    
-    public void changerLangue() {
-        if (LangueManager.getLangageCourant().equals(Langage.EN) || LangueManager.getLangageCourant().equals(null)) {
-            LangueManager.setLangage(Langage.FR);
-        } else {
-            LangueManager.setLangage(Langage.EN);
         }
     }
     

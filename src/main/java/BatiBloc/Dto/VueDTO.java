@@ -3,7 +3,8 @@ package BatiBloc.Dto;
 import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
 import java.util.List;
-import BatiBloc.langue.LangueManager;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class VueDTO 
 {
@@ -23,10 +24,11 @@ public class VueDTO
         return this.index;
     }
 
-    public String getNomVue() 
+    public String getNomVue(Locale locale) 
     {
+        ResourceBundle bundle = ResourceBundle.getBundle("i18n.messages", locale);
         return MessageFormat.format(
-            LangueManager.tr("panel.viewName"),
+            bundle.getString("panel.viewName"),
             this.index + 1
         );
     }
