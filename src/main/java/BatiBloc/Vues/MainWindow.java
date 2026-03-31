@@ -5,10 +5,10 @@ import javax.swing.JLabel;
 import javax.swing.*;
 import BatiBloc.Controleur.MainController;
 import BatiBloc.Dto.VueDTO;
-import BatiBloc.langue.TrComposant;
+//import BatiBloc.langue.TrComposant;
 import BatiBloc.dto.RognerVueDTO;
-import BatiBloc.langue.Langage;
-import BatiBloc.langue.LangueManager;
+//import BatiBloc.langue.Langage;
+//import BatiBloc.langue.LangueManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -55,31 +55,11 @@ public class MainWindow extends JFrame {
     }
     
     private void initialisationFormulaire(){
-        this.controleur.changerLangue();
+        //this.controleur.changerLangue();
         this.configurationPanel3D();
         this.configurerSpinnerEchelle();
         this.configurerActionBoutons();
         this.configurationLiaisonsTraduction();
-        
-        LangueManager.addObserver(() -> {
-            this.changerLangueFenetreVues();
-            if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
-                List<Integer> indicesCochesAvant = new ArrayList<>();
-                for (int i = 0; i < this.checkboxes.size(); i++) {
-                    if (this.checkboxes.get(i).isSelected()) {
-                        indicesCochesAvant.add(i);
-                    }
-                }
-
-                this.afficherPanelVues(this.actionCourante);
-
-                for (int index : indicesCochesAvant) {
-                    if (index < this.checkboxes.size()) {
-                        this.checkboxes.get(index).setSelected(true);
-                    }
-                }
-            }
-        });
     }
     
     private void configurerSpinnerEchelle(){
@@ -136,7 +116,7 @@ public class MainWindow extends JFrame {
         });
         
         this.btn_importer.addActionListener(e -> {
-            this.controleur.importerFichierPdf();
+            //this.controleur.importerFichierPdf();
             this.rafraichirVueCourante();
         });
         
@@ -146,7 +126,7 @@ public class MainWindow extends JFrame {
             this.btn_rogner.setText(this.modeRognage ? "Rognage actif" : "button.crop");
         });
         
-        this.btn_changerLangue.addActionListener(e -> this.controleur.changerLangue());
+        //this.btn_changerLangue.addActionListener(e -> this.controleur.changerLangue());
         this.btn_exporter.addActionListener(e -> this.afficherPanelVues("panel.export"));
         this.btn_supprimer.addActionListener(e -> this.afficherPanelVues("panel.delete"));
     
@@ -179,20 +159,20 @@ public class MainWindow extends JFrame {
     }
     
     private void configurationLiaisonsTraduction(){
-        new TrComposant<>(this.btn_importer, "button.import");
-        new TrComposant<>(this.btn_exporter, "button.export");
-        new TrComposant<>(this.btn_changerLangue, "button.changeLanguage");
-        new TrComposant<>(this.btn_supprimer, "button.delete");
-        new TrComposant<>(this.btn_rogner, "button.crop");
+        //new TrComposant<>(this.btn_importer, "button.import");
+        //new TrComposant<>(this.btn_exporter, "button.export");
+        //new TrComposant<>(this.btn_changerLangue, "button.changeLanguage");
+        //new TrComposant<>(this.btn_supprimer, "button.delete");
+        //new TrComposant<>(this.btn_rogner, "button.crop");
                 
-        new TrComposant<>(this.lbl_echelle, "label.scale");
-        new TrComposant<>(this.lbl_type, "label.type");
-        new TrComposant<>(this.lbl_forme, "label.form");
-        new TrComposant<>(this.lbl_largeurBloc, "label.width");
-        new TrComposant<>(this.lbl_hauteurBloc, "label.height");
-        new TrComposant<>(this.lbl_prixParBloc, "label.pricePerBloc");
-        new TrComposant<>(this.lbl_nombreBloc, "label.numberBlock");
-        new TrComposant<>(this.lbl_prixTotal, "label.totalPrice");
+        //new TrComposant<>(this.lbl_echelle, "label.scale");
+        //new TrComposant<>(this.lbl_type, "label.type");
+        //new TrComposant<>(this.lbl_forme, "label.form");
+        //new TrComposant<>(this.lbl_largeurBloc, "label.width");
+        //new TrComposant<>(this.lbl_hauteurBloc, "label.height");
+        //new TrComposant<>(this.lbl_prixParBloc, "label.pricePerBloc");
+        //new TrComposant<>(this.lbl_nombreBloc, "label.numberBlock");
+        //new TrComposant<>(this.lbl_prixTotal, "label.totalPrice");
 
         this.cbo_typeZone.addItem("button.type.classicFrame");
         this.cbo_typeZone.addItem("button.type.reinforcementBlocks");
@@ -215,7 +195,7 @@ public class MainWindow extends JFrame {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 
                 if (value instanceof String key) {
-                    setText(LangueManager.tr(key));
+                    //setText(LangueManager.tr(key));
                 }
                 
                 return this;
@@ -235,20 +215,18 @@ public class MainWindow extends JFrame {
     
     private void changerLangueFenetreVues() {
         if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
-            String action = LangueManager.tr(this.actionCourante);
-            String titre = MessageFormat.format(
-                    LangueManager.tr("panel.selectViews"), action
-            );
+            //String action = LangueManager.tr(this.actionCourante);
+            //String titre = MessageFormat.format(LangueManager.tr("panel.selectViews"), action);
             
             if (this.panel_selectionVues.getBorder() instanceof TitledBorder border) {
-                border.setTitle(titre);
+                //border.setTitle(titre);
             }
             
             this.panel_selectionVues.repaint();
             
-            this.btn_toutSelectionner.setText(LangueManager.tr("panel.selectAll"));
-            this.btn_confirmerModification.setText(LangueManager.tr("panel.confirm"));
-            this.btn_annulerModification.setText(LangueManager.tr("panel.cancel"));
+            //this.btn_toutSelectionner.setText(LangueManager.tr("panel.selectAll"));
+            //this.btn_confirmerModification.setText(LangueManager.tr("panel.confirm"));
+            //this.btn_annulerModification.setText(LangueManager.tr("panel.cancel"));
         }
         this.changerLangueTitreFenetreVues();
     }
@@ -258,14 +236,11 @@ public class MainWindow extends JFrame {
             return;
         }
         
-        String action = LangueManager.tr(this.actionCourante);
-        String titre = MessageFormat.format(
-                LangueManager.tr("panel.selectViews"),
-                action
-        );
+        //String action = LangueManager.tr(this.actionCourante);
+        //String titre = MessageFormat.format(LangueManager.tr("panel.selectViews"),action);
         
         if (this.panel_selectionVues.getBorder() instanceof TitledBorder tb) {
-            tb.setTitle(titre);
+            //tb.setTitle(titre);
             this.panel_selectionVues.repaint();
         }
     }
@@ -577,16 +552,15 @@ public class MainWindow extends JFrame {
         List<VueDTO> vues = this.controleur.getVues();
         if (vues.isEmpty()) return;
 
-        Locale locale = (LangueManager.getLangageCourant() == Langage.FR)
-        ? Locale.FRENCH : Locale.ENGLISH;
+        //Locale locale = (LangueManager.getLangageCourant() == Langage.FR)? Locale.FRENCH : Locale.ENGLISH;
 
-        ResourceBundle bundle = ResourceBundle.getBundle("i18n.messages", locale);
-        String action = bundle.getString(this.actionCourante);
-        String titre = MessageFormat.format(bundle.getString("panel.selectViews"), action);
+        //ResourceBundle bundle = ResourceBundle.getBundle("i18n.messages", locale);
+        //String action = bundle.getString(this.actionCourante);
+        //String titre = MessageFormat.format(bundle.getString("panel.selectViews"), action);
 
         this.panel_selectionVues = new JPanel();
         this.panel_selectionVues.setLayout(new BorderLayout());
-        this.panel_selectionVues.setBorder(BorderFactory.createTitledBorder(titre));
+        //this.panel_selectionVues.setBorder(BorderFactory.createTitledBorder(titre));
         this.panel_selectionVues.setBackground(new Color(240, 240, 240));
 
         this.panel_miniatures = new JPanel();
@@ -607,10 +581,10 @@ public class MainWindow extends JFrame {
             
             lblMiniature.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-            JCheckBox cb = new JCheckBox(vues.get(i).getNomVue());
-            cb.addActionListener(e -> majBoutonToutSelectionnerVues());
-            cb.setBackground(new Color(240, 240, 240));
-            this.checkboxes.add(cb);
+            //JCheckBox cb = new JCheckBox(vues.get(i).getNomVue());
+            //cb.addActionListener(e -> majBoutonToutSelectionnerVues());
+            //cb.setBackground(new Color(240, 240, 240));
+            //this.checkboxes.add(cb);
             
             int indexFinal = i;
             lblMiniature.addMouseListener(new MouseAdapter() {
@@ -623,14 +597,14 @@ public class MainWindow extends JFrame {
             });
 
             panelVue.add(lblMiniature, BorderLayout.CENTER);
-            panelVue.add(cb, BorderLayout.SOUTH);
+            //panelVue.add(cb, BorderLayout.SOUTH);
             this.panel_miniatures.add(panelVue);
         }
 
         JPanel panelBoutons = new JPanel();
-        this.btn_toutSelectionner = new JCheckBox(LangueManager.tr("panel.selectAll"));
-        this.btn_confirmerModification = new JButton(LangueManager.tr("panel.confirm"));
-        this.btn_annulerModification = new JButton(LangueManager.tr("panel.cancel"));
+        //this.btn_toutSelectionner = new JCheckBox(LangueManager.tr("panel.selectAll"));
+        //this.btn_confirmerModification = new JButton(LangueManager.tr("panel.confirm"));
+        //this.btn_annulerModification = new JButton(LangueManager.tr("panel.cancel"));
 
         this.btn_toutSelectionner.addActionListener(e -> this.onToggleSelectionnerVues());
         this.btn_confirmerModification.addActionListener(e -> this.confirmerSupressionOuExportVues());
@@ -745,7 +719,7 @@ public class MainWindow extends JFrame {
 
     this.modeRognage = false;
     this.drawingPanel.setModeRognage(false);
-    this.btn_rogner.setText(LangueManager.tr("button.crop"));
+    //this.btn_rogner.setText(LangueManager.tr("button.crop"));
 
     this.rafraichirVueCourante();
 }
@@ -830,7 +804,7 @@ private void appliquerRognageInverseEnAttente() {
 
     this.modeRognage = false;
     this.drawingPanel.setModeRognage(false);
-    this.btn_rogner.setText(LangueManager.tr("button.crop"));
+    //this.btn_rogner.setText(LangueManager.tr("button.crop"));
 
     this.rafraichirVueCourante();
 }
@@ -841,7 +815,7 @@ private void annulerRognageEnAttente() {
 
     this.modeRognage = false;
     this.drawingPanel.setModeRognage(false);
-    this.btn_rogner.setText(LangueManager.tr("button.crop"));
+    //this.btn_rogner.setText(LangueManager.tr("button.crop"));
 
     this.jPanel1.revalidate();
     this.jPanel1.repaint();
