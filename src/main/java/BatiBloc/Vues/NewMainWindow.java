@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import BatiBloc.dto.RognerVueDTO;
 
 public class NewMainWindow extends JFrame {
     
@@ -50,6 +51,7 @@ public class NewMainWindow extends JFrame {
     private ResourceBundle bundle;
     private String panelActionCourante = null;
     public enum Langage { FR, EN }
+    private boolean modeRognage = false;
 
     public NewMainWindow(MainController controleur) {
         this.controleur = controleur;
@@ -84,8 +86,8 @@ public class NewMainWindow extends JFrame {
     
     private void configurationPanelVues(){
         this.drawingPanel = new DrawingPanel(this.controleur);
-        //this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
-        //this.drawingPanel.setOnRognageTermine(rect -> this.preparerChoixRognage(rect));
+        this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect)); // n
+       
         
         this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
         if (this.drawingPanel instanceof DrawingPanel dp)
@@ -101,7 +103,6 @@ public class NewMainWindow extends JFrame {
         panelZoom.setLayout(new FlowLayout(FlowLayout.RIGHT));
         
         this.panel_vues.add(panelZoom, BorderLayout.SOUTH);
-        //this.initialiserPanelChoixRognage();
     }
     
     private void configurerActionListener() {        
@@ -143,10 +144,11 @@ public class NewMainWindow extends JFrame {
         
         this.btn_supprimerVue.addActionListener(e -> this.afficherPanelVues("panel.delete"));
         
+        // activation du mode rognage
         this.btn_rognerVue.addActionListener(e -> {
-            //this.modeRognage = !this.modeRognage;
-            //this.drawingPanel.setModeRognage(this.modeRognage);
-            //this.btn_rogner.setText(this.modeRognage ? "Rognage actif" : "button.crop");
+        this.modeRognage = !this.modeRognage;
+        this.drawingPanel.setModeRognage(this.modeRognage);
+        this.btn_rognerVue.setText(this.modeRognage ? "Rognage actif" : this.bundle.getString("button.cropView"));
         });
         
                 // bouton zoom +
@@ -399,6 +401,32 @@ public class NewMainWindow extends JFrame {
             tb.setTitle(titre);
             this.panelSelectionVues.repaint();
         }
+    }
+    
+    // methode du rognage
+    private void rognerVueCourante(Rectangle zoneAffichage) {
+    if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {
+        return;
+    }
+
+    if (!(this.drawingPanel instanceof DrawingPanel panel)) {
+        return;
+    }
+
+    Rectangle zoneImage = panel.convertirSelectionEcranVersImage(zoneAffichage);
+    if (zoneImage == null) {
+        return;
+    }
+
+    this.controleur.rognerVueCourante(
+        new RognerVueDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
+    );
+
+    this.modeRognage = false;
+    this.drawingPanel.setModeRognage(false);
+    this.btn_rognerVue.setText(this.bundle.getString("button.cropView"));
+
+    this.rafraichirVueCourante();
     }
     
     @SuppressWarnings("unchecked")
