@@ -18,5 +18,7 @@ public interface IPanelAffichage {
     void setModeCalibration(boolean actif);
     void setModeAjoutZone(boolean actif);
     void setOnRognageTermine(Consumer<Rectangle> callback);
-    void setOnZoneAjoutee(Runnable callback);//Colombe 
+    void setOnZoneAjoutee(Runnable callback);//Colombe
+    void zoomInCenter();
+    void zoomOutCenter();
 }

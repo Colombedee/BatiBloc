@@ -147,6 +147,15 @@ public class NewMainWindow extends JFrame {
             //this.btn_rogner.setText(this.modeRognage ? "Rognage actif" : "button.crop");
         });
         
+                // bouton zoom +
+        this.btn_zoomIn.addActionListener(e -> {
+            this.drawingPanel.zoomInCenter();
+        });
+        //  bouton zoom -
+        this.btn_zoomOut.addActionListener(e -> {
+            this.drawingPanel.zoomOutCenter();
+        });
+        
         this.cbo_langue.setModel(new DefaultComboBoxModel<>(new String[] {Langage.FR.toString(), Langage.EN.toString()}));
         
         this.cbo_langue.addActionListener(e -> {
