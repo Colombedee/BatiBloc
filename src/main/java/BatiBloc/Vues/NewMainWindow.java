@@ -78,6 +78,8 @@ public class NewMainWindow extends JFrame {
         this.btn_vueSuivante.setIcon(new FlatSVGIcon("icones/" + "forward_icon.svg", 25, 25));
         this.btn_zoomIn.setIcon(new FlatSVGIcon("icones/" + "zoomIn_icon.svg", 25, 25));
         this.btn_zoomOut.setIcon(new FlatSVGIcon("icones/" + "zoomOut_icon.svg", 20, 20));
+        
+        this.rafraichirVueCourante();
     }
     
     private void configurationPanelVues(){
@@ -155,6 +157,16 @@ public class NewMainWindow extends JFrame {
         this.btn_zoomOut.addActionListener(e -> {
             this.drawingPanel.zoomOutCenter();
         });
+        // bouton precendant
+        this.btn_vuePrecedente.addActionListener(e -> {
+            this.controleur.naviguerVuePrecedente(); 
+        this.rafraichirVueCourante();
+        });
+        //bouton suivant
+        this.btn_vueSuivante.addActionListener(e -> {
+            this.controleur.naviguerVueSuivante(); 
+        this.rafraichirVueCourante();
+        });
         
         this.cbo_langue.setModel(new DefaultComboBoxModel<>(new String[] {Langage.FR.toString(), Langage.EN.toString()}));
         
@@ -172,6 +184,13 @@ public class NewMainWindow extends JFrame {
         VueDTO vue = this.controleur.getVueCourante();
         if (this.drawingPanel != null) {
             this.drawingPanel.afficherVue(vue);
+            
+            // completion @roneh
+            if (vue != null) {
+          this.lbl_vueCourante.setText("Vue " + (vue.getIndex() + 1));
+        } else {
+            this.lbl_vueCourante.setText("Aucune vue");
+        }
         }
     }
     
