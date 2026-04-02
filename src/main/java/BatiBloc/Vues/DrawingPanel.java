@@ -1,6 +1,8 @@
 package BatiBloc.Vues;
 import BatiBloc.Controleur.MainController;
 import BatiBloc.Dto.ZoneDTO; //AJouter par Emmanuella 
+import BatiBloc.Dto.TypeForme; //Colombe
+import BatiBloc.Dto.TypeZone; //Colombe
 
 import BatiBloc.Dto.VueDTO;
 import java.awt.BasicStroke;
@@ -32,10 +34,10 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     private boolean modeAjoutZone = false; // Ajouter par Emmanuella 
     
     //Colombe
-    private BatiBloc.Dto.TypeForme formeEnCours = BatiBloc.Dto.TypeForme.RECTANGLE;
-    private BatiBloc.Dto.TypeZone typeEnCours = BatiBloc.Dto.TypeZone.ARMATURE_CLASSIQUE;
+    private TypeForme formeEnCours = TypeForme.RECTANGLE;
+    private TypeZone typeEnCours = TypeZone.ARMATURE_CLASSIQUE;
     private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
-
+    private boolean modeDeplacementZone = false;
 
     private Point pointDepart;
     private Point pointFin;
@@ -53,8 +55,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
 
     private boolean vueInitialisee = false;
                                                   
-
-
     public DrawingPanel(MainController controller){ //Ajouter par Emmanuella -prend MainController en paramètre 
     
         this.controller = controller;
@@ -69,25 +69,25 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 }
 
                 // Rognage / calibration / ajout zone / sélection au clic gauche
+                //Colombe modifie le 02avril
                 if (SwingUtilities.isLeftMouseButton(e)) {
-
-                    // Si on n’est dans aucun mode spécial → sélection de zone
-                    if (!modeRognage && !modeAjoutZone && !modeCalibration) {
-                        controller.selectionnerZone(e.getPoint());
+                    if (modeDeplacementZone) {
+                        Point2D imgPoint = screenToImage(e.getX(), e.getY());
+                        Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
+                        controller.selectionnerZone(ptImage);
                         vueCourante = controller.getVueCourante();
                         dernierPointSouris = e.getPoint();
                         repaint();
                         return;
                     }
 
-                    // Sinon, comportement existant (rognage / ajout / calibration)
-                    pointDepart = e.getPoint();
-                    pointFin = e.getPoint();
-                    repaint();
+                    if (modeRognage || modeAjoutZone || modeCalibration) {
+                        pointDepart = e.getPoint();
+                        pointFin = e.getPoint();
+                        repaint();
+                    }
                     return;
                 }
-
-
 
                 // Déplacement avec clic molette
                 if (SwingUtilities.isMiddleMouseButton(e)) {
@@ -116,17 +116,17 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 }
 
                 // déplacement d’une zone sélectionnée (si pas en mode spécial)
-                if (!modeRognage && !modeAjoutZone && !modeCalibration && dernierPointSouris != null) {
-
+                if (modeDeplacementZone && dernierPointSouris != null) {
                     ZoneDTO zoneSel = vueCourante.getZones().stream()
                             .filter(ZoneDTO::isSelectionnee)
                             .findFirst()
                             .orElse(null);
-
+                    //Colombe
                     if (zoneSel != null) {
-                        int dx = e.getX() - dernierPointSouris.x;
-                        int dy = e.getY() - dernierPointSouris.y;
-
+                        Point2D imgActuel = screenToImage(e.getX(), e.getY());
+                        Point2D imgDernier = screenToImage(dernierPointSouris.x, dernierPointSouris.y);
+                        int dx = (int)(imgActuel.getX() - imgDernier.getX());
+                        int dy = (int)(imgActuel.getY() - imgDernier.getY());
                         controller.deplacerZoneSelectionnee(dx, dy);
                         vueCourante = controller.getVueCourante();
                         dernierPointSouris = e.getPoint();
@@ -197,7 +197,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     
                     java.util.List<Point> pts = null;
                     
-                    if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE)
+                    if (formeEnCours == TypeForme.RECTANGLE)
                     {
                         pts = java.util.List.of
                         (
@@ -207,7 +207,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                           new Point(xMin, yMax)
                         );
                     }
-                    else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE)
+                    else if (formeEnCours == TypeForme.TRIANGLE)
                     {
                         pts = java.util.List.of
                         (
@@ -216,7 +216,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                             new Point(xCentre, yMin)
                         );
                     }
-                    else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE_TRONQUE)
+                    else if (formeEnCours == TypeForme.TRIANGLE_TRONQUE)
                     {
                         int largeurSommet = (xMax - xMin) /3;
                         pts = java.util.List.of
@@ -231,6 +231,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     {
                         controller.ajouterZone(typeEnCours, formeEnCours, pts);
                         if (onZoneAjoutee != null) onZoneAjoutee.run();
+                        modeDeplacementZone = false;
                         repaint();
                     }
                 }
@@ -337,34 +338,44 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
       
     @Override
     public void setModeCalibration(boolean actif){
-      this.modeCalibration = actif;
-      this.modeRognage = false;
-      this.modeAjoutZone = false;
-      repaint();
+        this.modeCalibration = actif;
+        this.modeRognage = false;
+        this.modeAjoutZone = false;
+        repaint();
     }
 
       
     @Override
     public void setModeAjoutZone(boolean actif) {
-      this.modeAjoutZone = actif;
-      this.modeRognage = false;
-      this.modeCalibration = false;
-      repaint();
+        this.modeAjoutZone = actif;
+        this.modeRognage = false;
+        this.modeCalibration = false;
+        //this.modeDeplacementZone = false;
+        repaint();
     }
-    
     //Colombe
-    public void setFormeEnCours(BatiBloc.Dto.TypeForme forme)
+    public void setModeDeplacementZone(boolean actif) {
+        this.modeDeplacementZone = actif;
+        this.modeRognage = false;
+        //this.modeAjoutZone = false;
+        this.modeCalibration = false;
+        repaint();
+    }
+    public boolean getModeDeplacementZone() {
+        return this.modeDeplacementZone;
+    }
+    //Colombe
+    public void setFormeEnCours(TypeForme forme)
     {
         this.formeEnCours = forme;
         this.pointsEnCours.clear();
         repaint();
     }
     
-    public void setTypeZoneEnCours(BatiBloc.Dto.TypeZone type)
+    public void setTypeZoneEnCours(TypeZone type)
     {
         this.typeEnCours = type;
     }
-    
     
     public void zoomInCenter() {
         appliquerZoom(1.1, getWidth() / 2.0, getHeight() / 2.0);
@@ -499,7 +510,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             int[] xs = pts.stream().mapToInt(p -> (int) p.getX()).toArray();
             int[] ys = pts.stream().mapToInt(p -> (int) p.getY()).toArray();
             
-            Color couleur = zone.getType() == BatiBloc.Dto.TypeZone.ARMATURE_CLASSIQUE
+            Color couleur = zone.getType() == TypeZone.ARMATURE_CLASSIQUE
                     ? new Color (34, 139, 34, 80)
                     : new Color (0, 0, 255, 80);
             
@@ -523,17 +534,17 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             int y2 = Math.max(pointDepart.y, pointFin.y);
             int xCentre = (x1 + x2) / 2;
             
-            if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE)
+            if (formeEnCours == TypeForme.RECTANGLE)
             {
                 overlay.drawRect(x1, y1, x2 - x1, y2 - y1);
             }
-            else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE)
+            else if (formeEnCours == TypeForme.TRIANGLE)
             {
                 int[] xs = {x1, x2, xCentre};
                 int[] ys = {y2, y2, y1};
                 overlay.drawPolygon(xs, ys, 3);
             }
-            else if (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE_TRONQUE)
+            else if (formeEnCours == TypeForme.TRIANGLE_TRONQUE)
             {
                 int largeurSommet = (x2 - x1) / 3;
                 int[] xs = {x1, x2, xCentre + largeurSommet, xCentre - largeurSommet};

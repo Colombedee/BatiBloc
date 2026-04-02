@@ -2,6 +2,8 @@ package BatiBloc.Vues;
 
 import BatiBloc.Controleur.MainController;
 import BatiBloc.Dto.VueDTO;
+import BatiBloc.Dto.TypeZone;//Colombe
+import BatiBloc.Dto.TypeForme;//Colombe
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import java.util.Locale;
@@ -52,6 +54,9 @@ public class NewMainWindow extends JFrame {
     private String panelActionCourante = null;
     public enum Langage { FR, EN }
     private boolean modeRognage = false;
+    private boolean typeZoneChoisi = false;//Colombe
+    private boolean formeChoisie = false;//Colombe
+    private JButton btn_arreterZone = null;//Colombe
 
     public NewMainWindow(MainController controleur) {
         this.controleur = controleur;
@@ -90,10 +95,10 @@ public class NewMainWindow extends JFrame {
        
         
         this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
-        if (this.drawingPanel instanceof DrawingPanel dp)
-        {
-            dp.setModeAjoutZone(true);
-        }
+//        if (this.drawingPanel instanceof DrawingPanel dp)
+//        {
+//            dp.setModeAjoutZone(true);
+//        }
         
         this.panel_vues.setLayout(new BorderLayout());
         this.panel_vues.add((Component) this.drawingPanel, BorderLayout.CENTER);
@@ -105,7 +110,8 @@ public class NewMainWindow extends JFrame {
         this.panel_vues.add(panelZoom, BorderLayout.SOUTH);
     }
     
-    private void configurerActionListener() {        
+    private void configurerActionListener() 
+    {        
         this.txt_echelle.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -179,6 +185,58 @@ public class NewMainWindow extends JFrame {
                 case "EN" -> this.langueCourante = Locale.ENGLISH;
             }
             this.changerLangueTexte();
+        });
+        // Type de zone
+        this.btn_zoneArmatureClassique.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setTypeZoneEnCours(TypeZone.ARMATURE_CLASSIQUE);
+                this.typeZoneChoisi = true;
+            }
+        });
+
+        this.btn_zoneArmatureBloc.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setTypeZoneEnCours(TypeZone.ARMATURE_BLOCS);
+                this.typeZoneChoisi = true;
+            }
+        });
+
+        this.btn_zoneOuverture.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setTypeZoneEnCours(TypeZone.OUVERTURE);
+                this.typeZoneChoisi = true;
+            }
+        });
+
+        // Forme
+        this.btn_formeRectangle.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setFormeEnCours(TypeForme.RECTANGLE);
+                this.formeChoisie = true;
+                this.verifierEtActiverDessin();
+            }
+        });
+
+        this.btn_formeTriangle.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setFormeEnCours(TypeForme.TRIANGLE);
+                this.formeChoisie = true;
+                this.verifierEtActiverDessin();
+            }
+        });
+
+        this.btn_formeTriangleTronque.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setFormeEnCours(TypeForme.TRIANGLE_TRONQUE);
+                this.formeChoisie = true;
+                this.verifierEtActiverDessin();
+            }
+        });
+        //Colombe
+        this.btn_deplacerZone.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setModeDeplacementZone(true);
+            }
         });
     }
     
@@ -429,6 +487,41 @@ public class NewMainWindow extends JFrame {
     this.rafraichirVueCourante();
     }
     
+    private void verifierEtActiverDessin() {
+        if (this.typeZoneChoisi && this.formeChoisie) {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                dp.setModeAjoutZone(true);
+            }
+            this.afficherBoutonArreter();
+        }
+    }
+
+    private void afficherBoutonArreter() {
+        if (this.btn_arreterZone == null) {
+            this.btn_arreterZone = new JButton("Dessin actif");
+            this.btn_arreterZone.setMaximumSize(new java.awt.Dimension(150, 30));
+            this.btn_arreterZone.setMinimumSize(new java.awt.Dimension(150, 30));
+            this.btn_arreterZone.setPreferredSize(new java.awt.Dimension(150, 30));
+            this.btn_arreterZone.addActionListener(e -> this.arreterModeZone());
+            this.panel_menu.add(this.btn_arreterZone);
+            this.panel_menu.revalidate();
+            this.panel_menu.repaint();
+        }
+    }
+
+    private void arreterModeZone() {
+        if (this.drawingPanel instanceof DrawingPanel dp) {
+            dp.setModeAjoutZone(false);
+        }
+        this.typeZoneChoisi = false;
+        this.formeChoisie = false;
+        if (this.btn_arreterZone != null) {
+            this.panel_menu.remove(this.btn_arreterZone);
+            this.btn_arreterZone = null;
+            this.panel_menu.revalidate();
+            this.panel_menu.repaint();
+                    }
+    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

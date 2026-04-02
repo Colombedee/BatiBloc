@@ -2,7 +2,7 @@
  *
  * @author Emmauella Iris Andréa Lehe
  * crée le 19 mars 2026 à 12h30
- * Imterface qui va acceuillir la 3D
+ * Interface qui va acceuillir la 3D
  */
 
 package BatiBloc.Vues;
@@ -19,6 +19,7 @@ public interface IPanelAffichage {
     void setModeAjoutZone(boolean actif);
     void setOnRognageTermine(Consumer<Rectangle> callback);
     void setOnZoneAjoutee(Runnable callback);//Colombe
+    void setModeDeplacementZone(boolean actif);//Colombe
     void zoomInCenter();
     void zoomOutCenter();
 }
