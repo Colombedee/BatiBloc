@@ -302,6 +302,13 @@ public class MainController {
         projetVues.get(indexVueCourante).deplacerZoneSelectionnee(dx, dy);
     }
     
+    //Colombe
+    public void redimensionnerZoneSelectionnee(int indexPoignee, int dx, int dy) 
+    {
+        if (indexVueCourante < 0) return;
+        projetVues.get(indexVueCourante).redimensionnerZoneSelectionnee(indexPoignee, dx, dy);
+    }
+    
     private Forme creerForme(TypeForme type, List<Point> points)
     {
         switch (type)

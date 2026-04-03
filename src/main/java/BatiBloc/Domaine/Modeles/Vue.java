@@ -109,6 +109,14 @@ public class Vue
                 zoneSelectionnee.getForme().deplacement(dx, dy);
             }
     }
+      //Colombe 
+      public void redimensionnerZoneSelectionnee(int indexPoignee, int dx, int dy) 
+      {
+        if (zoneSelectionnee != null) 
+        {
+            zoneSelectionnee.getForme().redimensionner(indexPoignee, dx, dy);
+        }
+    }
       
        public Zone getZoneSelectionnee() //Colombe  
     {

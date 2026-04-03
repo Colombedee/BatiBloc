@@ -30,6 +30,12 @@ public abstract class Forme {
             p.translate(dx, dy);
         }
     }
+    //Colombe
+    public void redimensionner(int indexPoignee, int dx, int dy) {
+        if (indexPoignee >= 0 && indexPoignee < this.position.size()) {
+            this.position.get(indexPoignee).translate(dx, dy);
+        }
+    }
     
     protected boolean contientPoint(Point p){
         return false;

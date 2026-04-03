@@ -232,14 +232,18 @@ public class NewMainWindow extends JFrame {
                 this.verifierEtActiverDessin();
             }
         });
+        
         //Colombe
         this.btn_deplacerZone.addActionListener(e -> {
             if (this.drawingPanel instanceof DrawingPanel dp) {
                 boolean actuel = dp.getModeDeplacementZone();
                 dp.setModeDeplacementZone(!actuel);
-                if (actuel) { // si on désactive le déplacement
-                    dp.setModeAjoutZone(true);
-                }
+            }
+        });
+        this.btn_dimensionZone.addActionListener(e -> {
+            if (this.drawingPanel instanceof DrawingPanel dp) {
+                boolean actuel = dp.getModeRedimensionnementZone();
+                dp.setModeRedimensionnementZone(!actuel);
             }
         });
     }

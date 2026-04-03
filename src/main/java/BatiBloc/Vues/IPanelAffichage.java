@@ -20,6 +20,7 @@ public interface IPanelAffichage {
     void setOnRognageTermine(Consumer<Rectangle> callback);
     void setOnZoneAjoutee(Runnable callback);//Colombe
     void setModeDeplacementZone(boolean actif);//Colombe
+    void setModeRedimensionnementZone(boolean actif);//Colombe
     void zoomInCenter();
     void zoomOutCenter();
 }

@@ -38,6 +38,8 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     private TypeZone typeEnCours = TypeZone.ARMATURE_CLASSIQUE;
     private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
     private boolean modeDeplacementZone = false;
+    private boolean modeRedimensionnementZone = false;
+    private int indexPoigneeSelectionnee = -1;
 
     private Point pointDepart;
     private Point pointFin;
@@ -80,7 +82,37 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                         repaint();
                         return;
                     }
-
+                    //Colombe
+                    if (modeRedimensionnementZone) {
+                        // Chercher si on clique sur une poignée
+                        indexPoigneeSelectionnee = -1;
+                        List<ZoneDTO> zones = vueCourante.getZones();
+                        for (ZoneDTO zone : zones) {
+                            if (zone.isSelectionnee()) {
+                                java.util.List<Point> pts = zone.getPoints();
+                                for (int i = 0; i < pts.size(); i++) {
+                                    Point2D imgPoint = screenToImage(e.getX(), e.getY());
+                                    int px = (int) pts.get(i).getX();
+                                    int py = (int) pts.get(i).getY();
+                                    if (Math.abs(imgPoint.getX() - px) <= 8 && Math.abs(imgPoint.getY() - py) <= 8) {
+                                        indexPoigneeSelectionnee = i;
+                                        dernierPointSouris = e.getPoint();
+                                        repaint();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                        // Si pas de poignée, sélectionner une zone
+                        Point2D imgPoint = screenToImage(e.getX(), e.getY());
+                        Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
+                        controller.selectionnerZone(ptImage);
+                        vueCourante = controller.getVueCourante();
+                        dernierPointSouris = e.getPoint();
+                        repaint();
+                        return;
+                    }
+                    
                     if (modeRognage || modeAjoutZone || modeCalibration) {
                         pointDepart = e.getPoint();
                         pointFin = e.getPoint();
@@ -133,6 +165,19 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                         repaint();
                         return;
                     }
+                }
+                //Colombe
+                if (modeRedimensionnementZone && indexPoigneeSelectionnee >= 0 && dernierPointSouris != null) 
+                {
+                    Point2D imgActuel = screenToImage(e.getX(), e.getY());
+                    Point2D imgDernier = screenToImage(dernierPointSouris.x, dernierPointSouris.y);
+                    int dx = (int)(imgActuel.getX() - imgDernier.getX());
+                    int dy = (int)(imgActuel.getY() - imgDernier.getY());
+                    controller.redimensionnerZoneSelectionnee(indexPoigneeSelectionnee, dx, dy);
+                    vueCourante = controller.getVueCourante();
+                    dernierPointSouris = e.getPoint();
+                    repaint();
+                    return;
                 }
                 
                 if (pointDepart == null) {
@@ -364,6 +409,19 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     public boolean getModeDeplacementZone() {
         return this.modeDeplacementZone;
     }
+    
+    //Colombe
+    public void setModeRedimensionnementZone(boolean actif) {
+        this.modeRedimensionnementZone = actif;
+        this.modeRognage = false;
+        this.modeAjoutZone = false;
+        this.modeCalibration = false;
+        repaint();
+    }
+
+    public boolean getModeRedimensionnementZone() {
+        return this.modeRedimensionnementZone;
+    }
     //Colombe
     public void setFormeEnCours(TypeForme forme)
     {
@@ -520,6 +578,20 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.setColor(zone.isSelectionnee() ? Color.YELLOW : couleur.darker());
             g2d.setStroke(new BasicStroke(2));
             g2d.drawPolygon(xs, ys, pts.size());
+            //Colombe
+            if (modeRedimensionnementZone && zone.isSelectionnee()) 
+            {
+                g2d.setColor(Color.WHITE);
+                for (int i = 0; i < pts.size(); i++) 
+                {
+                    int px = (int) pts.get(i).getX();
+                    int py = (int) pts.get(i).getY();
+                    g2d.fillRect(px - 4, py - 4, 8, 8);
+                    g2d.setColor(Color.BLACK);
+                    g2d.drawRect(px - 4, py - 4, 8, 8);
+                    g2d.setColor(Color.WHITE);
+                }
+            }
         }
         g2d.dispose();
 
