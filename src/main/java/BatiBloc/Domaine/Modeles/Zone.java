@@ -1,4 +1,4 @@
-package BatiBloc.Modeles;
+package BatiBloc.Domaine.Modeles;
 
 import java.util.ArrayList;
 import java.util.List;

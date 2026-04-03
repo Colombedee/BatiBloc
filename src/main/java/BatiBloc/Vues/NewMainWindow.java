@@ -1,9 +1,9 @@
 package BatiBloc.Vues;
 
-import BatiBloc.Controleur.MainController;
-import BatiBloc.Dto.VueDTO;
-import BatiBloc.Dto.TypeZone;//Colombe
-import BatiBloc.Dto.TypeForme;//Colombe
+import BatiBloc.Domaine.Controleur.MainController;
+import BatiBloc.Domaine.Dto.VueDTO;
+import BatiBloc.Domaine.Dto.TypeZone;
+import BatiBloc.Domaine.Dto.TypeForme;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import java.util.Locale;
@@ -36,39 +36,41 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
-import BatiBloc.dto.RognerVueDTO;
+import BatiBloc.Domaine.dto.RognerVueDTO;
+import java.util.function.Consumer;
+import javax.swing.AbstractButton;
 
 public class NewMainWindow extends JFrame {
     
+    private boolean formeEstChoisie = false;
+    private boolean modeRognage = false;
+    private boolean typeZoneEstChoisi = false;
     private IPanelAffichage drawingPanel;
     private JButton btnAnnulerModification;
+    private JButton btnArreterZone = null;
     private JButton btnConfirmerModification;
-    private JCheckBox btnToutSelectionner;
-    private JPanel panelMiniatures;
+    private JCheckBox chkToutSelectionner;
+    private JPanel panelMiniaturesVues;
     private JPanel panelSelectionVues;    
     private List<JCheckBox> checkboxes;
+    public enum Langage { FR, EN }
     private Locale langueCourante = Locale.FRENCH;
     private static final Logger logger = Logger.getLogger(NewMainWindow.class.getName());
     private final MainController controleur;
     private ResourceBundle bundle;
     private String panelActionCourante = null;
-    public enum Langage { FR, EN }
-    private boolean modeRognage = false;
-    private boolean typeZoneChoisi = false;//Colombe
-    private boolean formeChoisie = false;//Colombe
-    private JButton btn_arreterZone = null;//Colombe
 
     public NewMainWindow(MainController controleur) {
         this.controleur = controleur;
         this.initComponents();
-        this.initialisationFormulaire();        
+        this.initialisationDuFormulaire();        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
-    private void initialisationFormulaire(){
-        this.configurationPanelVues();
+    private void initialisationDuFormulaire(){
+        this.configurerPanelVues();
         this.changerLangueTexte();
-        this.configurerActionListener();
+        this.initialiserListener();
 
         this.cbo_langue.setSelectedItem(Langage.FR);
 
@@ -89,16 +91,10 @@ public class NewMainWindow extends JFrame {
         this.rafraichirVueCourante();
     }
     
-    private void configurationPanelVues(){
+    private void configurerPanelVues(){
         this.drawingPanel = new DrawingPanel(this.controleur);
-        this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect)); // n
-       
-        
+        this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
-//        if (this.drawingPanel instanceof DrawingPanel dp)
-//        {
-//            dp.setModeAjoutZone(true);
-//        }
         
         this.panel_vues.setLayout(new BorderLayout());
         this.panel_vues.add((Component) this.drawingPanel, BorderLayout.CENTER);
@@ -110,142 +106,29 @@ public class NewMainWindow extends JFrame {
         this.panel_vues.add(panelZoom, BorderLayout.SOUTH);
     }
     
-    private void configurerActionListener() 
-    {        
-        this.txt_echelle.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    double nouvelleEchelle = Double.parseDouble(txt_echelle.getText().trim());
-                    if (nouvelleEchelle > 0) {
-                        controleur.setEchelleCourante(nouvelleEchelle);
-                        rafraichirVueCourante();
-                    }
-                } catch (NumberFormatException ex) {
-                }
-            }
-        });
-        
-        this.btn_annulerAction.addActionListener(e -> {
-            this.controleur.annulerAction();
-            this.rafraichirVueCourante();
-        });
-        
-        this.btn_retablirAction.addActionListener(e -> {
-            this.controleur.retablirAction();
-            this.rafraichirVueCourante();
-        });
-        
-        this.btn_importerPdf.addActionListener(e -> {
-            this.controleur.importerPdf();
-            this.rafraichirVueCourante();
-        });
-        
-        this.btn_exporterPdf.addActionListener(e -> this.afficherPanelVues("panel.export"));
-        
-        this.btn_ajouterVue.addActionListener(e -> {
-            this.controleur.ajouterVue();
-            this.rafraichirVueCourante();
-        });
-        
-        this.btn_supprimerVue.addActionListener(e -> this.afficherPanelVues("panel.delete"));
-        
-        // activation du mode rognage
-        this.btn_rognerVue.addActionListener(e -> {
-        this.modeRognage = !this.modeRognage;
-        this.drawingPanel.setModeRognage(this.modeRognage);
-        this.btn_rognerVue.setText(this.modeRognage ? "Rognage actif" : this.bundle.getString("button.cropView"));
-        });
-        
-                // bouton zoom +
-        this.btn_zoomIn.addActionListener(e -> {
-            this.drawingPanel.zoomInCenter();
-        });
-        //  bouton zoom -
-        this.btn_zoomOut.addActionListener(e -> {
-            this.drawingPanel.zoomOutCenter();
-        });
-        // bouton precendant
-        this.btn_vuePrecedente.addActionListener(e -> {
-            this.controleur.naviguerVuePrecedente(); 
+    private void rognerVueCourante(Rectangle zoneAffichage) {
+        if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {
+            return;
+        }
+
+        if (!(this.drawingPanel instanceof DrawingPanel dp)) {
+            return;
+        }
+
+        Rectangle zoneImage = dp.convertirSelectionEcranVersImage(zoneAffichage);
+        if (zoneImage == null) {
+            return;
+        }
+
+        this.controleur.rognerVueCourante(
+            new RognerVueDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
+        );
+
+        this.modeRognage = false;
+        this.drawingPanel.setModeRognage(false);
+        this.btn_rognerVue.setText(this.bundle.getString("button.cropView"));
+
         this.rafraichirVueCourante();
-        });
-        //bouton suivant
-        this.btn_vueSuivante.addActionListener(e -> {
-            this.controleur.naviguerVueSuivante(); 
-        this.rafraichirVueCourante();
-        });
-        
-        this.cbo_langue.setModel(new DefaultComboBoxModel<>(new String[] {Langage.FR.toString(), Langage.EN.toString()}));
-        
-        this.cbo_langue.addActionListener(e -> {
-            String choix = (String) this.cbo_langue.getSelectedItem();
-            switch(choix) {
-                case "FR" -> this.langueCourante = Locale.FRENCH;
-                case "EN" -> this.langueCourante = Locale.ENGLISH;
-            }
-            this.changerLangueTexte();
-        });
-        // Type de zone
-        this.btn_zoneArmatureClassique.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setTypeZoneEnCours(TypeZone.ARMATURE_CLASSIQUE);
-                this.typeZoneChoisi = true;
-            }
-        });
-
-        this.btn_zoneArmatureBloc.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setTypeZoneEnCours(TypeZone.ARMATURE_BLOCS);
-                this.typeZoneChoisi = true;
-            }
-        });
-
-        this.btn_zoneOuverture.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setTypeZoneEnCours(TypeZone.OUVERTURE);
-                this.typeZoneChoisi = true;
-            }
-        });
-
-        // Forme
-        this.btn_formeRectangle.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setFormeEnCours(TypeForme.RECTANGLE);
-                this.formeChoisie = true;
-                this.verifierEtActiverDessin();
-            }
-        });
-
-        this.btn_formeTriangle.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setFormeEnCours(TypeForme.TRIANGLE);
-                this.formeChoisie = true;
-                this.verifierEtActiverDessin();
-            }
-        });
-
-        this.btn_formeTriangleTronque.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setFormeEnCours(TypeForme.TRIANGLE_TRONQUE);
-                this.formeChoisie = true;
-                this.verifierEtActiverDessin();
-            }
-        });
-        
-        //Colombe
-        this.btn_deplacerZone.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                boolean actuel = dp.getModeDeplacementZone();
-                dp.setModeDeplacementZone(!actuel);
-            }
-        });
-        this.btn_dimensionZone.addActionListener(e -> {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
-                boolean actuel = dp.getModeRedimensionnementZone();
-                dp.setModeRedimensionnementZone(!actuel);
-            }
-        });
     }
     
     private void rafraichirVueCourante() {
@@ -253,12 +136,11 @@ public class NewMainWindow extends JFrame {
         if (this.drawingPanel != null) {
             this.drawingPanel.afficherVue(vue);
             
-            // completion @roneh
             if (vue != null) {
-          this.lbl_vueCourante.setText("Vue " + (vue.getIndex() + 1));
-        } else {
-            this.lbl_vueCourante.setText("Aucune vue");
-        }
+              this.lbl_vueCourante.setText("Vue " + (vue.getIndex() + 1));
+            } else {
+                this.lbl_vueCourante.setText("Aucune vue");
+            }
         }
     }
     
@@ -310,6 +192,36 @@ public class NewMainWindow extends JFrame {
         bouton.setIconTextGap(10);
     }
     
+    private void changerLangueFenetreVues() {
+        if (this.panelSelectionVues != null && this.panelSelectionVues.isShowing()) {
+            String titre = MessageFormat.format(bundle.getString("panel.selectViews"),this.panelActionCourante);
+            
+            if (this.panelSelectionVues.getBorder() instanceof TitledBorder border) {
+                border.setTitle(titre);
+            }
+            
+            this.panelSelectionVues.repaint();
+            
+            this.chkToutSelectionner.setText(bundle.getString("panel.selectAll"));
+            this.btnConfirmerModification.setText(bundle.getString("panel.confirm"));
+            this.btnAnnulerModification.setText(bundle.getString("panel.cancel"));
+        }
+        this.changerLangueTitreFenetreVues();
+    }
+    
+    private void changerLangueTitreFenetreVues() {
+        if (this.panelSelectionVues == null || !this.panelSelectionVues.isShowing() || this.panelActionCourante == null) {
+            return;
+        }
+        
+        String titre = MessageFormat.format(bundle.getString("panel.selectViews"),this.panelActionCourante);
+        
+        if (this.panelSelectionVues.getBorder() instanceof TitledBorder tb) {
+            tb.setTitle(titre);
+            this.panelSelectionVues.repaint();
+        }
+    }
+    
     private void afficherPanelVues(String actionKey) {
         this.panelActionCourante = actionKey;
         
@@ -329,9 +241,9 @@ public class NewMainWindow extends JFrame {
         this.panelSelectionVues.setBorder(BorderFactory.createTitledBorder(titre));
         this.panelSelectionVues.setBackground(new Color(240, 240, 240));
 
-        this.panelMiniatures = new JPanel();
-        this.panelMiniatures.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        this.panelMiniatures.setBackground(new Color(240, 240, 240));
+        this.panelMiniaturesVues = new JPanel();
+        this.panelMiniaturesVues.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        this.panelMiniaturesVues.setBackground(new Color(240, 240, 240));
 
         this.checkboxes = new ArrayList<>();
         JPanel panelVue;
@@ -369,23 +281,23 @@ public class NewMainWindow extends JFrame {
 
             panelVue.add(lblMiniature, BorderLayout.CENTER);
             panelVue.add(cb, BorderLayout.SOUTH);
-            this.panelMiniatures.add(panelVue);
+            this.panelMiniaturesVues.add(panelVue);
         }
 
         JPanel panelBoutons = new JPanel();
-        this.btnToutSelectionner = new JCheckBox(this.bundle.getString("panel.selectAll"));
+        this.chkToutSelectionner = new JCheckBox(this.bundle.getString("panel.selectAll"));
         this.btnConfirmerModification = new JButton(this.bundle.getString("panel.confirm"));
         this.btnAnnulerModification = new JButton(this.bundle.getString("panel.cancel"));
 
-        this.btnToutSelectionner.addActionListener(e -> this.onToggleSelectionnerVues());
+        this.chkToutSelectionner.addActionListener(e -> this.onToggleSelectionnerVues());
         this.btnConfirmerModification.addActionListener(e -> this.confirmerSupressionOuExportVues());
         this.btnAnnulerModification.addActionListener(e -> this.annulerSupressionOuExportVues());
 
-        panelBoutons.add(this.btnToutSelectionner);
+        panelBoutons.add(this.chkToutSelectionner);
         panelBoutons.add(this.btnConfirmerModification);
         panelBoutons.add(this.btnAnnulerModification);
 
-        this.panelSelectionVues.add(new JScrollPane(this.panelMiniatures), BorderLayout.CENTER);
+        this.panelSelectionVues.add(new JScrollPane(this.panelMiniaturesVues), BorderLayout.CENTER);
         this.panelSelectionVues.add(panelBoutons, BorderLayout.SOUTH);
         this.panelSelectionVues.setPreferredSize(new Dimension(getWidth(), 180));
 
@@ -404,11 +316,12 @@ public class NewMainWindow extends JFrame {
     
     private void majBoutonToutSelectionnerVues() {
         boolean tousCoches = checkboxes.stream().allMatch(JCheckBox::isSelected);
-        this.btnToutSelectionner.setSelected(tousCoches);
+        this.chkToutSelectionner.setSelected(tousCoches);
     }
-
+    
+    
     private void onToggleSelectionnerVues(){
-        boolean etat = this.btnToutSelectionner.isSelected();
+        boolean etat = this.chkToutSelectionner.isSelected();
 
         for (JCheckBox cb : checkboxes) {
             cb.setSelected(etat);
@@ -438,80 +351,125 @@ public class NewMainWindow extends JFrame {
         revalidate();
         repaint();
     }
-    
-    private void changerLangueFenetreVues() {
-        if (this.panelSelectionVues != null && this.panelSelectionVues.isShowing()) {
-            String titre = MessageFormat.format(bundle.getString("panel.selectViews"),this.panelActionCourante);
-            
-            if (this.panelSelectionVues.getBorder() instanceof TitledBorder border) {
-                border.setTitle(titre);
+
+    private void initialiserListener() 
+    {        
+        this.txt_echelle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double nouvelleEchelle = Double.parseDouble(txt_echelle.getText().trim());
+                    if (nouvelleEchelle > 0) {
+                        controleur.setEchelleCourante(nouvelleEchelle);
+                        rafraichirVueCourante();
+                    }
+                } catch (NumberFormatException ex) {
+                }
             }
-            
-            this.panelSelectionVues.repaint();
-            
-            this.btnToutSelectionner.setText(bundle.getString("panel.selectAll"));
-            this.btnConfirmerModification.setText(bundle.getString("panel.confirm"));
-            this.btnAnnulerModification.setText(bundle.getString("panel.cancel"));
-        }
-        this.changerLangueTitreFenetreVues();
+        });
+        
+        this.ajoutListenerBouton(this.btn_annulerAction, this.controleur::annulerAction);
+        this.ajoutListenerBouton(this.btn_retablirAction, this.controleur::retablirAction);
+        this.ajoutListenerBouton(this.btn_importerPdf, this.controleur::importerPdf);
+        this.ajoutListenerBouton(this.btn_annulerAction, this.controleur::annulerAction);
+        this.btn_exporterPdf.addActionListener(e -> this.afficherPanelVues("panel.export"));
+        this.ajoutListenerBouton(this.btn_ajouterVue, this.controleur::ajouterVue);
+        this.btn_supprimerVue.addActionListener(e -> this.afficherPanelVues("panel.delete"));
+        
+        this.btn_rognerVue.addActionListener(e -> {
+            this.modeRognage = !this.modeRognage;
+            this.drawingPanel.setModeRognage(this.modeRognage);
+            this.btn_rognerVue.setText(this.modeRognage ? "Rognage actif" : this.bundle.getString("button.cropView"));
+        });
+        
+        this.ajoutListenerBouton(this.btn_zoomIn, this.drawingPanel::zoomInCenter);
+        this.ajoutListenerBouton(this.btn_zoomOut, this.drawingPanel::zoomOutCenter);
+        this.ajoutListenerBouton(this.btn_vuePrecedente, this.controleur::naviguerVuePrecedente);
+        this.ajoutListenerBouton(this.btn_vueSuivante, this.controleur::naviguerVueSuivante);
+        
+        this.cbo_langue.setModel(new DefaultComboBoxModel<>(new String[] {Langage.FR.toString(), Langage.EN.toString()}));
+        this.cbo_langue.addActionListener(e -> {
+            String choix = (String) this.cbo_langue.getSelectedItem();
+            switch(choix) {
+                case "FR" -> this.langueCourante = Locale.FRENCH;
+                case "EN" -> this.langueCourante = Locale.ENGLISH;
+            }
+            this.changerLangueTexte();
+        });
+        
+        this.ajoutListenerBoutonZone(this.btn_zoneArmatureClassique, TypeZone.ARMATURE_CLASSIQUE);
+        this.ajoutListenerBoutonZone(this.btn_zoneArmatureBloc, TypeZone.ARMATURE_BLOCS);
+        this.ajoutListenerBoutonZone(this.btn_zoneOuverture, TypeZone.OUVERTURE);
+        this.ajoutListenerBoutonForme(this.btn_formeRectangle, TypeForme.RECTANGLE);
+        this.ajoutListenerBoutonForme(this.btn_formeTriangle, TypeForme.TRIANGLE);
+        this.ajoutListenerBoutonForme(this.btn_formeTriangleTronque, TypeForme.TRIANGLE_TRONQUE);
+        
+        this.btn_deplacerZone.addActionListener(e -> {
+            this.withDrawingPanel(dp -> {
+                boolean actuel = dp.getModeDeplacementZone();
+                dp.setModeDeplacementZone(!actuel);
+            });
+        });
+        
+        this.btn_dimensionZone.addActionListener(e -> {
+            this.withDrawingPanel(dp -> {
+                boolean actuel = dp.getModeRedimensionnementZone();
+                dp.setModeRedimensionnementZone(!actuel);
+            });
+        });
     }
     
-    private void changerLangueTitreFenetreVues() {
-        if (this.panelSelectionVues == null || !this.panelSelectionVues.isShowing() || this.panelActionCourante == null) {
-            return;
-        }
-        
-        String titre = MessageFormat.format(bundle.getString("panel.selectViews"),this.panelActionCourante);
-        
-        if (this.panelSelectionVues.getBorder() instanceof TitledBorder tb) {
-            tb.setTitle(titre);
-            this.panelSelectionVues.repaint();
+    private void ajoutListenerBouton(AbstractButton button, Runnable... actions) {
+        button.addActionListener(e -> {
+            for (Runnable action : actions) {
+                action.run();
+            }
+            this.rafraichirVueCourante();
+        });
+    }
+    
+    private void ajoutListenerBoutonZone(AbstractButton button, TypeZone zone) {
+        button.addActionListener(e ->
+            this.withDrawingPanel(dp -> {
+                dp.setTypeZoneEnCours(zone);
+                this.typeZoneEstChoisi = true;
+            })
+        );
+    }
+    
+    private void withDrawingPanel(Consumer<DrawingPanel> action) {
+        if (this.drawingPanel instanceof DrawingPanel dp) {
+            action.accept(dp);
         }
     }
     
-    // methode du rognage
-    private void rognerVueCourante(Rectangle zoneAffichage) {
-    if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {
-        return;
-    }
-
-    if (!(this.drawingPanel instanceof DrawingPanel panel)) {
-        return;
-    }
-
-    Rectangle zoneImage = panel.convertirSelectionEcranVersImage(zoneAffichage);
-    if (zoneImage == null) {
-        return;
-    }
-
-    this.controleur.rognerVueCourante(
-        new RognerVueDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
-    );
-
-    this.modeRognage = false;
-    this.drawingPanel.setModeRognage(false);
-    this.btn_rognerVue.setText(this.bundle.getString("button.cropView"));
-
-    this.rafraichirVueCourante();
+    private void ajoutListenerBoutonForme(AbstractButton button, TypeForme forme) {
+        button.addActionListener(e ->
+            this.withDrawingPanel(dp -> {
+                dp.setFormeEnCours(forme);
+                this.formeEstChoisie = true;
+                this.verifierEtActiverDessin();
+            })
+        );
     }
     
     private void verifierEtActiverDessin() {
-        if (this.typeZoneChoisi && this.formeChoisie) {
-            if (this.drawingPanel instanceof DrawingPanel dp) {
+        if (this.typeZoneEstChoisi && this.formeEstChoisie) {
+            this.withDrawingPanel(dp -> {
                 dp.setModeAjoutZone(true);
-            }
+            });
             this.afficherBoutonArreter();
         }
     }
 
     private void afficherBoutonArreter() {
-        if (this.btn_arreterZone == null) {
-            this.btn_arreterZone = new JButton("Dessin actif");
-            this.btn_arreterZone.setMaximumSize(new java.awt.Dimension(150, 30));
-            this.btn_arreterZone.setMinimumSize(new java.awt.Dimension(150, 30));
-            this.btn_arreterZone.setPreferredSize(new java.awt.Dimension(150, 30));
-            this.btn_arreterZone.addActionListener(e -> this.arreterModeZone());
-            this.panel_menu.add(this.btn_arreterZone);
+        if (this.btnArreterZone == null) {
+            this.btnArreterZone = new JButton("Dessin actif");
+            this.btnArreterZone.setMaximumSize(new java.awt.Dimension(150, 30));
+            this.btnArreterZone.setMinimumSize(new java.awt.Dimension(150, 30));
+            this.btnArreterZone.setPreferredSize(new java.awt.Dimension(150, 30));
+            this.btnArreterZone.addActionListener(e -> this.arreterModeZone());
+            this.panel_menu.add(this.btnArreterZone);
             this.panel_menu.revalidate();
             this.panel_menu.repaint();
         }
@@ -521,15 +479,18 @@ public class NewMainWindow extends JFrame {
         if (this.drawingPanel instanceof DrawingPanel dp) {
             dp.setModeAjoutZone(false);
         }
-        this.typeZoneChoisi = false;
-        this.formeChoisie = false;
-        if (this.btn_arreterZone != null) {
-            this.panel_menu.remove(this.btn_arreterZone);
-            this.btn_arreterZone = null;
+        
+        this.typeZoneEstChoisi = false;
+        this.formeEstChoisie = false;
+        
+        if (this.btnArreterZone != null) {
+            this.panel_menu.remove(this.btnArreterZone);
+            this.btnArreterZone = null;
             this.panel_menu.revalidate();
             this.panel_menu.repaint();
-                    }
+        }
     }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -844,7 +805,7 @@ public class NewMainWindow extends JFrame {
         panel_vues.setLayout(panel_vuesLayout);
         panel_vuesLayout.setHorizontalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 855, Short.MAX_VALUE)
+            .addGap(0, 853, Short.MAX_VALUE)
         );
         panel_vuesLayout.setVerticalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -858,20 +819,20 @@ public class NewMainWindow extends JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-public static void main(String args[]) { 
-    FlatDarkLaf.setup();
+    public static void main(String args[]) { 
+        FlatDarkLaf.setup();
 
-    UIManager.put("Button.arc", 8);
-    UIManager.put("Component.arc", 8);
-    UIManager.put("TextComponent.arc", 10);
+        UIManager.put("Button.arc", 8);
+        UIManager.put("Component.arc", 8);
+        UIManager.put("TextComponent.arc", 10);
 
-    UIManager.put("Button.hoverBackground", new Color(60,63,65));
-    UIManager.put("Button.pressedBackground", new Color(50,50,50));
+        UIManager.put("Button.hoverBackground", new Color(60,63,65));
+        UIManager.put("Button.pressedBackground", new Color(50,50,50));
 
-    EventQueue.invokeLater(() -> {
-        new NewMainWindow(new MainController()).setVisible(true);
-    });
-}
+        EventQueue.invokeLater(() -> {
+            new NewMainWindow(new MainController()).setVisible(true);
+        });
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_ajouterVue;

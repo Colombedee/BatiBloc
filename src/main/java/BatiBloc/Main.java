@@ -1,7 +1,6 @@
 package BatiBloc;
 
-import BatiBloc.Controleur.MainController;
-import BatiBloc.Vues.MainWindow;
+import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Vues.NewMainWindow;
 
 public class Main {

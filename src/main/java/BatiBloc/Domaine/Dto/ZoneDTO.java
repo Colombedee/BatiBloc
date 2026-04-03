@@ -1,4 +1,4 @@
-package BatiBloc.Dto;
+package BatiBloc.Domaine.Dto;
 
 import java.awt.Point;
 import java.util.List;

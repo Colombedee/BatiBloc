@@ -1,5 +1,4 @@
-
-package BatiBloc.Dto;
+package BatiBloc.Domaine.Dto;
 
 public enum TypeForme 
 {

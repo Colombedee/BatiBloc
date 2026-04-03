@@ -1,6 +1,5 @@
-package BatiBloc.Modeles;
+package BatiBloc.Domaine.Modeles;
 
-import BatiBloc.Modeles.Bloc;
 import java.util.ArrayList;
 import java.util.List;
 

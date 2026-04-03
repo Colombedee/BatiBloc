@@ -1,7 +1,7 @@
-package BatiBloc.Affichage;
+package BatiBloc.Domaine.Affichage;
 
-import BatiBloc.Dto.VueDTO;
-import BatiBloc.Dto.ZoneDTO;
+import BatiBloc.Domaine.Dto.VueDTO;
+import BatiBloc.Domaine.Dto.ZoneDTO;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

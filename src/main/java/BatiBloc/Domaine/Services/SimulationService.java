@@ -1,7 +1,7 @@
-package BatiBloc.Services;
+package BatiBloc.Domaine.Services;
 
-import BatiBloc.Dto.*;
-import BatiBloc.Modeles.Zone;
+import BatiBloc.Domaine.Dto.*;
+import BatiBloc.Domaine.Modeles.Zone;
 
 import java.util.ArrayList;
 import java.util.List;

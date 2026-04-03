@@ -1,4 +1,4 @@
-package BatiBloc.Modeles;
+package BatiBloc.Domaine.Modeles;
 
 import java.awt.Point;
 import java.util.List;

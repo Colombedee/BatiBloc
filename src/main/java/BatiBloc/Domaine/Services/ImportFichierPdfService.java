@@ -1,6 +1,6 @@
-package BatiBloc.Services;
+package BatiBloc.Domaine.Services;
 
-import BatiBloc.Dto.FichierImporteDTO;
+import BatiBloc.Domaine.Dto.FichierImporteDTO;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;

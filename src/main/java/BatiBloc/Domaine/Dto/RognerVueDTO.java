@@ -1,4 +1,4 @@
-package BatiBloc.dto;
+package BatiBloc.Domaine.dto;
 
 public class RognerVueDTO {
 

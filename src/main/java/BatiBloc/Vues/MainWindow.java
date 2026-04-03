@@ -3,10 +3,12 @@ package BatiBloc.Vues;
 import javax.swing.ImageIcon; 
 import javax.swing.JLabel;
 import javax.swing.*;
-import BatiBloc.Controleur.MainController;
-import BatiBloc.Dto.VueDTO;
+import BatiBloc.Domaine.Controleur.MainController;
+import BatiBloc.Domaine.Dto.TypeForme;
+import BatiBloc.Domaine.Dto.TypeZone;
+import BatiBloc.Domaine.Dto.VueDTO;
 //import BatiBloc.langue.TrComposant;
-import BatiBloc.dto.RognerVueDTO;
+import BatiBloc.Domaine.dto.RognerVueDTO;
 //import BatiBloc.langue.Langage;
 //import BatiBloc.langue.LangueManager;
 import java.awt.BorderLayout;
@@ -132,11 +134,11 @@ public class MainWindow extends JFrame {
     
     this.cbo_typeZone.addActionListener(e -> {
         int index = this.cbo_typeZone.getSelectedIndex();
-        BatiBloc.Dto.TypeZone type;
+        TypeZone type;
         switch (index) {
-            case 1: type = BatiBloc.Dto.TypeZone.ARMATURE_BLOCS; break;
-            case 2: type = BatiBloc.Dto.TypeZone.OUVERTURE; break;
-            default: type = BatiBloc.Dto.TypeZone.ARMATURE_CLASSIQUE; break;        
+            case 1: type = TypeZone.ARMATURE_BLOCS; break;
+            case 2: type = TypeZone.OUVERTURE; break;
+            default: type = TypeZone.ARMATURE_CLASSIQUE; break;        
         }
         if (this.drawingPanel instanceof DrawingPanel dp){
             dp.setTypeZoneEnCours(type);
@@ -145,11 +147,11 @@ public class MainWindow extends JFrame {
     
     this.cbo_formeZone.addActionListener(e -> {
         int index = this.cbo_formeZone.getSelectedIndex();
-        BatiBloc.Dto.TypeForme forme;
+        TypeForme forme;
         switch (index) {
-            case 1: forme = BatiBloc.Dto.TypeForme.TRIANGLE; break;
-            case 2: forme = BatiBloc.Dto.TypeForme.TRIANGLE_TRONQUE; break;
-            default: forme = BatiBloc.Dto.TypeForme.RECTANGLE; break;        
+            case 1: forme = TypeForme.TRIANGLE; break;
+            case 2: forme = TypeForme.TRIANGLE_TRONQUE; break;
+            default: forme = TypeForme.RECTANGLE; break;        
         }
         if (this.drawingPanel instanceof DrawingPanel dp) {
             dp.setFormeEnCours(forme);

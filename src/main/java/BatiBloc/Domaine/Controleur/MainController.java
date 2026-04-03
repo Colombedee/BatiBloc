@@ -1,12 +1,12 @@
-package BatiBloc.Controleur;
+package BatiBloc.Domaine.Controleur;
 
-import BatiBloc.Services.SimulationService;
-import BatiBloc.Dto.SimulationDTO;
-import BatiBloc.Modeles.*;
-import BatiBloc.Dto.*;
-import BatiBloc.Services.ExportFichierPdfService;
-import BatiBloc.Services.ImportFichierPdfService;
-import BatiBloc.dto.RognerVueDTO;
+import BatiBloc.Domaine.Services.SimulationService;
+import BatiBloc.Domaine.Dto.SimulationDTO;
+import BatiBloc.Domaine.Modeles.*;
+import BatiBloc.Domaine.Dto.*;
+import BatiBloc.Domaine.Services.ExportFichierPdfService;
+import BatiBloc.Domaine.Services.ImportFichierPdfService;
+import BatiBloc.Domaine.dto.RognerVueDTO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;

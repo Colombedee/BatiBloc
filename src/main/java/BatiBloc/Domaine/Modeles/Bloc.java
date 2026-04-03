@@ -1,4 +1,4 @@
-package BatiBloc.Modeles;
+package BatiBloc.Domaine.Modeles;
 
 public class Bloc {
 

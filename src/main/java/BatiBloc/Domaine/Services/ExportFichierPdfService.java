@@ -1,4 +1,4 @@
-package BatiBloc.Services;
+package BatiBloc.Domaine.Services;
 
 import java.io.File;
 import javax.swing.JFileChooser;

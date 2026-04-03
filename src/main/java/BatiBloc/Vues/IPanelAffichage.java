@@ -1,13 +1,6 @@
-/**
- *
- * @author Emmauella Iris Andréa Lehe
- * crée le 19 mars 2026 à 12h30
- * Interface qui va acceuillir la 3D
- */
-
 package BatiBloc.Vues;
 
-import BatiBloc.Dto.VueDTO;
+import BatiBloc.Domaine.Dto.VueDTO;
 import java.awt.Rectangle;
 import java.util.function.Consumer;
 
@@ -18,9 +11,9 @@ public interface IPanelAffichage {
     void setModeCalibration(boolean actif);
     void setModeAjoutZone(boolean actif);
     void setOnRognageTermine(Consumer<Rectangle> callback);
-    void setOnZoneAjoutee(Runnable callback);//Colombe
-    void setModeDeplacementZone(boolean actif);//Colombe
-    void setModeRedimensionnementZone(boolean actif);//Colombe
+    void setOnZoneAjoutee(Runnable callback);
+    void setModeDeplacementZone(boolean actif);
+    void setModeRedimensionnementZone(boolean actif);
     void zoomInCenter();
     void zoomOutCenter();
 }

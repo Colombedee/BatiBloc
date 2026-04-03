@@ -1,10 +1,10 @@
 package BatiBloc.Vues;
-import BatiBloc.Controleur.MainController;
-import BatiBloc.Dto.ZoneDTO; //AJouter par Emmanuella 
-import BatiBloc.Dto.TypeForme; //Colombe
-import BatiBloc.Dto.TypeZone; //Colombe
+import BatiBloc.Domaine.Controleur.MainController;
+import BatiBloc.Domaine.Dto.ZoneDTO;
+import BatiBloc.Domaine.Dto.TypeForme;
+import BatiBloc.Domaine.Dto.TypeZone;
 
-import BatiBloc.Dto.VueDTO;
+import BatiBloc.Domaine.Dto.VueDTO;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
@@ -12,16 +12,16 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-import java.awt.RenderingHints; // Ajouter par Emmanuella
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.List; // Ajouter par Emmanuella
-import java.util.function.Consumer; //Ajouter par Emmanuella
+import java.util.List;
+import java.util.function.Consumer;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;  // @roneh
-import java.awt.Cursor; //@roneh
-import java.awt.geom.Point2D; //@roneh
-import java.awt.event.MouseWheelEvent; //@roneh
+import javax.swing.SwingUtilities;
+import java.awt.Cursor;
+import java.awt.geom.Point2D;
+import java.awt.event.MouseWheelEvent;
 
 public class DrawingPanel extends JPanel implements IPanelAffichage
 {
