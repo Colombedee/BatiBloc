@@ -88,6 +88,7 @@ public class NewMainWindow extends JFrame {
         this.btn_zoomIn.setIcon(new FlatSVGIcon("icones/" + "zoomIn_icon.svg", 25, 25));
         this.btn_zoomOut.setIcon(new FlatSVGIcon("icones/" + "zoomOut_icon.svg", 20, 20));
         
+        
         this.rafraichirVueCourante();
     }
     
@@ -382,6 +383,32 @@ public class NewMainWindow extends JFrame {
             this.btn_rognerVue.setText(this.modeRognage ? "Rognage actif" : this.bundle.getString("button.cropView"));
         });
         
+        // Emmanuella - Appliquer l'échelle en pouces par pixel
+        this.btn_appliquerEchelle.addActionListener(e -> {
+            try {
+                String texte = this.txt_echelle.getText().trim();
+                double poucesParPixel;
+
+                if (texte.contains("'") || texte.contains("\"")) {
+                    poucesParPixel = parserMesureImperiale(texte);
+                } else {
+                    poucesParPixel = Double.parseDouble(texte);
+                }
+
+                if (poucesParPixel <= 0) {
+                    javax.swing.JOptionPane.showMessageDialog(this, "L'échelle doit être supérieure à 0.");
+                    return;
+                }
+
+                this.controleur.setEchelleCourante(poucesParPixel);
+                this.rafraichirVueCourante();
+
+            } catch (NumberFormatException ex) {
+                //javax.swing.JOptionPane.showMessageDialog(this,
+                    //"Format invalide.\nEntrez un nombre (ex: 3) ou un format impérial (ex: 3' 8\" 3/4)");
+            }
+        });
+        
         this.ajoutListenerBouton(this.btn_zoomIn, this.drawingPanel::zoomInCenter);
         this.ajoutListenerBouton(this.btn_zoomOut, this.drawingPanel::zoomOutCenter);
         this.ajoutListenerBouton(this.btn_vuePrecedente, this.controleur::naviguerVuePrecedente);
@@ -417,6 +444,41 @@ public class NewMainWindow extends JFrame {
                 dp.setModeRedimensionnementZone(!actuel);
             });
         });
+    }
+    
+    
+    // Emmanuella - parse un format impérial comme: 3' 8" 3/4
+    private double parserMesureImperiale(String texte) {
+        double totalPouces = 0;
+
+        int indexPied = texte.indexOf('\'');
+        if (indexPied >= 0) {
+            String piedsStr = texte.substring(0, indexPied).trim();
+            totalPouces += Integer.parseInt(piedsStr) * 12;
+            texte = texte.substring(indexPied + 1).trim();
+        }
+
+        int indexPouce = texte.indexOf('"');
+        if (indexPouce >= 0) {
+            String poucesStr = texte.substring(0, indexPouce).trim();
+            totalPouces += Double.parseDouble(poucesStr);
+            texte = texte.substring(indexPouce + 1).trim();
+        }
+
+        texte = texte.trim();
+        if (!texte.isEmpty()) {
+            String[] parts = texte.split("/");
+            if (parts.length == 2) {
+                double num = Double.parseDouble(parts[0].trim());
+                double den = Double.parseDouble(parts[1].trim());
+                if (den != 0) totalPouces += num / den;
+            }
+        }
+
+        if (totalPouces <= 0) {
+            return 1.0;
+        }
+        return totalPouces;
     }
     
     private void ajoutListenerBouton(AbstractButton button, Runnable... actions) {

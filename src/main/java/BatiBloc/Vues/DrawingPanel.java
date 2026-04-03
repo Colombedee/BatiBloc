@@ -7,6 +7,7 @@ import BatiBloc.Domaine.Dto.TypeZone;
 import BatiBloc.Domaine.Dto.VueDTO;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font; //Emmanuella 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -22,6 +23,8 @@ import javax.swing.SwingUtilities;
 import java.awt.Cursor;
 import java.awt.geom.Point2D;
 import java.awt.event.MouseWheelEvent;
+
+
 
 public class DrawingPanel extends JPanel implements IPanelAffichage
 {
@@ -435,6 +438,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         this.typeEnCours = type;
     }
     
+
     public void zoomInCenter() {
         appliquerZoom(1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
@@ -442,6 +446,28 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     public void zoomOutCenter() {
         appliquerZoom(1.0 / 1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
+    
+    // Emmanuella - convertit pixels en format pieds/pouces
+    private String pixelsEnImperial(double pixels, double echelle) {
+        double totalPouces = pixels * echelle;
+        int pieds = (int) (totalPouces / 12);
+        double reste = totalPouces % 12;
+        int pouces = (int) reste;
+        double fraction = reste - pouces;
+
+        StringBuilder sb = new StringBuilder();
+        if (pieds > 0) sb.append(pieds).append("'");
+        if (pouces > 0 || fraction > 0.1) {
+            if (pieds > 0) sb.append(" ");
+            sb.append(pouces);
+            if (fraction >= 0.2 && fraction < 0.4) sb.append(" 1/4");
+            else if (fraction >= 0.4 && fraction < 0.6) sb.append(" 1/2");
+            else if (fraction >= 0.6 && fraction < 0.9) sb.append(" 3/4");
+            sb.append("\"");
+        }
+        return sb.length() == 0 ? "0\"" : sb.toString().trim();
+    }
+    
     
     public Rectangle convertirSelectionEcranVersImage(Rectangle zoneEcran) {
         if (vueCourante == null || vueCourante.getImage() == null || zoneEcran == null) {
@@ -578,6 +604,35 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.setColor(zone.isSelectionnee() ? Color.YELLOW : couleur.darker());
             g2d.setStroke(new BasicStroke(2));
             g2d.drawPolygon(xs, ys, pts.size());
+            
+            // Emmanuella - Afficher dimensions en pieds/pouces
+            double echelle = this.vueCourante.getEchelle();
+            if (echelle > 0 && pts.size() >= 2) {
+                int xMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
+                int xMax = pts.stream().mapToInt(p -> p.x).max().orElse(0);
+                int yMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
+                int yMax = pts.stream().mapToInt(p -> p.y).max().orElse(0);
+
+                String texte = pixelsEnImperial(xMax - xMin, echelle)
+                             + " "
+                             + pixelsEnImperial(yMax - yMin, echelle);
+
+                // Convertir coordonnées image vers écran
+                int centreEcranX = (int)(((xMin + xMax) / 2.0) * zoom + offsetX);
+                int centreEcranY = (int)(((yMin + yMax) / 2.0) * zoom + offsetY);
+
+                Graphics2D gTexte = (Graphics2D) g.create();
+                gTexte.setFont(new Font("Arial", Font.BOLD, 14));
+                java.awt.FontMetrics fm = gTexte.getFontMetrics();
+                int tw = fm.stringWidth(texte);
+                int th = fm.getHeight();
+                gTexte.setColor(new Color(0, 0, 0, 180));
+                gTexte.fillRoundRect(centreEcranX - tw/2 - 3, centreEcranY - th + 2, tw + 6, th + 2, 4, 4);
+                gTexte.setColor(Color.WHITE);
+                gTexte.drawString(texte, centreEcranX - tw/2, centreEcranY);
+                gTexte.dispose();
+            }
+            
             //Colombe
             if (modeRedimensionnementZone && zone.isSelectionnee()) 
             {
@@ -594,6 +649,8 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             }
         }
         g2d.dispose();
+        
+ 
 
         // 3. Dessiner l'action en cours
         if (pointDepart != null && pointFin != null && modeAjoutZone) {

@@ -388,7 +388,7 @@ public class MainController {
             zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(), 
                     z == modeleVue.getZoneSelectionnee()));
         }        
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos, modeleVue.getEchelle());
     }
     
     public List<VueDTO> getVues() 
@@ -397,7 +397,7 @@ public class MainController {
         for (int i = 0; i < this.projetVues.size(); i++) 
         {
             Vue v = projetVues.get(i);
-            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>()));
+            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>(), v.getEchelle()));
         }
         return dtos;
     }
