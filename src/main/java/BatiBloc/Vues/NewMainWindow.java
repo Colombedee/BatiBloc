@@ -235,7 +235,11 @@ public class NewMainWindow extends JFrame {
         //Colombe
         this.btn_deplacerZone.addActionListener(e -> {
             if (this.drawingPanel instanceof DrawingPanel dp) {
-                dp.setModeDeplacementZone(true);
+                boolean actuel = dp.getModeDeplacementZone();
+                dp.setModeDeplacementZone(!actuel);
+                if (actuel) { // si on désactive le déplacement
+                    dp.setModeAjoutZone(true);
+                }
             }
         });
     }
@@ -836,7 +840,7 @@ public class NewMainWindow extends JFrame {
         panel_vues.setLayout(panel_vuesLayout);
         panel_vuesLayout.setHorizontalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 853, Short.MAX_VALUE)
+            .addGap(0, 855, Short.MAX_VALUE)
         );
         panel_vuesLayout.setVerticalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

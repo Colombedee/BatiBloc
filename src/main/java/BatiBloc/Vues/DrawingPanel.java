@@ -357,7 +357,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     public void setModeDeplacementZone(boolean actif) {
         this.modeDeplacementZone = actif;
         this.modeRognage = false;
-        //this.modeAjoutZone = false;
+        this.modeAjoutZone = false;
         this.modeCalibration = false;
         repaint();
     }
