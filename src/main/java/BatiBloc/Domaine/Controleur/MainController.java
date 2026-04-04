@@ -124,7 +124,7 @@ public class MainController {
         }
     }
             
-    public void exporterVues(List<Integer> indices) {
+    public void exporterPdf(List<Integer> indices) {
         if (indices == null || indices.isEmpty()) {
             return;
         }
