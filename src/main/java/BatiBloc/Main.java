@@ -1,20 +1,27 @@
 package BatiBloc;
 
 import BatiBloc.Domaine.Controleur.MainController;
-import BatiBloc.Vues.majLangueDrawingPanel;
-import com.formdev.flatlaf.FlatDarkLaf;
+import BatiBloc.Vues.NewMainWindow;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class Main {
 
     private static void startApp() {
         MainController controller = new MainController();
-        majLangueDrawingPanel window = new majLangueDrawingPanel(controller);
+        NewMainWindow window = new NewMainWindow(controller);
         window.setVisible(true);
     }
 
     public static void main(String[] args) {
-        FlatDarkLaf.setup();
+        FlatMacDarkLaf.setup();
+
+        UIManager.put("Button.arc", 15);
+        
+        UIManager.put("Component.arc", 15);
+        UIManager.put("TextComponent.arc", 10);
+
         SwingUtilities.invokeLater(Main::startApp);
     }
 }

@@ -8,7 +8,6 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFrame;
 import javax.swing.JButton;
 import java.awt.BorderLayout;
@@ -30,7 +29,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.border.TitledBorder;
 import BatiBloc.Domaine.dto.RognerVueDTO;
 import java.awt.Cursor;
 import java.util.function.Consumer;
@@ -39,39 +37,38 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
-public class majLangueDrawingPanel extends JFrame {
+public class NewMainWindow extends JFrame {
     
     private boolean formeZoneEstChoisie = false;
     private boolean modeRognage = false;
     private boolean typeZoneEstChoisi = false;
-    private DrawingPanel drawingPanel;
     private JButton btnAnnulerModif;
-    private JButton btnStopZoneDrawing = null;
     private JButton btnConfirmerModif;
+    private JButton btnStopZoneDrawing = null;
     private JCheckBox chkToutesVues;
-    private JPanel viewsThumbnailPanel;
-    private JPanel viewsSelectionPanel;    
-    private List<JCheckBox> viewCheckBoxes;
-    public enum Langage { FR, EN }
-    private Locale langueCourante = Locale.FRENCH;
+    private DrawingPanel drawingPanel;
     private final MainController controleur;
+    private JPanel panneauVues;
+    private JPanel viewsThumbnailPanel;
+    private List<JCheckBox> viewCheckBoxes;
+    private Locale langueCourante = Locale.FRENCH;
     private ResourceBundle resourceBundle;
-    private String actionCouranteDrawingPanel = null;
+    private String actionCourantePanneauVues = null;
+    public enum Langage { FR, EN }
 
-    public majLangueDrawingPanel(MainController controleur) {
+    public NewMainWindow(MainController controleur) {
         this.controleur = controleur;
         this.initComponents();
         this.initFormulaire();        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
-    private void initFormulaire(){
+    private void initFormulaire(){        
         this.initDrawingPanel();
-        this.majTextesLangue();
-        this.initListeners();
         this.initIconesBoutons();
-        this.cbo_langue.setSelectedItem(Langage.FR);
+        this.majLanguetextes(); 
         this.initPlaceholders();
+        this.initListeners();
         this.majVueCourante();
     }
     
@@ -106,12 +103,12 @@ public class majLangueDrawingPanel extends JFrame {
 
         this.modeRognage = false;
         this.drawingPanel.setModeRognage(false);
-        this.btn_rognerVue.setText(this.getComposantString("button.cropView"));
+        this.btn_rognerVue.setText(this.getComposantTexte("button.cropView"));
 
         this.majVueCourante();
     }
     
-    private String getComposantString(String key){
+    private String getComposantTexte(String key){
         return this.resourceBundle.getString(key);
     }
     
@@ -124,100 +121,108 @@ public class majLangueDrawingPanel extends JFrame {
         }
     }
     
-    private void majTextesLangue() {
+    private void majLanguetextes() {
         this.resourceBundle = ResourceBundle.getBundle("i18n.messages", this.langueCourante);
+        
+        this.btn_appliquerEchelle.setText(this.getComposantTexte("button.applyScale"));
+        this.btn_changerLangue.setText(this.getComposantTexte("button.changeLanguage"));
 
         this.configBoutons();
-        
-        this.btn_appliquerEchelle.setText(this.getComposantString("label.applyScale"));
-
         this.configLabels();
-        
-        //this.majLangueDrawingPanel();
-        if (this.viewsSelectionPanel != null && this.viewsSelectionPanel.isShowing()) {
-            List<Integer> indicesCochesAvant = new ArrayList<>();
-            for (int i = 0; i < this.viewCheckBoxes.size(); i++) {
-                if (this.viewCheckBoxes.get(i).isSelected()) {
-                    indicesCochesAvant.add(i);
-                }
-            }
+        this.majLanguePanneauVues();
 
-            this.showViewsSelectionPanel(this.actionCouranteDrawingPanel);
-
-            for (int index : indicesCochesAvant) {
-                if (index < this.viewCheckBoxes.size()) {
-                    this.viewCheckBoxes.get(index).setSelected(true);
-                }
-            }
-        }
         this.revalidate();
         this.repaint();
     }
     
     private void configBoutons() {
-        this.configButton(this.btn_annulerAction, "button.undoAction", "undo_icon.svg");
-        this.configButton(this.btn_retablirAction, "button.redoAction", "redo_icon.svg");
-        this.configButton(this.btn_importerPdf, "button.importPdf", "import_icon.svg");
-        this.configButton(this.btn_exporterPdf, "button.exportPdf", "export_icon.svg");
-        this.configButton(this.btn_ajouterVue, "button.addView", "add_icon.svg");
-        this.configButton(this.btn_supprimerVue, "button.deleteView", "delete_icon.svg");
-        this.configButton(this.btn_rognerVue, "button.cropView", "crop_icon.svg");
+        this.configBouton(this.btn_annulerAction, "button.undoAction", "undo_icon.svg");
+        this.configBouton(this.btn_retablirAction, "button.redoAction", "redo_icon.svg");
+        this.configBouton(this.btn_importerPdf, "button.importPdf", "import_icon.svg");
+        this.configBouton(this.btn_exporterPdf, "button.exportPdf", "export_icon.svg");
+        this.configBouton(this.btn_ajouterVue, "button.addView", "add_icon.svg");
+        this.configBouton(this.btn_supprimerVue, "button.deleteView", "delete_icon.svg");
+        this.configBouton(this.btn_rognerVue, "button.cropView", "crop_icon.svg");
     }
     
-    private void configButton(JButton bouton, String nomBouton, String nomIcone){
-        bouton.setText(this.getComposantString(nomBouton));
+    private void configBouton(JButton bouton, String nomBouton, String nomIcone){
+        bouton.setText(this.getComposantTexte(nomBouton));
         bouton.setIcon(new FlatSVGIcon("icones/" + nomIcone, 25, 25));
         bouton.setIconTextGap(10);
     }
     
     private void configLabels() {
-        this.lbl_blocsTitre.setText(this.getComposantString("label.block"));
-        this.lbl_largeurBloc.setText(this.getComposantString("label.width"));
-        this.lbl_hauteurBloc.setText(this.getComposantString("label.height"));
-        this.lbl_prixParBloc.setText(this.getComposantString("label.costPerBlock"));
-        this.lbl_typeZoneTitre.setText(this.getComposantString("label.zoneType"));
-        this.lbl_formeZoneTitre.setText(this.getComposantString("label.form"));
-        this.lbl_blocsTotaux.setText(this.getComposantString("label.totalBlock"));
-        this.lbl_coutTotal.setText(this.getComposantString("label.totalCost"));
-        this.lbl_echelle.setText(this.getComposantString("label.scale"));
+        this.lbl_blocsTitre.setText(this.getComposantTexte("label.block"));
+        this.lbl_actionsTitre.setText(this.getComposantTexte("label.action"));
+        this.lbl_largeurBloc.setText(this.getComposantTexte("label.width"));
+        this.lbl_hauteurBloc.setText(this.getComposantTexte("label.height"));
+        this.lbl_prixParBloc.setText(this.getComposantTexte("label.costPerBlock"));
+        this.lbl_typeZoneTitre.setText(this.getComposantTexte("label.zoneType"));
+        this.lbl_formeZoneTitre.setText(this.getComposantTexte("label.form"));
+        this.lbl_blocsTotaux.setText(this.getComposantTexte("label.totalBlock"));
+        this.lbl_coutTotal.setText(this.getComposantTexte("label.totalCost"));
+        this.lbl_echelle.setText(this.getComposantTexte("label.scale"));
     }
     
-    private void majLangueDrawingPanel() {
-        if (this.viewsSelectionPanel != null && this.viewsSelectionPanel.isShowing()) {
-            this.chkToutesVues.setText(this.getComposantString("panel.selectAll"));
-            this.btnConfirmerModif.setText(this.getComposantString("panel.confirm"));
-            this.btnAnnulerModif.setText(this.getComposantString("panel.cancel"));
-            //this.majLangueTitreDrawingPanel();
+    private void majLanguePanneauVues() {
+        if (this.panneauVues != null && this.panneauVues.isShowing()) {            
+            this.configPanneauVues();
+            
+            this.chkToutesVues.setText(this.getComposantTexte("panel.selectAll"));
+            this.btnConfirmerModif.setText(this.getComposantTexte("panel.confirm"));
+            this.btnAnnulerModif.setText(this.getComposantTexte("panel.cancel"));
         }
     }
     
-    private void majLangueTitreDrawingPanel() {       
-        String titre = MessageFormat.format(this.resourceBundle.getString("panel.selectViews"),this.actionCouranteDrawingPanel);
-        
-        if (this.viewsSelectionPanel.getBorder() instanceof TitledBorder tb) {
-            tb.setTitle(titre);
-            this.viewsSelectionPanel.repaint();
-        }
+
+    
+    private void configPanneauVues() {
+        List<Integer> indicesCochesAvant = this.sauvegarderCasesCochees();
+
+        this.creerPanneauVues(this.actionCourantePanneauVues);
+
+        this.restaurerCasesCochees(indicesCochesAvant);
     }
     
-    private void showViewsSelectionPanel(String actionKey) {
-        this.actionCouranteDrawingPanel = actionKey;
+    private List<Integer> sauvegarderCasesCochees() {
+        List<Integer> indices = new ArrayList<>();
+
+        for (int i = 0; i < this.viewCheckBoxes.size(); i++) {
+            if (this.viewCheckBoxes.get(i).isSelected()) {
+                indices.add(i);
+            }
+        }
+        return indices;
+    }
+    
+    private void restaurerCasesCochees(List<Integer> indices) {
+        for (int index : indices) {
+            if (index < this.viewCheckBoxes.size()) {
+                this.viewCheckBoxes.get(index).setSelected(true);
+            }
+        }
+    }
+
+
+    
+    private void creerPanneauVues(String actionKey) {
+        this.actionCourantePanneauVues = actionKey;
         
-        if (this.viewsSelectionPanel != null) {
-            this.panel_principal.remove(this.viewsSelectionPanel);
-            this.viewsSelectionPanel = null;
+        if (this.panneauVues != null) {
+            this.panel_principal.remove(this.panneauVues);
+            this.panneauVues = null;
         }
 
         List<VueDTO> vues = this.controleur.getVues();
         if (vues.isEmpty()) return;
         
-        String action = this.resourceBundle.getString(this.actionCouranteDrawingPanel);
+        String action = this.resourceBundle.getString(this.actionCourantePanneauVues);
         String titre = MessageFormat.format(this.resourceBundle.getString("panel.selectViews"), action);
 
-        this.viewsSelectionPanel = new JPanel();
-        this.viewsSelectionPanel.setLayout(new BorderLayout());
-        this.viewsSelectionPanel.setBorder(BorderFactory.createTitledBorder(titre));
-        this.viewsSelectionPanel.setBackground(UIManager.getColor("Panel.background"));
+        this.panneauVues = new JPanel();
+        this.panneauVues.setLayout(new BorderLayout());
+        this.panneauVues.setBorder(BorderFactory.createTitledBorder(titre));
+        this.panneauVues.setBackground(UIManager.getColor("Panel.background"));
 
         this.viewsThumbnailPanel = new JPanel();
         this.viewsThumbnailPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
@@ -275,11 +280,11 @@ public class majLangueDrawingPanel extends JFrame {
         panelBoutons.add(this.btnConfirmerModif);
         panelBoutons.add(this.btnAnnulerModif);
 
-        this.viewsSelectionPanel.add(new JScrollPane(this.viewsThumbnailPanel), BorderLayout.CENTER);
-        this.viewsSelectionPanel.add(panelBoutons, BorderLayout.SOUTH);
-        this.viewsSelectionPanel.setPreferredSize(new Dimension(getWidth(), 180));
+        this.panneauVues.add(new JScrollPane(this.viewsThumbnailPanel), BorderLayout.CENTER);
+        this.panneauVues.add(panelBoutons, BorderLayout.SOUTH);
+        this.panneauVues.setPreferredSize(new Dimension(getWidth(), 180));
 
-        this.panel_principal.add(this.viewsSelectionPanel, BorderLayout.SOUTH);
+        this.panel_principal.add(this.panneauVues, BorderLayout.SOUTH);
         revalidate();
         repaint();
     }
@@ -313,10 +318,10 @@ public class majLangueDrawingPanel extends JFrame {
                 indices.add(i);
             }
         }
-        if (!indices.isEmpty() && this.actionCouranteDrawingPanel.equalsIgnoreCase("panel.delete")) {
+        if (!indices.isEmpty() && this.actionCourantePanneauVues.equalsIgnoreCase("panel.delete")) {
             this.controleur.supprimerVues(indices);
         }
-        else if (!indices.isEmpty() && this.actionCouranteDrawingPanel.equalsIgnoreCase("panel.export")){
+        else if (!indices.isEmpty() && this.actionCourantePanneauVues.equalsIgnoreCase("panel.export")){
             this.controleur.exporterPdf(indices);
         }
         
@@ -325,7 +330,7 @@ public class majLangueDrawingPanel extends JFrame {
     }
 
     private void cancelViewsModification() {
-        this.panel_principal.remove(this.viewsSelectionPanel);
+        this.panel_principal.remove(this.panneauVues);
         revalidate();
         repaint();
     }
@@ -342,9 +347,9 @@ public class majLangueDrawingPanel extends JFrame {
         this.addAction(this.btn_annulerAction, this.controleur::annulerAction);
         this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
         this.addAction(this.btn_importerPdf, this.controleur::importerPdf);
-        this.btn_exporterPdf.addActionListener(e -> this.showViewsSelectionPanel("panel.export"));
+        this.btn_exporterPdf.addActionListener(e -> this.creerPanneauVues("panel.export"));
         this.addAction(this.btn_ajouterVue, this.controleur::ajouterVue);
-        this.btn_supprimerVue.addActionListener(e -> this.showViewsSelectionPanel("panel.delete"));
+        this.btn_supprimerVue.addActionListener(e -> this.creerPanneauVues("panel.delete"));
         
         this.btn_rognerVue.addActionListener(e -> {
             this.modeRognage = !this.modeRognage;
@@ -352,14 +357,13 @@ public class majLangueDrawingPanel extends JFrame {
             this.btn_rognerVue.setText(this.modeRognage ? "Rognage actif" : this.resourceBundle.getString("button.cropView"));
         });
         
-        this.cbo_langue.setModel(new DefaultComboBoxModel<>(new String[] {Langage.FR.toString(), Langage.EN.toString()}));
-        this.cbo_langue.addActionListener(e -> {
-            String choix = (String) this.cbo_langue.getSelectedItem();
-            switch(choix) {
-                case "FR" -> this.langueCourante = Locale.FRENCH;
-                case "EN" -> this.langueCourante = Locale.ENGLISH;
+        this.btn_changerLangue.addActionListener(e -> {
+            if (this.langueCourante.equals(Locale.FRENCH)){
+                this.langueCourante = Locale.ENGLISH;
+            } else if (this.langueCourante.equals(Locale.ENGLISH)) {
+                this.langueCourante = Locale.FRENCH;
             }
-            this.majTextesLangue();
+            this.majLanguetextes();
         });
     }
 
@@ -528,10 +532,6 @@ public class majLangueDrawingPanel extends JFrame {
             }
         });
     }
-
-    private FlatSVGIcon loadIcon(String name,int size){
-        return new FlatSVGIcon("icones/" + name, size, size);
-    }
     
     private void initIconesBoutons() {
         this.btn_deplacerZone.setIcon(loadIcon("move_icon.svg", 25));
@@ -549,11 +549,15 @@ public class majLangueDrawingPanel extends JFrame {
         this.btn_zoomOut.setIcon(loadIcon("zoomOut_icon.svg", 25));
     }
     
+        private FlatSVGIcon loadIcon(String name,int size){
+        return new FlatSVGIcon("icones/" + name, size, size);
+    }
+    
     private void initPlaceholders() {
-        this.txt_echelle.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "3'6\"1/3");
-        this.txt_largeurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "3'6\"1/3");
-        this.txt_hauteurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "3'6\"1/3");
-        this.txt_prixParBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "5,00");
+        this.txt_largeurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 3'6\"1/3");
+        this.txt_hauteurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 1'2\"4/5");
+        this.txt_prixParBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 5,00");
+        this.txt_echelle.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 3'6\"1/3");
     }
     
     @SuppressWarnings("unchecked")
@@ -575,14 +579,17 @@ public class majLangueDrawingPanel extends JFrame {
         filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
         btn_rognerVue = new javax.swing.JButton();
         filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
-        cbo_langue = new javax.swing.JComboBox<>();
+        btn_changerLangue = new javax.swing.JButton();
         panel_menu = new javax.swing.JPanel();
         lbl_blocsTitre = new javax.swing.JLabel();
         panel_dimensionsBloc = new javax.swing.JPanel();
+        jPanel1 = new javax.swing.JPanel();
         lbl_largeurBloc = new javax.swing.JLabel();
         txt_largeurBloc = new javax.swing.JTextField();
+        jPanel2 = new javax.swing.JPanel();
         lbl_hauteurBloc = new javax.swing.JLabel();
         txt_hauteurBloc = new javax.swing.JTextField();
+        jPanel3 = new javax.swing.JPanel();
         lbl_prixParBloc = new javax.swing.JLabel();
         txt_prixParBloc = new javax.swing.JTextField();
         lbl_actionsTitre = new javax.swing.JLabel();
@@ -677,73 +684,80 @@ public class majLangueDrawingPanel extends JFrame {
         panel_boutons.add(btn_rognerVue);
         panel_boutons.add(filler7);
 
-        cbo_langue.setMaximumSize(new java.awt.Dimension(50, 30));
-        cbo_langue.setMinimumSize(new java.awt.Dimension(50, 30));
-        cbo_langue.setPreferredSize(new java.awt.Dimension(50, 30));
-        panel_boutons.add(cbo_langue);
+        btn_changerLangue.setMaximumSize(new java.awt.Dimension(60, 30));
+        btn_changerLangue.setMinimumSize(new java.awt.Dimension(60, 30));
+        btn_changerLangue.setPreferredSize(new java.awt.Dimension(60, 30));
+        panel_boutons.add(btn_changerLangue);
 
         getContentPane().add(panel_boutons, java.awt.BorderLayout.PAGE_START);
 
-        panel_menu.setMaximumSize(new java.awt.Dimension(300, 360));
-        panel_menu.setMinimumSize(new java.awt.Dimension(300, 360));
-        panel_menu.setPreferredSize(new java.awt.Dimension(300, 360));
-        panel_menu.setLayout(new javax.swing.BoxLayout(panel_menu, javax.swing.BoxLayout.Y_AXIS));
+        panel_menu.setMaximumSize(new java.awt.Dimension(275, 360));
+        panel_menu.setMinimumSize(new java.awt.Dimension(275, 360));
+        panel_menu.setPreferredSize(new java.awt.Dimension(275, 360));
 
         lbl_blocsTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_blocsTitre.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lbl_blocsTitre.setToolTipText("");
         lbl_blocsTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_blocsTitre.setMaximumSize(new java.awt.Dimension(140, 30));
-        lbl_blocsTitre.setMinimumSize(new java.awt.Dimension(140, 30));
-        lbl_blocsTitre.setPreferredSize(new java.awt.Dimension(140, 30));
+        lbl_blocsTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_blocsTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_blocsTitre.setPreferredSize(new java.awt.Dimension(100, 30));
         panel_menu.add(lbl_blocsTitre);
 
-        panel_dimensionsBloc.setMaximumSize(new java.awt.Dimension(275, 75));
-        panel_dimensionsBloc.setMinimumSize(new java.awt.Dimension(275, 75));
-        panel_dimensionsBloc.setPreferredSize(new java.awt.Dimension(275, 75));
-        panel_dimensionsBloc.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        panel_dimensionsBloc.setMaximumSize(new java.awt.Dimension(250, 100));
+        panel_dimensionsBloc.setMinimumSize(new java.awt.Dimension(250, 100));
+        panel_dimensionsBloc.setPreferredSize(new java.awt.Dimension(250, 100));
+        panel_dimensionsBloc.setLayout(new javax.swing.BoxLayout(panel_dimensionsBloc, javax.swing.BoxLayout.Y_AXIS));
 
+        lbl_largeurBloc.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         lbl_largeurBloc.setMaximumSize(new java.awt.Dimension(65, 30));
         lbl_largeurBloc.setMinimumSize(new java.awt.Dimension(65, 30));
         lbl_largeurBloc.setPreferredSize(new java.awt.Dimension(65, 30));
-        panel_dimensionsBloc.add(lbl_largeurBloc);
+        jPanel1.add(lbl_largeurBloc);
 
         txt_largeurBloc.setMaximumSize(new java.awt.Dimension(80, 30));
         txt_largeurBloc.setMinimumSize(new java.awt.Dimension(80, 30));
         txt_largeurBloc.setPreferredSize(new java.awt.Dimension(80, 30));
-        panel_dimensionsBloc.add(txt_largeurBloc);
+        jPanel1.add(txt_largeurBloc);
+
+        panel_dimensionsBloc.add(jPanel1);
 
         lbl_hauteurBloc.setMaximumSize(new java.awt.Dimension(65, 30));
         lbl_hauteurBloc.setMinimumSize(new java.awt.Dimension(65, 30));
         lbl_hauteurBloc.setPreferredSize(new java.awt.Dimension(65, 30));
-        panel_dimensionsBloc.add(lbl_hauteurBloc);
+        jPanel2.add(lbl_hauteurBloc);
 
         txt_hauteurBloc.setMaximumSize(new java.awt.Dimension(80, 30));
         txt_hauteurBloc.setMinimumSize(new java.awt.Dimension(80, 30));
         txt_hauteurBloc.setPreferredSize(new java.awt.Dimension(80, 30));
-        panel_dimensionsBloc.add(txt_hauteurBloc);
+        jPanel2.add(txt_hauteurBloc);
+
+        panel_dimensionsBloc.add(jPanel2);
 
         lbl_prixParBloc.setMaximumSize(new java.awt.Dimension(110, 30));
         lbl_prixParBloc.setMinimumSize(new java.awt.Dimension(110, 30));
         lbl_prixParBloc.setPreferredSize(new java.awt.Dimension(110, 30));
-        panel_dimensionsBloc.add(lbl_prixParBloc);
+        jPanel3.add(lbl_prixParBloc);
 
         txt_prixParBloc.setMaximumSize(new java.awt.Dimension(80, 30));
         txt_prixParBloc.setMinimumSize(new java.awt.Dimension(80, 30));
         txt_prixParBloc.setPreferredSize(new java.awt.Dimension(80, 30));
-        panel_dimensionsBloc.add(txt_prixParBloc);
+        jPanel3.add(txt_prixParBloc);
+
+        panel_dimensionsBloc.add(jPanel3);
 
         panel_menu.add(panel_dimensionsBloc);
 
         lbl_actionsTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_actionsTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_actionsTitre.setMaximumSize(new java.awt.Dimension(49, 30));
-        lbl_actionsTitre.setMinimumSize(new java.awt.Dimension(49, 30));
-        lbl_actionsTitre.setPreferredSize(new java.awt.Dimension(49, 30));
+        lbl_actionsTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_actionsTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_actionsTitre.setPreferredSize(new java.awt.Dimension(100, 30));
         panel_menu.add(lbl_actionsTitre);
 
-        panel_boutonAction.setMaximumSize(new java.awt.Dimension(275, 40));
-        panel_boutonAction.setMinimumSize(new java.awt.Dimension(275, 40));
-        panel_boutonAction.setPreferredSize(new java.awt.Dimension(275, 40));
+        panel_boutonAction.setMaximumSize(new java.awt.Dimension(250, 40));
+        panel_boutonAction.setMinimumSize(new java.awt.Dimension(250, 40));
+        panel_boutonAction.setPreferredSize(new java.awt.Dimension(250, 40));
 
         btn_deplacerZone.setIconTextGap(0);
         btn_deplacerZone.setMaximumSize(new java.awt.Dimension(75, 30));
@@ -767,14 +781,14 @@ public class majLangueDrawingPanel extends JFrame {
 
         lbl_typeZoneTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_typeZoneTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_typeZoneTitre.setMaximumSize(new java.awt.Dimension(87, 30));
-        lbl_typeZoneTitre.setMinimumSize(new java.awt.Dimension(87, 30));
-        lbl_typeZoneTitre.setPreferredSize(new java.awt.Dimension(87, 30));
+        lbl_typeZoneTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_typeZoneTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_typeZoneTitre.setPreferredSize(new java.awt.Dimension(100, 30));
         panel_menu.add(lbl_typeZoneTitre);
 
-        panel_typeZone.setMaximumSize(new java.awt.Dimension(275, 40));
-        panel_typeZone.setMinimumSize(new java.awt.Dimension(275, 40));
-        panel_typeZone.setPreferredSize(new java.awt.Dimension(275, 40));
+        panel_typeZone.setMaximumSize(new java.awt.Dimension(250, 40));
+        panel_typeZone.setMinimumSize(new java.awt.Dimension(250, 40));
+        panel_typeZone.setPreferredSize(new java.awt.Dimension(250, 40));
 
         btn_zoneArmatureClassique.setIconTextGap(0);
         btn_zoneArmatureClassique.setMaximumSize(new java.awt.Dimension(75, 30));
@@ -798,14 +812,14 @@ public class majLangueDrawingPanel extends JFrame {
 
         lbl_formeZoneTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_formeZoneTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_formeZoneTitre.setMaximumSize(new java.awt.Dimension(47, 30));
-        lbl_formeZoneTitre.setMinimumSize(new java.awt.Dimension(47, 30));
-        lbl_formeZoneTitre.setPreferredSize(new java.awt.Dimension(47, 30));
+        lbl_formeZoneTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_formeZoneTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_formeZoneTitre.setPreferredSize(new java.awt.Dimension(100, 30));
         panel_menu.add(lbl_formeZoneTitre);
 
-        panel_formeZone.setMaximumSize(new java.awt.Dimension(275, 40));
-        panel_formeZone.setMinimumSize(new java.awt.Dimension(275, 40));
-        panel_formeZone.setPreferredSize(new java.awt.Dimension(275, 40));
+        panel_formeZone.setMaximumSize(new java.awt.Dimension(250, 40));
+        panel_formeZone.setMinimumSize(new java.awt.Dimension(250, 40));
+        panel_formeZone.setPreferredSize(new java.awt.Dimension(250, 40));
 
         btn_formeRectangle.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_formeRectangle.setMinimumSize(new java.awt.Dimension(75, 30));
@@ -878,9 +892,9 @@ public class majLangueDrawingPanel extends JFrame {
         panel_echelle.add(btn_appliquerEchelle);
         panel_echelle.add(filler11);
 
-        lbl_echelle.setMaximumSize(new java.awt.Dimension(65, 30));
-        lbl_echelle.setMinimumSize(new java.awt.Dimension(65, 30));
-        lbl_echelle.setPreferredSize(new java.awt.Dimension(65, 30));
+        lbl_echelle.setMaximumSize(new java.awt.Dimension(50, 30));
+        lbl_echelle.setMinimumSize(new java.awt.Dimension(50, 30));
+        lbl_echelle.setPreferredSize(new java.awt.Dimension(50, 30));
         panel_echelle.add(lbl_echelle);
 
         txt_echelle.setMaximumSize(new java.awt.Dimension(150, 30));
@@ -906,7 +920,7 @@ public class majLangueDrawingPanel extends JFrame {
         panel_vues.setLayout(panel_vuesLayout);
         panel_vuesLayout.setHorizontalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 858, Short.MAX_VALUE)
+            .addGap(0, 883, Short.MAX_VALUE)
         );
         panel_vuesLayout.setVerticalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -924,6 +938,7 @@ public class majLangueDrawingPanel extends JFrame {
     private javax.swing.JButton btn_ajouterVue;
     private javax.swing.JButton btn_annulerAction;
     private javax.swing.JButton btn_appliquerEchelle;
+    private javax.swing.JButton btn_changerLangue;
     private javax.swing.JButton btn_deplacerZone;
     private javax.swing.JButton btn_dimensionZone;
     private javax.swing.JButton btn_exporterPdf;
@@ -942,7 +957,6 @@ public class majLangueDrawingPanel extends JFrame {
     private javax.swing.JButton btn_zoneOuverture;
     private javax.swing.JButton btn_zoomIn;
     private javax.swing.JButton btn_zoomOut;
-    private javax.swing.JComboBox<String> cbo_langue;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler10;
     private javax.swing.Box.Filler filler11;
@@ -956,6 +970,9 @@ public class majLangueDrawingPanel extends JFrame {
     private javax.swing.Box.Filler filler7;
     private javax.swing.Box.Filler filler8;
     private javax.swing.Box.Filler filler9;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JLabel lbl_actionsTitre;
     private javax.swing.JLabel lbl_blocsTitre;
     private javax.swing.JLabel lbl_blocsTotaux;
