@@ -7,7 +7,6 @@ import BatiBloc.Domaine.Dto.*;
 import BatiBloc.Domaine.Services.ExportFichierPdfService;
 import BatiBloc.Domaine.Services.ImportFichierPdfService;
 import BatiBloc.Domaine.Dto.RognerVueDTO;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -249,6 +248,7 @@ public class MainController {
         }
     }
     
+    // @roneh 
     public void rognerVueCourante(RognerVueDTO zone) {
         if (this.indexVueCourante < 0 || zone == null) {
             return;
@@ -268,44 +268,7 @@ public class MainController {
         }
     }
     
-    // @roneh Pour le rognage inverser
-    public void rognerInverseVueCourante(RognerVueDTO zone) {
-    if (this.indexVueCourante < 0 || zone == null) {
-        return;
-    }
 
-    Vue vue = this.projetVues.get(this.indexVueCourante);
-    BufferedImage imageOrigine = vue.getImage();
-
-    if (imageOrigine == null) {
-        return;
-    }
-
-    int x = Math.max(0, zone.getX());
-    int y = Math.max(0, zone.getY());
-    int w = Math.min(zone.getLargeur(), imageOrigine.getWidth() - x);
-    int h = Math.min(zone.getHauteur(), imageOrigine.getHeight() - y);
-
-    if (w <= 0 || h <= 0) {
-        return;
-    }
-
-    BufferedImage copie = new BufferedImage(
-        imageOrigine.getWidth(),
-        imageOrigine.getHeight(),
-        imageOrigine.getType() == 0 ? BufferedImage.TYPE_INT_RGB : imageOrigine.getType()
-    );
-    
-    this.enregistrerEtatAvantModification();
-
-    Graphics2D g2d = copie.createGraphics();
-    g2d.drawImage(imageOrigine, 0, 0, null);
-    g2d.setColor(Color.WHITE);
-    g2d.fillRect(x, y, w, h);
-    g2d.dispose();
-
-    vue.setImage(copie);
-}
 
     // ---GESTION DES ZONES --- (Ajoutée Par Colombe)
     public void ajouterZone(TypeZone type, TypeForme forme, List<Point> points)

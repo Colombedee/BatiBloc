@@ -792,15 +792,6 @@ private void appliquerRognageInverseEnAttente() {
         return;
     }
 
-    this.controleur.rognerInverseVueCourante(
-        new RognerVueDTO(
-            zoneImage.x,
-            zoneImage.y,
-            zoneImage.width,
-            zoneImage.height
-        )
-    );
-
     this.selectionRognageEnAttente = null;
     this.panelChoixRognage.setVisible(false);
 
