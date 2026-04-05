@@ -7,6 +7,8 @@ public abstract class Zone {
 
     protected Forme forme;
     protected double largeurBloc;
+    protected double hauteurBloc; 
+    // AJOUT : champ pour hauteur configurable (Nicky-Davis N.)
 
     protected List<Ligne> lignes = new ArrayList<>();
     protected double morceauRestant = 0;
@@ -14,6 +16,8 @@ public abstract class Zone {
     public Zone(Forme forme, double largeurBloc) {
         this.forme = forme;
         this.largeurBloc = largeurBloc;
+        this.hauteurBloc = largeurBloc; 
+       // Valeur par défaut : hauteur = largeur (bloc carré)
     }
 
     public Forme getForme() {
@@ -23,6 +27,27 @@ public abstract class Zone {
     public double getLargeurBloc() {
         return this.largeurBloc;
     }
+    
+        // Mutateur pour la largeur avec réinitialisation
+    public void setLargeurBloc(double largeurBloc) {
+        if (largeurBloc > 0) {
+            this.largeurBloc = largeurBloc;
+            // Réinitialiser car les dimensions ont changé
+            this.lignes.clear();
+            this.morceauRestant = 0;
+        }
+    }
+
+    // Mutateur pour la hauteur avec réinitialisation  
+    public void setHauteurBloc(double hauteurBloc) {
+        if (hauteurBloc > 0) {
+            this.hauteurBloc = hauteurBloc;
+            // Réinitialiser car les dimensions ont changé
+            this.lignes.clear();
+            this.morceauRestant = 0;
+        }
+    }
+
 
     public double getLargeurTotale() {
         return this.forme.getLargeur();
@@ -61,5 +86,8 @@ public abstract class Zone {
         return lignes.size() * getHauteurBloc() >= getHauteurTotale();
     }
 
-    public abstract double getHauteurBloc();
+    // MODIFIÉ : Plus abstraite, retourne le champ (les sous-classes peuvent surcharger)
+    public double getHauteurBloc() {
+        return this.hauteurBloc;
+    }
 }

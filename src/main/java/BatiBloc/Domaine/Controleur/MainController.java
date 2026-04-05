@@ -124,7 +124,7 @@ public class MainController {
         }
     }
             
-    public void exporterPdf(List<Integer> indices) {
+    public void exporterVues(List<Integer> indices) {
         if (indices == null || indices.isEmpty()) {
             return;
         }
@@ -343,6 +343,31 @@ public class MainController {
         return TypeZone.OUVERTURE;
     }
     
+    /**
+ * Modifie les dimensions des blocs de la zone actuellement sélectionnée.
+ * Cette méthode doit être appelée avant la simulation pour appliquer
+ * les dimensions saisies par l'utilisateur dans l'interface.
+ */
+public void modifierDimensionsBloc(double largeur, double hauteur) {
+    if (indexVueCourante < 0 || largeur <= 0 || hauteur <= 0) {
+        return;
+    }
+    
+    Vue vue = this.projetVues.get(indexVueCourante);
+    Zone zone = vue.getZoneSelectionnee();
+    
+    if (zone != null) {
+        zone.setLargeurBloc(largeur);
+        zone.setHauteurBloc(hauteur);
+        
+        // Met aussi à jour la valeur par défaut pour les nouvelles zones
+        this.largeurBlocDefaut = largeur;
+    }
+}
+
+    
+    
+    
     public SimulationDTO simulerZoneSelectionnee() {
     if (indexVueCourante < 0) {
         return null;
@@ -388,7 +413,7 @@ public class MainController {
             zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(), 
                     z == modeleVue.getZoneSelectionnee()));
         }        
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos, modeleVue.getEchelle());
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);
     }
     
     public List<VueDTO> getVues() 
@@ -397,7 +422,7 @@ public class MainController {
         for (int i = 0; i < this.projetVues.size(); i++) 
         {
             Vue v = projetVues.get(i);
-            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>(), v.getEchelle()));
+            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>()));
         }
         return dtos;
     }
