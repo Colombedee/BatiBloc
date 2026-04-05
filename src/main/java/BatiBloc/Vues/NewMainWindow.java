@@ -120,7 +120,7 @@ public class NewMainWindow extends JFrame {
     }
     
     private void rognerVueCourante(Rectangle zoneAffichage) {
-        if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {
+        if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {  
             return;
         }
 

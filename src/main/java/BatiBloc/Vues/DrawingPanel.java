@@ -211,7 +211,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
 
                 pointFin = e.getPoint();
                 
-                
+               
                 //Modification Emmmanuella - Mode Rognage : on va calculer le rectangle 
                 // sélectionner par l'utilisateur et on envoie le rectangle à MainWIndow via le callback
                 if (modeRognage && onRognageTermine != null) {
@@ -339,7 +339,8 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
 
     @Override
     public void afficherVue(VueDTO vue) {
-        boolean nouvelleVue = this.vueCourante != vue;
+        boolean nouvelleVue = vue == null || this.vueCourante == null || 
+                      this.vueCourante.getIndex() != vue.getIndex();
         this.vueCourante = vue;
         
         if (nouvelleVue) {

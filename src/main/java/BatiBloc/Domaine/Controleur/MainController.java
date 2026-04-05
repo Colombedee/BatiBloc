@@ -224,12 +224,11 @@ public class MainController {
         
         Vue vue = this.projetVues.get(this.indexVueCourante);
         BufferedImage imageOrigine = vue.getImage();
-
         int x = Math.max(0, zone.getX());
         int y = Math.max(0, zone.getY());
         int w = Math.min(zone.getLargeur(), imageOrigine.getWidth() - x);
         int h = Math.min(zone.getHauteur(), imageOrigine.getHeight() - y);
-
+        
        if (w > 0 && h > 0) {
             BufferedImage imageRognee = imageOrigine.getSubimage(x, y, w, h);
             vue.setImage(imageRognee);
