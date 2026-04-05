@@ -32,7 +32,9 @@ public class MainController {
     private static final double ECHELLE_DEFAUT = 1.0 / DPI_ECRAN;
     private final List<Vue> projetVues = new ArrayList<>();
     private int indexVueCourante = -1;
-    private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut
+    private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut (8 pieds)
+    private double hauteurBlocDefaut = 12.0;   // 12 pouces
+
     
     private BufferedImage genererImageAvecZones(Vue vue) //Colombe
     {
@@ -320,15 +322,21 @@ public class MainController {
         }
     }
               
-    private Zone creerZone(TypeZone type, Forme forme)
-    {
-        switch (type)
-        {
-            case ARMATURE_CLASSIQUE: return new ArmatureClassique(forme, largeurBlocDefaut);
-            case ARMATURE_BLOCS: return new ArmatureEnBlocs(forme, largeurBlocDefaut);
-            default: return null;
+    private Zone creerZone(TypeZone type, Forme forme) {
+        switch (type) {
+            case ARMATURE_CLASSIQUE:
+                return new ArmatureClassique(forme, largeurBlocDefaut, hauteurBlocDefaut);
+
+            case ARMATURE_BLOCS:
+                return new ArmatureEnBlocs(forme, largeurBlocDefaut, hauteurBlocDefaut);
+
+            case OUVERTURE:
+            default:
+                // Livrable 4 : on ne gère pas encore la simulation des ouvertures
+                return null;
         }
-     }
+    }
+
             
     private TypeZone getTypeZone(Zone zone)      
     {
@@ -349,21 +357,23 @@ public class MainController {
  * les dimensions saisies par l'utilisateur dans l'interface.
  */
 public void modifierDimensionsBloc(double largeur, double hauteur) {
-    if (indexVueCourante < 0 || largeur <= 0 || hauteur <= 0) {
+    if (indexVueCourante < 0 || largeur < 6.0 || hauteur <= 0) {
         return;
     }
-    
+
     Vue vue = this.projetVues.get(indexVueCourante);
     Zone zone = vue.getZoneSelectionnee();
-    
+
     if (zone != null) {
         zone.setLargeurBloc(largeur);
         zone.setHauteurBloc(hauteur);
-        
-        // Met aussi à jour la valeur par défaut pour les nouvelles zones
-        this.largeurBlocDefaut = largeur;
     }
+
+    // Mémorise aussi les valeurs par défaut pour les prochaines zones
+    this.largeurBlocDefaut = largeur;
+    this.hauteurBlocDefaut = hauteur;
 }
+
 
     
     
@@ -375,7 +385,18 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
     Vue vue = this.projetVues.get(indexVueCourante);
     Zone zone = vue.getZoneSelectionnee();
+
     if (zone == null) {
+        return null;
+    }
+
+    // Livrable 4 : pas de simulation pour les ouvertures
+    if (zone instanceof Ouverture) {
+        return null;
+    }
+
+    // Version minimale honnête : simulation seulement des rectangles
+    if (!(zone.getForme() instanceof RectangleForme)) {
         return null;
     }
 
@@ -416,14 +437,29 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);
     }
     
-    public List<VueDTO> getVues() 
-    {
+    public List<VueDTO> getVues() {
         List<VueDTO> dtos = new ArrayList<>();
-        for (int i = 0; i < this.projetVues.size(); i++) 
-        {
-            Vue v = projetVues.get(i);
-            dtos.add(new VueDTO(i, v.getImage(), new ArrayList<>()));
+
+        for (int i = 0; i < this.projetVues.size(); i++) {
+            Vue v = this.projetVues.get(i);
+            List<ZoneDTO> zoneDtos = new ArrayList<>();
+
+            for (Zone z : v.getZones()) {
+                TypeZone type = getTypeZone(z);
+                TypeForme forme = getTypeForme(z.getForme());
+
+                zoneDtos.add(new ZoneDTO(
+                        type,
+                        forme,
+                        z.getForme().getPosition(),
+                        z == v.getZoneSelectionnee()
+                ));
+            }
+
+            dtos.add(new VueDTO(i, v.getImage(), zoneDtos));
         }
+
         return dtos;
     }
+
 }
