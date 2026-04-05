@@ -310,7 +310,11 @@ public class MainController {
         if (indexVueCourante < 0) return;
         projetVues.get(indexVueCourante).redimensionnerZoneSelectionnee(indexPoignee, dx, dy);
     }
-    
+    public void redimensionnerParBoundingBox(int indexPoignee, int dx, int dy) 
+    {
+        if (indexVueCourante < 0) return;
+        projetVues.get(indexVueCourante).redimensionnerParBoundingBox(indexPoignee, dx, dy);
+    }
     private Forme creerForme(TypeForme type, List<Point> points)
     {
         switch (type)

@@ -111,13 +111,64 @@ public class Vue
     }
       //Colombe 
       public void redimensionnerZoneSelectionnee(int indexPoignee, int dx, int dy) 
-      {
+    {
         if (zoneSelectionnee != null) 
         {
             zoneSelectionnee.getForme().redimensionner(indexPoignee, dx, dy);
         }
     }
-      
+      public void redimensionnerParBoundingBox(int indexPoignee, int dx, int dy) 
+    {
+        Zone zone = getZoneSelectionnee();
+        if (zone == null) return;
+
+        Forme forme = zone.getForme();
+        List<java.awt.geom.Point2D.Double> pts = forme.positionPrecise;
+
+        double xMin = pts.stream().mapToDouble(p -> p.x).min().orElse(0);
+        double yMin = pts.stream().mapToDouble(p -> p.y).min().orElse(0);
+        double xMax = pts.stream().mapToDouble(p -> p.x).max().orElse(0);
+        double yMax = pts.stream().mapToDouble(p -> p.y).max().orElse(0);
+
+        double largeur = xMax - xMin;
+        double hauteur = yMax - yMin;
+
+        boolean affecteGauche = indexPoignee == 0 || indexPoignee == 6 || indexPoignee == 7;
+        boolean affecteDroite = indexPoignee == 2 || indexPoignee == 3 || indexPoignee == 4;
+        boolean affecteHaut   = indexPoignee == 0 || indexPoignee == 1 || indexPoignee == 2;
+        boolean affecteBas    = indexPoignee == 4 || indexPoignee == 5 || indexPoignee == 6;
+
+        double nouvelleLargeur = largeur;
+        double nouvelleHauteur = hauteur;
+
+        if (affecteDroite) nouvelleLargeur = largeur + dx;
+        if (affecteGauche) nouvelleLargeur = largeur - dx;
+        if (affecteBas)    nouvelleHauteur = hauteur + dy;
+        if (affecteHaut)   nouvelleHauteur = hauteur - dy;
+
+        if (nouvelleLargeur < 10 || nouvelleHauteur < 10) return;
+
+        double scaleX = nouvelleLargeur / largeur;
+        double scaleY = nouvelleHauteur / hauteur;
+
+        double ancreX = affecteGauche ? xMax : xMin;
+        double ancreY = affecteHaut   ? yMax : yMin;
+
+        for (int i = 0; i < pts.size(); i++) {
+            java.awt.geom.Point2D.Double p = pts.get(i);
+
+            if (affecteDroite || affecteGauche) {
+                p.x = ancreX + (p.x - ancreX) * scaleX;
+            }
+            if (affecteBas || affecteHaut) {
+                p.y = ancreY + (p.y - ancreY) * scaleY;
+            }
+
+            // Synchroniser le Point entier avec la valeur précise
+            forme.getPointsInternes().get(i).x = (int) Math.round(p.x);
+            forme.getPointsInternes().get(i).y = (int) Math.round(p.y);
+        }
+    }
        public Zone getZoneSelectionnee() //Colombe  
     {
         return zoneSelectionnee;
