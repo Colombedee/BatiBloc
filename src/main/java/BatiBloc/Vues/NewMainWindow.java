@@ -436,6 +436,7 @@ public class NewMainWindow extends JFrame {
         });
         
         this.btn_rognerVue.addActionListener(e -> {
+            this.stopZoneDrawingMode();
             this.modeRognage = !this.modeRognage;
             this.drawingPanel.setModeRognage(this.modeRognage);
             this.btn_rognerVue.setText(this.modeRognage ? "Rognage actif" : this.getTexte("button.cropView"));
