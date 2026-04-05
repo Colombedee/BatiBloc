@@ -173,4 +173,10 @@ public class Vue
     {
         return zoneSelectionnee;
     }
+       
+      // Undo/Redo : permet de restaurer exactement la zone sélectionnée d'un memento.  
+       public void definirZoneSelectionnee(Zone zone)
+    {
+        this.zoneSelectionnee = zone;
+    }  
 }

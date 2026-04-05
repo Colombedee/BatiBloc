@@ -34,6 +34,22 @@ public class MainController {
     private int indexVueCourante = -1;
     private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut (8 pieds)
     private double hauteurBlocDefaut = 12.0;   // 12 pouces
+    
+    private final UndoRedoManager<ProjetMemento> undoRedoManager = new UndoRedoManager<>();
+    
+    private static class ProjetMemento {
+    private final List<Vue> vues;
+    private final int indexVueCourante;
+    private final double largeurBlocDefaut;
+    private final double hauteurBlocDefaut;
+
+        private ProjetMemento(List<Vue> vues, int indexVueCourante, double largeurBlocDefaut, double hauteurBlocDefaut) {
+            this.vues = vues;
+            this.indexVueCourante = indexVueCourante;
+            this.largeurBlocDefaut = largeurBlocDefaut;
+            this.hauteurBlocDefaut = hauteurBlocDefaut;
+        }
+    }
 
     
     private BufferedImage genererImageAvecZones(Vue vue) //Colombe
@@ -66,11 +82,11 @@ public class MainController {
     }
     
     public void annulerAction(){
-        
+        this.undoRedoManager.annuler(this::creerMemento, this::restaurerMemento);  
     }
     
     public void retablirAction(){
-        
+        this.undoRedoManager.retablir(this::creerMemento, this::restaurerMemento);
     }
     
     public void ajouterVue(){
@@ -83,6 +99,10 @@ public class MainController {
         if (fichier == null) {
             return;
         }
+        
+        this.enregistrerEtatAvantModification();
+        this.projetVues.clear();
+        this.indexVueCourante = -1;
 
         this.projetVues.clear();
         this.indexVueCourante = -1;
@@ -163,6 +183,7 @@ public class MainController {
         if (indexVueCourante >= 0 && distancePixels > 0) {
             double totalPouces = (pieds * 12) + pouces;
             double echelle = totalPouces / distancePixels;
+            this.enregistrerEtatAvantModification();
             projetVues.get(indexVueCourante).setEchelle(echelle);
         }
     }
@@ -174,6 +195,7 @@ public class MainController {
 
     public void setEchelleCourante(double echelle) {
         if (indexVueCourante >= 0 && echelle > 0) {
+            this.enregistrerEtatAvantModification();
             projetVues.get(indexVueCourante).setEchelle(echelle);
         }
     }
@@ -192,6 +214,7 @@ public class MainController {
 
     public void supprimerVueCourante() {
         if (this.indexVueCourante >= 0) {
+            this.enregistrerEtatAvantModification();
             this.projetVues.remove(this.indexVueCourante);
             if (this.projetVues.isEmpty()) {
                 this.indexVueCourante = -1;
@@ -202,6 +225,15 @@ public class MainController {
     }   
     
     public void supprimerVues(List<Integer> indices) {
+        indices.stream()
+            .sorted(Comparator.reverseOrder())
+            .forEach(i -> {
+                if (i >= 0 && i < this.projetVues.size()) {
+                    this.projetVues.remove((int) i);
+                }
+            });
+        
+        this.enregistrerEtatAvantModification();
         indices.stream()
             .sorted(Comparator.reverseOrder())
             .forEach(i -> {
@@ -230,6 +262,7 @@ public class MainController {
         int h = Math.min(zone.getHauteur(), imageOrigine.getHeight() - y);
         
        if (w > 0 && h > 0) {
+            this.enregistrerEtatAvantModification();
             BufferedImage imageRognee = imageOrigine.getSubimage(x, y, w, h);
             vue.setImage(imageRognee);
         }
@@ -262,6 +295,8 @@ public class MainController {
         imageOrigine.getHeight(),
         imageOrigine.getType() == 0 ? BufferedImage.TYPE_INT_RGB : imageOrigine.getType()
     );
+    
+    this.enregistrerEtatAvantModification();
 
     Graphics2D g2d = copie.createGraphics();
     g2d.drawImage(imageOrigine, 0, 0, null);
@@ -282,13 +317,17 @@ public class MainController {
         Zone zone = creerZone(type, formeModele);
 
         if (zone == null) return;
+        this.enregistrerEtatAvantModification();
         projetVues.get(indexVueCourante).ajouterZone(zone);
     }
     
     public void supprimerZone(int indexZone)
     {
         if (indexVueCourante < 0) return;
-        projetVues.get(indexVueCourante).supprimerZone(indexZone);
+        Vue vue = projetVues.get(indexVueCourante);
+        if (indexZone < 0 || indexZone >= vue.getZones().size()) return;
+        this.enregistrerEtatAvantModification();
+        vue.supprimerZone(indexZone);
     }
     
     public void selectionnerZone(Point point)
@@ -300,6 +339,9 @@ public class MainController {
     public void deplacerZoneSelectionnee(int dx, int dy)
     {
         if (indexVueCourante < 0) return;
+        if (dx == 0 && dy == 0) return;
+        if (projetVues.get(indexVueCourante).getZoneSelectionnee() == null) return;
+        this.enregistrerEtatAvantModification();
         projetVues.get(indexVueCourante).deplacerZoneSelectionnee(dx, dy);
     }
     
@@ -307,11 +349,17 @@ public class MainController {
     public void redimensionnerZoneSelectionnee(int indexPoignee, int dx, int dy) 
     {
         if (indexVueCourante < 0) return;
+        if (dx == 0 && dy == 0) return;
+        if (projetVues.get(indexVueCourante).getZoneSelectionnee() == null) return;
+        this.enregistrerEtatAvantModification();
         projetVues.get(indexVueCourante).redimensionnerZoneSelectionnee(indexPoignee, dx, dy);
     }
     public void redimensionnerParBoundingBox(int indexPoignee, int dx, int dy) 
     {
         if (indexVueCourante < 0) return;
+        if (dx == 0 && dy == 0) return;
+        if (projetVues.get(indexVueCourante).getZoneSelectionnee() == null) return;
+        this.enregistrerEtatAvantModification();
         projetVues.get(indexVueCourante).redimensionnerParBoundingBox(indexPoignee, dx, dy);
     }
     private Forme creerForme(TypeForme type, List<Point> points)
@@ -371,6 +419,10 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         zone.setLargeurBloc(largeur);
         zone.setHauteurBloc(hauteur);
     }
+    
+    this.enregistrerEtatAvantModification();
+    zone.setLargeurBloc(largeur);
+    zone.setHauteurBloc(hauteur);
 
     // Mémorise aussi les valeurs par défaut pour les prochaines zones
     this.largeurBlocDefaut = largeur;
@@ -405,6 +457,114 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
     return SimulationService.simuler(zone);
 }
+    
+    public void commencerModificationComposee() {
+        this.undoRedoManager.commencerModificationComposee();
+    }
+
+    public void terminerModificationComposee() {
+        this.undoRedoManager.terminerModificationComposee();
+    }
+
+    private void enregistrerEtatAvantModification() {
+        this.undoRedoManager.enregistrerEtatAvantModification(this::creerMemento);
+    }
+
+    private ProjetMemento creerMemento() {
+        return new ProjetMemento(
+                this.copierVues(this.projetVues),
+                this.indexVueCourante,
+                this.largeurBlocDefaut,
+                this.hauteurBlocDefaut
+        );
+    }
+
+    private void restaurerMemento(ProjetMemento memento) {
+        this.projetVues.clear();
+        this.projetVues.addAll(this.copierVues(memento.vues));
+        this.indexVueCourante = memento.indexVueCourante;
+        this.largeurBlocDefaut = memento.largeurBlocDefaut;
+        this.hauteurBlocDefaut = memento.hauteurBlocDefaut;
+    }
+
+    private List<Vue> copierVues(List<Vue> vuesSource) {
+        List<Vue> copies = new ArrayList<>();
+        for (Vue vueSource : vuesSource) {
+            copies.add(this.copierVue(vueSource));
+        }
+        return copies;
+    }
+
+    private Vue copierVue(Vue vueSource) {
+        Vue copie = new Vue(this.copierImage(vueSource.getImage()));
+        copie.setEchelle(vueSource.getEchelle());
+        copie.setZoom(vueSource.getZoom());
+
+        Zone zoneSelectionneeCopie = null;
+        Zone zoneSelectionneeSource = vueSource.getZoneSelectionnee();
+
+        for (Zone zoneSource : vueSource.getZones()) {
+            Zone zoneCopie = this.copierZone(zoneSource);
+            copie.ajouterZone(zoneCopie);
+
+            if (zoneSource == zoneSelectionneeSource) {
+                zoneSelectionneeCopie = zoneCopie;
+            }
+        }
+
+        copie.definirZoneSelectionnee(zoneSelectionneeCopie);
+        return copie;
+    }
+
+    private Zone copierZone(Zone zoneSource) {
+        Forme formeCopie = this.copierForme(zoneSource.getForme());
+
+        if (zoneSource instanceof ArmatureClassique) {
+            return new ArmatureClassique(formeCopie, zoneSource.getLargeurBloc(), zoneSource.getHauteurBloc());
+        }
+        if (zoneSource instanceof ArmatureEnBlocs) {
+            return new ArmatureEnBlocs(formeCopie, zoneSource.getLargeurBloc(), zoneSource.getHauteurBloc());
+        }
+        if (zoneSource instanceof Ouverture) {
+            Ouverture ouverture = (Ouverture) zoneSource;
+            return new Ouverture(formeCopie, zoneSource.getLargeurBloc(), ouverture.getType());
+        }
+
+        return null;
+    }
+
+    private Forme copierForme(Forme formeSource) {
+        List<Point> pointsCopie = this.copierPoints(formeSource.getPosition());
+
+        if (formeSource instanceof RectangleForme) {
+            return new RectangleForme(pointsCopie);
+        }
+        if (formeSource instanceof Triangle) {
+            return new Triangle(pointsCopie);
+        }
+        return new TriangleTronque(pointsCopie);
+    }
+
+    private BufferedImage copierImage(BufferedImage imageSource) {
+        if (imageSource == null) {
+            return null;
+        }
+
+        int type = imageSource.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : imageSource.getType();
+        BufferedImage copie = new BufferedImage(imageSource.getWidth(), imageSource.getHeight(), type);
+        Graphics2D g2d = copie.createGraphics();
+        g2d.drawImage(imageSource, 0, 0, null);
+        g2d.dispose();
+        return copie;
+    }
+
+    private List<Point> copierPoints(List<Point> pointsSource) {
+        List<Point> copies = new ArrayList<>();
+        for (Point point : pointsSource) {
+            copies.add(new Point(point));
+        }
+        return copies;
+    }
 
 
     

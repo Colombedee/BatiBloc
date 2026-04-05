@@ -81,6 +81,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                         Point2D imgPoint = screenToImage(e.getX(), e.getY());
                         Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
                         controller.selectionnerZone(ptImage);
+                        controller.commencerModificationComposee(); // Undo/Redo
                         vueCourante = controller.getVueCourante();
                         dernierPointSouris = e.getPoint();
                         repaint();
@@ -98,6 +99,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                                     if (Math.abs(imgPoint.getX() - poignees[i].x) <= 8 
                                      && Math.abs(imgPoint.getY() - poignees[i].y) <= 8) {
                                         indexPoigneeSelectionnee = i;
+                                        controller.commencerModificationComposee(); // Undo/Redo : 
                                         dernierPointSouris = e.getPoint();
                                         repaint();
                                         return;
@@ -202,6 +204,13 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     enDeplacement = false;
                     dernierPointSouris = null;
                     setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    return;
+                }
+                
+                    if (SwingUtilities.isLeftMouseButton(e) && (modeDeplacementZone || modeRedimensionnementZone)) {
+                    controller.terminerModificationComposee(); // Undo/Redo 
+                    indexPoigneeSelectionnee = -1;
+                    dernierPointSouris = null;
                     return;
                 }
       
