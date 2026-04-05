@@ -1,16 +1,12 @@
 package BatiBloc.Domaine.Modeles;
 
-public class ArmatureClassique extends Zone 
-{
+public class ArmatureClassique extends Zone {
 
-    public ArmatureClassique(Forme forme, double largeurBloc) 
-    {
+    public ArmatureClassique(Forme forme, double largeurBloc) {
         super(forme, largeurBloc);
     }
 
-    @Override
-    public double getHauteurBloc() 
-    {
-        return 20; 
+    public ArmatureClassique(Forme forme, double largeurBloc, double hauteurBloc) {
+        super(forme, largeurBloc, hauteurBloc);
     }
 }

@@ -1,16 +1,12 @@
 package BatiBloc.Domaine.Modeles;
 
-public class ArmatureEnBlocs extends Zone 
-{
+public class ArmatureEnBlocs extends Zone {
 
-    public ArmatureEnBlocs(Forme forme,double largeurBloc) 
-    {
+    public ArmatureEnBlocs(Forme forme, double largeurBloc) {
         super(forme, largeurBloc);
     }
 
-    @Override
-    public double getHauteurBloc() 
-    {
-        return 30;
+    public ArmatureEnBlocs(Forme forme, double largeurBloc, double hauteurBloc) {
+        super(forme, largeurBloc, hauteurBloc);
     }
 }

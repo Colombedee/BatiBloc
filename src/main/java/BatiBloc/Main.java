@@ -18,7 +18,6 @@ public class Main {
         FlatMacDarkLaf.setup();
 
         UIManager.put("Button.arc", 15);
-        
         UIManager.put("Component.arc", 15);
         UIManager.put("TextComponent.arc", 10);
 
