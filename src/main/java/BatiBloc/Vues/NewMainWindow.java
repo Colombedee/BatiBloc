@@ -322,7 +322,7 @@ public class NewMainWindow extends JFrame {
             this.controleur.supprimerVues(indices);
         }
         else if (!indices.isEmpty() && this.actionCourantePanneauVues.equalsIgnoreCase("panel.export")){
-            this.controleur.exporterPdf(indices);
+            this.controleur.exporterVues(indices);
         }
         
         this.cancelViewsModification();

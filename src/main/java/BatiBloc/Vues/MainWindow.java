@@ -657,7 +657,7 @@ public class MainWindow extends JFrame {
             this.controleur.supprimerVues(indices);
         }
         else if (!indices.isEmpty() && this.actionCourante.equalsIgnoreCase("panel.export")){
-            this.controleur.exporterPdf(indices);
+            this.controleur.exporterVues(indices);
         }
         
         this.annulerSupressionOuExportVues();
