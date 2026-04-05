@@ -6,7 +6,7 @@ import BatiBloc.Domaine.Modeles.*;
 import BatiBloc.Domaine.Dto.*;
 import BatiBloc.Domaine.Services.ExportFichierPdfService;
 import BatiBloc.Domaine.Services.ImportFichierPdfService;
-import BatiBloc.Domaine.dto.RognerVueDTO;
+import BatiBloc.Domaine.Dto.RognerVueDTO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;

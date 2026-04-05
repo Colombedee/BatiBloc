@@ -29,7 +29,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import BatiBloc.Domaine.dto.RognerVueDTO;
+import BatiBloc.Domaine.Dto.RognerVueDTO;
 import java.awt.Cursor;
 import javax.swing.AbstractButton;
 import javax.swing.JOptionPane;

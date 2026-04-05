@@ -8,7 +8,7 @@ import BatiBloc.Domaine.Dto.TypeForme;
 import BatiBloc.Domaine.Dto.TypeZone;
 import BatiBloc.Domaine.Dto.VueDTO;
 //import BatiBloc.langue.TrComposant;
-import BatiBloc.Domaine.dto.RognerVueDTO;
+import BatiBloc.Domaine.Dto.RognerVueDTO;
 //import BatiBloc.langue.Langage;
 //import BatiBloc.langue.LangueManager;
 import java.awt.BorderLayout;
