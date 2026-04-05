@@ -7,8 +7,16 @@ public abstract class Forme {
     
     protected List<Point> position;
     
-    protected Forme(List<Point> position){
-        this.position = position;
+    protected List<java.awt.geom.Point2D.Double> positionPrecise;//Colombe
+    //Colombe
+    protected Forme(List<Point> position) 
+    {
+        this.position = new java.util.ArrayList<>(position);
+        // Initialiser la version précise
+        this.positionPrecise = new java.util.ArrayList<>();
+        for (Point p : position) {
+            this.positionPrecise.add(new java.awt.geom.Point2D.Double(p.x, p.y));
+        }
     }
     
     protected List<Point> getPointsInternes() {

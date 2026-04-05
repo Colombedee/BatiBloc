@@ -41,6 +41,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     private TypeZone typeEnCours = TypeZone.ARMATURE_CLASSIQUE;
     private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
     private boolean modeDeplacementZone = false;
+    private boolean modeSuppressionZone = false;
     private boolean modeRedimensionnementZone = false;
     private int indexPoigneeSelectionnee = -1;
 
@@ -87,17 +88,15 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     }
                     //Colombe
                     if (modeRedimensionnementZone) {
-                        // Chercher si on clique sur une poignée
                         indexPoigneeSelectionnee = -1;
-                        List<ZoneDTO> zones = vueCourante.getZones();
-                        for (ZoneDTO zone : zones) {
+                        for (ZoneDTO zone : vueCourante.getZones()) {
                             if (zone.isSelectionnee()) {
-                                java.util.List<Point> pts = zone.getPoints();
-                                for (int i = 0; i < pts.size(); i++) {
+                                Rectangle bb = calculerBoundingBox(zone.getPoints());
+                                Point[] poignees = calculerPoigneesBoundingBox(bb);
+                                for (int i = 0; i < poignees.length; i++) {
                                     Point2D imgPoint = screenToImage(e.getX(), e.getY());
-                                    int px = (int) pts.get(i).getX();
-                                    int py = (int) pts.get(i).getY();
-                                    if (Math.abs(imgPoint.getX() - px) <= 8 && Math.abs(imgPoint.getY() - py) <= 8) {
+                                    if (Math.abs(imgPoint.getX() - poignees[i].x) <= 8 
+                                     && Math.abs(imgPoint.getY() - poignees[i].y) <= 8) {
                                         indexPoigneeSelectionnee = i;
                                         dernierPointSouris = e.getPoint();
                                         repaint();
@@ -106,10 +105,9 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                                 }
                             }
                         }
-                        // Si pas de poignée, sélectionner une zone
+                        // Aucune poignée → sélectionner zone
                         Point2D imgPoint = screenToImage(e.getX(), e.getY());
-                        Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
-                        controller.selectionnerZone(ptImage);
+                        controller.selectionnerZone(new Point((int)imgPoint.getX(), (int)imgPoint.getY()));
                         vueCourante = controller.getVueCourante();
                         dernierPointSouris = e.getPoint();
                         repaint();
@@ -170,13 +168,13 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     }
                 }
                 //Colombe
-                if (modeRedimensionnementZone && indexPoigneeSelectionnee >= 0 && dernierPointSouris != null) 
-                {
+                if (modeRedimensionnementZone && indexPoigneeSelectionnee >= 0 && dernierPointSouris != null) {
                     Point2D imgActuel = screenToImage(e.getX(), e.getY());
                     Point2D imgDernier = screenToImage(dernierPointSouris.x, dernierPointSouris.y);
                     int dx = (int)(imgActuel.getX() - imgDernier.getX());
                     int dy = (int)(imgActuel.getY() - imgDernier.getY());
-                    controller.redimensionnerZoneSelectionnee(indexPoigneeSelectionnee, dx, dy);
+
+                    controller.redimensionnerParBoundingBox(indexPoigneeSelectionnee, dx, dy);
                     vueCourante = controller.getVueCourante();
                     dernierPointSouris = e.getPoint();
                     repaint();
@@ -278,8 +276,9 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     if (pts != null)
                     {
                         controller.ajouterZone(typeEnCours, formeEnCours, pts);
+                        vueCourante = controller.getVueCourante();
                         if (onZoneAjoutee != null) onZoneAjoutee.run();
-                        modeDeplacementZone = false;
+//                        modeDeplacementZone = false;
                         repaint();
                     }
                 }
@@ -299,27 +298,26 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 appliquerZoom(facteur, e.getX(), e.getY());
             }
             
-//            //Colombe
-//            public void mouseClicked(MouseEvent e)
-//            {
-//                if (vueCourante == null || !modeAjoutZone) return;
-//                if (formeEnCours == BatiBloc.Dto.TypeForme.RECTANGLE) return;
-//                if (!SwingUtilities.isLeftMouseButton(e)) return;
-//                
-//                Point2D imgPoint = screenToImage(e.getX(), e.getY());
-//                pointsEnCours.add(new Point((int) imgPoint.getX(), (int) imgPoint.getY()));
-//                
-//                int nbPointsRequis = (formeEnCours == BatiBloc.Dto.TypeForme.TRIANGLE) ? 3 : 4;
-//                
-//                if (pointsEnCours.size() == nbPointsRequis)
-//                {
-//                    controller.ajouterZone(typeEnCours, formeEnCours, new java.util.ArrayList<>(pointsEnCours));
-//                    if (onZoneAjoutee != null) onZoneAjoutee.run();
-//                    pointsEnCours.clear();
-//                    repaint();
-//                }
-//            }   
-            
+            //Colombe 
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (vueCourante == null || !modeSuppressionZone) return;
+                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                if (e.getClickCount() != 2) return;
+
+                Point2D imgPoint = screenToImage(e.getX(), e.getY());
+                Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
+
+                List<ZoneDTO> zones = vueCourante.getZones();
+                for (int i = 0; i < zones.size(); i++) {
+                    if (zones.get(i).contientPoint(ptImage)) {
+                        controller.supprimerZone(i);
+                        vueCourante = controller.getVueCourante();
+                        repaint();
+                        return;
+                    }
+                }
+            }
         };
         
         this.addMouseListener(mouseHandler);
@@ -404,6 +402,13 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     //Colombe
     public void setModeDeplacementZone(boolean actif) {
         this.modeDeplacementZone = actif;
+        this.modeRognage = false;
+        this.modeAjoutZone = false;
+        this.modeCalibration = false;
+        repaint();
+    }
+    public void setModeSuppressionZone(boolean actif) {
+        this.modeSuppressionZone = actif;
         this.modeRognage = false;
         this.modeAjoutZone = false;
         this.modeCalibration = false;
@@ -567,8 +572,29 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         double imageY = (screenY - currentOffsetY) / currentZoom;
         return new Point2D.Double(imageX, imageY);
     }
+    //Colombe
+    private Rectangle calculerBoundingBox(java.util.List<Point> pts) {
+        int xMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
+        int yMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
+        int xMax = pts.stream().mapToInt(p -> p.x).max().orElse(0);
+        int yMax = pts.stream().mapToInt(p -> p.y).max().orElse(0);
+        return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
+    }
+    //Colombe
+    private Point[] calculerPoigneesBoundingBox(Rectangle bb) {
+        int x = bb.x, y = bb.y, w = bb.width, h = bb.height;
+        return new Point[] {
+            new Point(x,         y        ), // 0: coin haut-gauche
+            new Point(x + w/2,   y        ), // 1: milieu haut
+            new Point(x + w,     y        ), // 2: coin haut-droit
+            new Point(x + w,     y + h/2  ), // 3: milieu droit
+            new Point(x + w,     y + h    ), // 4: coin bas-droit
+            new Point(x + w/2,   y + h    ), // 5: milieu bas
+            new Point(x,         y + h    ), // 6: coin bas-gauche
+            new Point(x,         y + h/2  )  // 7: milieu gauche
+        };
+    }
     
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -634,17 +660,20 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             }
             
             //Colombe
-            if (modeRedimensionnementZone && zone.isSelectionnee()) 
-            {
-                g2d.setColor(Color.WHITE);
-                for (int i = 0; i < pts.size(); i++) 
-                {
-                    int px = (int) pts.get(i).getX();
-                    int py = (int) pts.get(i).getY();
-                    g2d.fillRect(px - 4, py - 4, 8, 8);
-                    g2d.setColor(Color.BLACK);
-                    g2d.drawRect(px - 4, py - 4, 8, 8);
+            if (modeRedimensionnementZone && zone.isSelectionnee()) {
+                Rectangle bb = calculerBoundingBox(pts);
+                // Boîte en pointillés
+                g2d.setColor(Color.GRAY);
+                g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER,
+                    10, new float[]{4}, 0));
+                g2d.drawRect(bb.x, bb.y, bb.width, bb.height);
+                // 8 poignées
+                g2d.setStroke(new BasicStroke(1));
+                for (Point p : calculerPoigneesBoundingBox(bb)) {
                     g2d.setColor(Color.WHITE);
+                    g2d.fillRect(p.x - 4, p.y - 4, 8, 8);
+                    g2d.setColor(Color.GRAY);
+                    g2d.drawRect(p.x - 4, p.y - 4, 8, 8);
                 }
             }
         }

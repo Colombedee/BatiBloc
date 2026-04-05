@@ -38,4 +38,12 @@ public class ZoneDTO
             {
                 return this.selectionnee;
             }
+    public boolean contientPoint(Point p) 
+    {
+        java.awt.Polygon poly = new java.awt.Polygon();
+        for (Point pt : this.points) {
+            poly.addPoint(pt.x, pt.y);
+        }
+        return poly.contains(p);
+    }
 }

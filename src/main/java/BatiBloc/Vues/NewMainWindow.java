@@ -42,6 +42,7 @@ public class NewMainWindow extends JFrame {
     private ActionVue actionVue;
     private boolean formeChoisie = false;
     private boolean modeRognage = false;
+    private boolean modeSuppressionZone = false;
     private boolean typeChoisi = false;
     private DrawingPanel drawingPanel;
     private JButton btnAnnulerModif;
@@ -459,12 +460,38 @@ public class NewMainWindow extends JFrame {
         this.addZoneBoutonListener(this.btn_zoneArmatureClassique, TypeZone.ARMATURE_CLASSIQUE);
         this.addZoneBoutonListener(this.btn_zoneArmatureBloc, TypeZone.ARMATURE_BLOCS);
         this.addZoneBoutonListener(this.btn_zoneOuverture, TypeZone.OUVERTURE);
+
+        this.btn_deplacerZone.addActionListener(e -> {
+            boolean actuel = this.drawingPanel.getModeDeplacementZone();
+            this.stopZoneDrawingMode();                            
+            this.drawingPanel.setModeRedimensionnementZone(false); 
+            this.drawingPanel.setModeDeplacementZone(!actuel);
+        });
+
+        this.btn_dimensionZone.addActionListener(e -> {
+            boolean actuel = this.drawingPanel.getModeRedimensionnementZone();
+            this.stopZoneDrawingMode();                       
+            this.drawingPanel.setModeDeplacementZone(false);   
+            this.drawingPanel.setModeRedimensionnementZone(!actuel);
+        });
+        this.btn_supprimerZone.addActionListener(e -> {
+            boolean actuel = this.modeSuppressionZone;
+            this.stopZoneDrawingMode();
+            this.drawingPanel.setModeDeplacementZone(false);
+            this.drawingPanel.setModeRedimensionnementZone(false);
+            this.modeSuppressionZone = !actuel;
+            this.drawingPanel.setModeSuppressionZone(this.modeSuppressionZone);
+        });
     }
-    
     private void addZoneBoutonListener(AbstractButton button, TypeZone zone) {
         button.addActionListener(e -> {
+            this.drawingPanel.setModeDeplacementZone(false);       
+            this.drawingPanel.setModeRedimensionnementZone(false); 
+            this.modeSuppressionZone = false;                      
+            this.drawingPanel.setModeSuppressionZone(false); 
             this.drawingPanel.setTypeZoneEnCours(zone);
             this.typeChoisi = true;
+            this.verifierActivationDessin();
         });
     }
     
@@ -476,6 +503,10 @@ public class NewMainWindow extends JFrame {
     
     private void addFormeBoutonListener(AbstractButton button, TypeForme forme) {
         button.addActionListener(e -> {
+            this.modeSuppressionZone = false;               
+            this.drawingPanel.setModeSuppressionZone(false); 
+            this.drawingPanel.setModeDeplacementZone(false);      
+            this.drawingPanel.setModeRedimensionnementZone(false);  
             this.drawingPanel.setFormeEnCours(forme);
             this.formeChoisie = true;
             this.verifierActivationDessin();
@@ -504,10 +535,11 @@ public class NewMainWindow extends JFrame {
 
     private void stopZoneDrawingMode() {
         this.drawingPanel.setModeAjoutZone(false);
-        
         this.typeChoisi = false;
         this.formeChoisie = false;
-        
+        this.modeSuppressionZone = false;                        
+        this.drawingPanel.setModeSuppressionZone(false);      
+
         if (this.btnStopZoneDrawing != null) {
             this.panel_menu.remove(this.btnStopZoneDrawing);
             this.btnStopZoneDrawing = null;
