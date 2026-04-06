@@ -35,6 +35,21 @@ public class Triangle extends Forme {
     public boolean contientPoint(Point p) {
         return this.pointDansTriangle(p, this.position.get(0), this.position.get(1), this.position.get(2));
     }
+    
+    // sim librable 4 @roneh
+    @Override
+    public double getLargeurAHauteur(double distanceDepuisLaBase) {
+        double hauteur = getHauteur();
+        if (hauteur <= 0) return 0;
+        double t = Math.min(1.0, distanceDepuisLaBase / hauteur);
+        return getLargeur() * (1.0 - t);
+    }
+
+    //@roneh Sim. Livrable4
+    @Override
+    public double getXOffsetAHauteur(double distanceDepuisLaBase) {
+        return (getLargeur() - getLargeurAHauteur(distanceDepuisLaBase)) / 2.0;
+    }
 
     private boolean pointDansTriangle(Point p, Point a, Point b, Point c) {
         double area = aire(a, b, c);

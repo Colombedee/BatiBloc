@@ -1,5 +1,6 @@
 package BatiBloc.Domaine.Modeles;
 
+import BatiBloc.Domaine.Dto.BlocDTO;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,8 @@ public abstract class Zone {
 
     protected List<Ligne> lignes = new ArrayList<>();
     protected double morceauRestant = 0.0;
+
+    protected List<BlocDTO> blocsSimules = new ArrayList<>();
 
     public Zone(Forme forme, double largeurBloc) {
         this(forme, largeurBloc, HAUTEUR_BLOC_DEFAUT);
@@ -43,6 +46,7 @@ public abstract class Zone {
             this.largeurBloc = largeurBloc;
             this.lignes.clear();
             this.morceauRestant = 0.0;
+            this.blocsSimules.clear();
         }
     }
 
@@ -51,6 +55,7 @@ public abstract class Zone {
             this.hauteurBloc = hauteurBloc;
             this.lignes.clear();
             this.morceauRestant = 0.0;
+            this.blocsSimules.clear();
         }
     }
 
@@ -74,6 +79,30 @@ public abstract class Zone {
 
     public List<Ligne> getLignes() {
         return List.copyOf(this.lignes);
+    }
+
+    // Blocs calculés lors de la dernière simulation (lecture)
+    public List<BlocDTO> getBlocsSimules() {
+        return List.copyOf(this.blocsSimules);
+    }
+
+    public void setBlocsSimules(List<BlocDTO> blocs) {
+        this.blocsSimules = new ArrayList<>(blocs);
+    }
+
+    public double getMorceauRestant() {
+        return this.morceauRestant;
+    }
+
+    public void setMorceauRestant(double morceauRestant) {
+        this.morceauRestant = morceauRestant >= LONGUEUR_MINIMALE_BLOC ? morceauRestant : 0.0;
+    }
+
+    /** Réinitialise complètement l'état de simulation. */
+    public void reinitialiserSimulation() {
+        this.lignes.clear();
+        this.morceauRestant = 0.0;
+        this.blocsSimules.clear();
     }
 
     /**
@@ -106,33 +135,28 @@ public abstract class Zone {
     }
 
     /**
-     * Version minimale  pour le livrable 4 :
-     * - placement gauche -> droite
-     * - réutilisation du morceau restant
-     * - aucun morceau < 6 pouces
+     * Construit une rangée de blocs pour la largeur donnée (en pixels / pouces selon l'échelle).
+     * Utilise et met à jour {@code morceauRestant}.
+     * N'ajoute PAS la ligne à {@code this.lignes} : c'est le rôle de l'appelant.
      *
-     * Cette logique est adaptée à une simulation rectangulaire.
-     * Les triangles / tronqués devront être traités plus finement plus tard.
+     * @param largeurZone largeur disponible pour cette rangée
+     * @return la Ligne construite, ou {@code null} si aucun bloc ne tient
      */
-    public void construireLigne() {
-        double largeurZone = getLargeurTotale();
-
+    public Ligne construireLigneAvecLargeur(double largeurZone) {
         if (largeurZone < LONGUEUR_MINIMALE_BLOC || this.largeurBloc < LONGUEUR_MINIMALE_BLOC) {
-            return;
+            return null;
         }
 
         Ligne ligne = new Ligne();
         double largeurUtilisee = 0.0;
 
-        // 1. Réutilisation de la chute précédente si elle est valide
+        // 1. Réutilisation de la chute précédente si valide
         if (this.morceauRestant + EPSILON >= LONGUEUR_MINIMALE_BLOC) {
             double largeurReprise = Math.min(this.morceauRestant, largeurZone);
-
             if (largeurReprise + EPSILON >= LONGUEUR_MINIMALE_BLOC) {
                 ligne.ajouterBloc(new Bloc(largeurReprise));
                 largeurUtilisee += largeurReprise;
             }
-
             this.morceauRestant = 0.0;
         } else {
             this.morceauRestant = 0.0;
@@ -141,10 +165,7 @@ public abstract class Zone {
         double largeurDisponible = largeurZone - largeurUtilisee;
 
         if (largeurDisponible + EPSILON < LONGUEUR_MINIMALE_BLOC) {
-            if (!ligne.getBlocs().isEmpty()) {
-                this.lignes.add(ligne);
-            }
-            return;
+            return ligne.getBlocs().isEmpty() ? null : ligne;
         }
 
         // 2. Premier bloc "neuf", potentiellement ajusté
@@ -182,7 +203,19 @@ public abstract class Zone {
             this.morceauRestant = 0.0;
         }
 
-        if (!ligne.getBlocs().isEmpty()) {
+        return ligne.getBlocs().isEmpty() ? null : ligne;
+    }
+
+    /**
+     * - placement gauche -> droite
+     * - réutilisation du morceau restant
+     * - aucun morceau < 6 pouces
+     * Pour les rectangle.
+     */
+    public void construireLigne() {
+        double largeurZone = getLargeurTotale();
+        Ligne ligne = construireLigneAvecLargeur(largeurZone);
+        if (ligne != null) {
             this.lignes.add(ligne);
         }
     }

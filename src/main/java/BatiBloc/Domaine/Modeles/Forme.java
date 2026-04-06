@@ -45,6 +45,16 @@ public abstract class Forme {
         }
     }
     
+    // @roneh pour la simulation livrable4
+    public double getLargeurAHauteur(double distanceDepuisLaBase) {
+        return getLargeur();
+    }
+
+    // @roneh pour la simulation livrable4
+    public double getXOffsetAHauteur(double distanceDepuisLaBase) {
+        return 0.0;
+    }
+    
     protected boolean contientPoint(Point p){
         return false;
     }

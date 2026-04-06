@@ -47,6 +47,29 @@ public class TriangleTronque extends Forme {
                this.pointDansTriangle(p, A, C, D);
     }
 
+    // Simulation livrable 4 @roneh
+    public double getLargeurSommet() {
+        double xGaucheSommet = this.position.get(3).x;
+        double xDroitSommet  = this.position.get(2).x;
+        return Math.abs(xDroitSommet - xGaucheSommet);
+    }
+    
+    //@roneh pour sim liv.4
+    @Override
+    public double getLargeurAHauteur(double distanceDepuisLaBase) {
+        double hauteur = getHauteur();
+        if (hauteur <= 0) return getLargeur();
+        double t = Math.min(1.0, distanceDepuisLaBase / hauteur);
+        double grande = getLargeur();
+        double petite = getLargeurSommet();
+        return grande + (petite - grande) * t;
+    }
+    // Simulation 4
+    @Override
+    public double getXOffsetAHauteur(double distanceDepuisLaBase) {
+        return (getLargeur() - getLargeurAHauteur(distanceDepuisLaBase)) / 2.0;
+    }
+    
     private double aire(Point p1, Point p2, Point p3) {
         return Math.abs(
             p1.x * (p2.y - p3.y) +
