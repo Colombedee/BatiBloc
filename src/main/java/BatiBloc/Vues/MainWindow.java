@@ -1,16 +1,15 @@
 package BatiBloc.Vues;
 
-import javax.swing.ImageIcon; 
-import javax.swing.JLabel;
-import javax.swing.*;
 import BatiBloc.Domaine.Controleur.MainController;
-import BatiBloc.Domaine.Dto.TypeForme;
-import BatiBloc.Domaine.Dto.TypeZone;
 import BatiBloc.Domaine.Dto.VueDTO;
-//import BatiBloc.langue.TrComposant;
-import BatiBloc.Domaine.Dto.RognerVueDTO;
-//import BatiBloc.langue.Langage;
-//import BatiBloc.langue.LangueManager;
+import BatiBloc.Domaine.Dto.TypeZone;
+import BatiBloc.Domaine.Dto.TypeForme;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import javax.swing.JFrame;
+import javax.swing.JButton;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -24,826 +23,1119 @@ import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.logging.Logger;
-import javax.swing.border.TitledBorder;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import BatiBloc.Domaine.Dto.RognerVueDTO;
+import java.awt.Cursor;
+import javax.swing.AbstractButton;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import BatiBloc.Domaine.Dto.SimulationDTO;
 
 public class MainWindow extends JFrame {
-    
-    private static final Logger logger = Logger.getLogger(MainWindow.class.getName());
-    private final MainController controleur;
-    private IPanelAffichage drawingPanel;
+    private enum ActionVue { EXPORT, DELETE }
+    private ActionVue actionVue;
+    private boolean formeChoisie = false;
     private boolean modeRognage = false;
-    private String actionCourante = null;
-    private JPanel panel_miniatures;
-    private JPanel panel_selectionVues;
-    private JCheckBox btn_toutSelectionner;
-    private JButton btn_confirmerModification;
-    private JButton btn_annulerModification;
-    private List<JCheckBox> checkboxes;
-    //pour le rognage inverse @roneh
-    private Rectangle selectionRognageEnAttente = null;
-    private JPanel panelChoixRognage;
-    private JButton btn_appliquerRognageNormal;
-    private JButton btn_appliquerRognageInverse;
-    private JButton btn_annulerRognage;
-            
+    private boolean modeSuppressionZone = false;
+    private boolean typeChoisi = false;
+    private DrawingPanel drawingPanel;
+    private JButton btnAnnulerModif;
+    private JButton btnConfirmerModif;
+    private JButton btnStopZoneDrawing;
+    private JCheckBox chkToutesVues;
+    private JPanel panneauVues;
+    private JPanel viewsThumbnailPanel;
+    private Locale langueCourante = Locale.FRENCH;
+    private List<JButton> boutonsVue;
+    private List<JLabel> labelsVue;
+    private List<JTextField> textFieldsVue;
+    private List<JCheckBox> casesVues;
+    private final MainController controleur;
+    private ResourceBundle resourceBundle;
+
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
         this.initComponents();
-        this.initialisationFormulaire();        
+        this.initFormulaire();        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
-    
-    private void initialisationFormulaire(){
-        //this.controleur.changerLangue();
-        this.configurationPanel3D();
-        this.configurerSpinnerEchelle();
-        this.configurerActionBoutons();
-        this.configurationLiaisonsTraduction();
+
+    private void initFormulaire() {
+        this.initListes();
+        this.initPanneauDessin();
+        this.initBoutonsIcones();
+        this.majInterface(); 
+        this.initPlaceholders();
+        this.initListeners();
+        this.rafraichirUI();
     }
-    
-    private void configurerSpinnerEchelle(){
-        SpinnerNumberModel modeleEchelle = new SpinnerNumberModel(
-        1.0 / 96.0,
-        null,
-        null,
-        0.001
+
+    private void initListes() {
+        this.initListeBoutonsVue();
+        this.initListeLabelVue();
+        this.initListetextFieldVue();
+    }
+
+    private void initListeBoutonsVue() {
+        this.boutonsVue = List.of(
+            this.btn_exporterPdf, this.btn_supprimerVue, this.btn_rognerVue,
+            this.btn_vuePrecedente, this.btn_vueSuivante, this.btn_appliquerEchelle,
+            this.btn_deplacerZone, this.btn_redimensionnerZone, this.btn_supprimerZone,
+            this.btn_zoneArmatureClassique, this.btn_zoneArmatureBloc, this.btn_zoneOuverture,
+            this.btn_formeRectangle, this.btn_formeTriangle, this.btn_formeTriangleTronque,
+            this.btn_zoomIn, this.btn_zoomOut, this.btn_simulation
         );
-        
-        this.spi_echelle.setModel(modeleEchelle);
-        this.spi_echelle.addChangeListener(e -> {
-            double nouvelleEchelle = ((Number) this.spi_echelle.getValue()).doubleValue();
-            if (nouvelleEchelle > 0) {
-                this.controleur.setEchelleCourante(nouvelleEchelle);
-                this.rafraichirVueCourante();
-            }
-        });
     }
-    
-    private void configurationPanel3D(){
+
+    private void initListeLabelVue() {
+        this.labelsVue = List.of(
+            this.lbl_largeurBloc, this.lbl_hauteurBloc,
+            this.lbl_coutParBloc, this.lbl_echelle
+        );
+    }
+
+    private void initListetextFieldVue() {
+        this.textFieldsVue = List.of(
+            this.txt_largeurBloc, this.txt_hauteurBloc,
+            this.txt_coutParBloc, this.txt_echelle
+        );
+    }
+
+    private void initPanneauDessin() {
         this.drawingPanel = new DrawingPanel(this.controleur);
-        //this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
-        this.drawingPanel.setOnRognageTermine(rect -> this.preparerChoixRognage(rect));  // @roneh
+        this.drawingPanel.setOnRognageTermine(this::rognerVueCourante);
+        this.drawingPanel.setOnZoneAjoutee(this::rafraichirUI);
         
-        this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirVueCourante());
-        if (this.drawingPanel instanceof DrawingPanel dp) //Colombe
-        {
-            dp.setModeAjoutZone(true);
-        }
-        
-        this.jPanel1.setLayout(new BorderLayout());
-        this.jPanel1.add((Component) this.drawingPanel, BorderLayout.CENTER);
+        this.panel_vues.setLayout(new BorderLayout());
+        this.panel_vues.add((Component) this.drawingPanel, BorderLayout.CENTER);
         
         JPanel panelZoom = new JPanel();
         panelZoom.setOpaque(false);
         panelZoom.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        panelZoom.add(this.btn_zoomer);
-        panelZoom.add(this.btn_dezoomer);
-        
-        this.jPanel1.add(panelZoom, BorderLayout.SOUTH);
-        this.initialiserPanelChoixRognage(); // @roneh
+        this.panel_vues.add(panelZoom, BorderLayout.SOUTH);
     }
-    
-    private void configurerActionBoutons() {      
-        this.btn_precedent.addActionListener(e -> {
-            this.controleur.naviguerVuePrecedente();
-            this.rafraichirVueCourante();
+
+    private void rognerVueCourante(Rectangle zoneAffichage) {
+        if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) return;
+
+        Rectangle zoneImage = this.drawingPanel.convertirSelectionEcranVersImage(zoneAffichage);
+        if (zoneImage == null) return;
+
+        this.controleur.rognerVueCourante(
+            new RognerVueDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
+        );
+
+        this.modeRognage = false;
+        this.drawingPanel.setModeRognage(false);
+        this.btn_rognerVue.setText(this.getTexte("button.cropView"));
+        this.rafraichirUI();
+    }
+
+    private void initBoutonsIcones() {
+        this.btn_deplacerZone.setIcon(loadIcon("move_icon.svg", 25));
+        this.btn_redimensionnerZone.setIcon(loadIcon("resize_icon.svg", 25));
+        this.btn_supprimerZone.setIcon(loadIcon("delete_icon.svg", 25));
+        this.btn_zoneArmatureClassique.setIcon(loadIcon("classicZone_icon.svg", 25));
+        this.btn_zoneArmatureBloc.setIcon(loadIcon("blockZone_icon.svg", 25));
+        this.btn_zoneOuverture.setIcon(loadIcon("opening_icon.svg", 25));
+        this.btn_formeRectangle.setIcon(loadIcon("rectangle_icon.svg", 25));
+        this.btn_formeTriangle.setIcon(loadIcon("triangle_icon.svg", 25));
+        this.btn_formeTriangleTronque.setIcon(loadIcon("truncatedTriangle_icon.svg", 25));
+        this.btn_vuePrecedente.setIcon(loadIcon("backward_icon.svg", 25));
+        this.btn_vueSuivante.setIcon(loadIcon("forward_icon.svg", 25));
+        this.btn_zoomIn.setIcon(loadIcon("zoomIn_icon.svg", 25));
+        this.btn_zoomOut.setIcon(loadIcon("zoomOut_icon.svg", 25));
+    }
+
+    private FlatSVGIcon loadIcon(String name, int size) {
+        return new FlatSVGIcon("icones/" + name, size, size);
+    }
+
+    private void majInterface() {
+        this.resourceBundle = ResourceBundle.getBundle("i18n.messages", this.langueCourante);
+        this.btn_appliquerEchelle.setText(this.getTexte("button.applyScale"));
+        this.btn_changerLangue.setText(this.getTexte("button.changeLanguage"));
+        this.btn_simulation.setText(this.getTexte("button.simulation"));
+
+        this.configBoutons();
+        this.configLabels();
+        this.configBoutonsMouseHover();
+        this.majLanguePanneauVues();
+        this.rafraichirUI();
+    }
+
+    private void configBoutons() {
+        this.configBouton(this.btn_annulerAction, "button.undoAction", "undo_icon.svg");
+        this.configBouton(this.btn_retablirAction, "button.redoAction", "redo_icon.svg");
+        this.configBouton(this.btn_importerPdf, "button.importPdf", "import_icon.svg");
+        this.configBouton(this.btn_exporterPdf, "button.exportPdf", "export_icon.svg");
+        this.configBouton(this.btn_ajouterVue, "button.addView", "add_icon.svg");
+        this.configBouton(this.btn_supprimerVue, "button.deleteView", "delete_icon.svg");
+        this.configBouton(this.btn_rognerVue, "button.cropView", "crop_icon.svg");
+    }
+
+    private void configBouton(JButton bouton, String nomBouton, String nomIcone) {
+        bouton.setText(this.getTexte(nomBouton));
+        bouton.setIcon(new FlatSVGIcon("icones/" + nomIcone, 25, 25));
+        bouton.setIconTextGap(10);
+    }
+
+    private void configLabels() {
+        this.lbl_blocsTitre.setText(this.getTexte("label.block"));
+        this.lbl_actionsTitre.setText(this.getTexte("label.action"));
+        this.lbl_largeurBloc.setText(this.getTexte("label.width"));
+        this.lbl_hauteurBloc.setText(this.getTexte("label.height"));
+        this.lbl_coutParBloc.setText(this.getTexte("label.costPerBlock"));
+        this.lbl_typeZoneTitre.setText(this.getTexte("label.zoneType"));
+        this.lbl_formeZoneTitre.setText(this.getTexte("label.form"));
+        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock"));
+        this.lbl_coutTotal.setText(this.getTexte("label.totalCost"));
+        this.lbl_echelle.setText(this.getTexte("label.scale"));
+    }
+
+    private void configBoutonsMouseHover() {
+        this.initMouseHover(this.btn_deplacerZone, this.getTexte("button.move"));
+        this.initMouseHover(this.btn_redimensionnerZone, this.getTexte("button.resize"));
+        this.initMouseHover(this.btn_supprimerZone, this.getTexte("button.deleteZone"));
+        this.initMouseHover(this.btn_zoneArmatureClassique, this.getTexte("button.zoneClassicFrame"));
+        this.initMouseHover(this.btn_zoneArmatureBloc, this.getTexte("button.zoneReinforcementBlocks"));
+        this.initMouseHover(this.btn_zoneOuverture, this.getTexte("button.zoneOpening"));
+        this.initMouseHover(this.btn_formeRectangle, this.getTexte("button.formRectangle"));
+        this.initMouseHover(this.btn_formeTriangle, this.getTexte("button.formTriangle"));
+        this.initMouseHover(this.btn_formeTriangleTronque, this.getTexte("button.formTruncatedTriangle"));
+    }
+
+    private void initMouseHover(JButton bouton, String texte) {
+        bouton.setToolTipText(texte);
+    }
+
+    private void majLanguePanneauVues() {
+        if (this.panneauVues != null && this.panneauVues.isShowing()) {            
+            this.configPanneauVues();
+            this.chkToutesVues.setText(this.getTexte("panel.selectAll"));
+            this.btnConfirmerModif.setText(this.getTexte("panel.confirm"));
+            this.btnAnnulerModif.setText(this.getTexte("panel.cancel"));
+        }
+    }
+
+    private void configPanneauVues() {
+        List<Integer> indicesCochesAvant = this.sauvegarderCasesCochees();
+        this.afficherSelectionVues(this.actionVue);
+        this.restaurerSelection(indicesCochesAvant);
+    }
+
+    private void initPlaceholders() {
+        this.txt_largeurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 3'6\"1/3");
+        this.txt_hauteurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 1'2\"4/5");
+        this.txt_coutParBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 5,00");
+        this.txt_echelle.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 6\"");
+    }
+
+    private void initListeners() {
+        this.initBoutonsPrincipal();
+        this.initBoutonsAction();
+        this.initBoutonsZone();
+        this.initBoutonsForme();
+        this.initBoutonsVues();
+        this.initLabelFocus();
+    }
+
+    private void initBoutonsPrincipal() {
+        this.addAction(this.btn_annulerAction, this.controleur::annulerAction);
+        this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
+        this.addAction(this.btn_importerPdf, () -> {
+            this.controleur.importerPdf();
+            this.rafraichirUI();
         });
-        
-        this.btn_suivant.addActionListener(e -> {
-            this.controleur.naviguerVueSuivante();
-            this.rafraichirVueCourante();
+        this.addAction(this.btn_ajouterVue, () -> {
+            this.controleur.ajouterVue();
+            this.rafraichirUI();
         });
-        
-        this.btn_importer.addActionListener(e -> {
-            //this.controleur.importerFichierPdf();
-            this.rafraichirVueCourante();
+        this.btn_exporterPdf.addActionListener(e -> {
+            this.actionVue = ActionVue.EXPORT;
+            this.afficherSelectionVues(this.actionVue);
         });
-        
-        this.btn_rogner.addActionListener(e -> {
+        this.btn_supprimerVue.addActionListener(e -> {
+            this.actionVue = ActionVue.DELETE;
+            this.afficherSelectionVues(this.actionVue);
+        });
+        this.btn_rognerVue.addActionListener(e -> {
             this.modeRognage = !this.modeRognage;
             this.drawingPanel.setModeRognage(this.modeRognage);
-            this.btn_rogner.setText(this.modeRognage ? "Rognage actif" : "button.crop");
+            this.btn_rognerVue.setText(this.modeRognage ? this.getTexte("button.activeCropping") : this.getTexte("button.cropView"));
         });
-        
-        //this.btn_changerLangue.addActionListener(e -> this.controleur.changerLangue());
-        this.btn_exporter.addActionListener(e -> this.afficherPanelVues("panel.export"));
-        this.btn_supprimer.addActionListener(e -> this.afficherPanelVues("panel.delete"));
-    
-    this.cbo_typeZone.addActionListener(e -> {
-        int index = this.cbo_typeZone.getSelectedIndex();
-        TypeZone type;
-        switch (index) {
-            case 1: type = TypeZone.ARMATURE_BLOCS; break;
-            case 2: type = TypeZone.OUVERTURE; break;
-            default: type = TypeZone.ARMATURE_CLASSIQUE; break;        
-        }
-        if (this.drawingPanel instanceof DrawingPanel dp){
-            dp.setTypeZoneEnCours(type);
-        }
-    });
-    
-    this.cbo_formeZone.addActionListener(e -> {
-        int index = this.cbo_formeZone.getSelectedIndex();
-        TypeForme forme;
-        switch (index) {
-            case 1: forme = TypeForme.TRIANGLE; break;
-            case 2: forme = TypeForme.TRIANGLE_TRONQUE; break;
-            default: forme = TypeForme.RECTANGLE; break;        
-        }
-        if (this.drawingPanel instanceof DrawingPanel dp) {
-            dp.setFormeEnCours(forme);
-            dp.setModeAjoutZone(true);
-        }
-    });
+        this.btn_changerLangue.addActionListener(e -> {
+            this.langueCourante = (this.langueCourante.equals(Locale.FRENCH)) ? Locale.ENGLISH : Locale.FRENCH;
+            this.majInterface();
+        });
+        this.btn_simulation.addActionListener(e -> this.lancerSimulation());
     }
-    
-    private void configurationLiaisonsTraduction(){
-        //new TrComposant<>(this.btn_importer, "button.import");
-        //new TrComposant<>(this.btn_exporter, "button.export");
-        //new TrComposant<>(this.btn_changerLangue, "button.changeLanguage");
-        //new TrComposant<>(this.btn_supprimer, "button.delete");
-        //new TrComposant<>(this.btn_rogner, "button.crop");
-                
-        //new TrComposant<>(this.lbl_echelle, "label.scale");
-        //new TrComposant<>(this.lbl_type, "label.type");
-        //new TrComposant<>(this.lbl_forme, "label.form");
-        //new TrComposant<>(this.lbl_largeurBloc, "label.width");
-        //new TrComposant<>(this.lbl_hauteurBloc, "label.height");
-        //new TrComposant<>(this.lbl_prixParBloc, "label.pricePerBloc");
-        //new TrComposant<>(this.lbl_nombreBloc, "label.numberBlock");
-        //new TrComposant<>(this.lbl_prixTotal, "label.totalPrice");
 
-        this.cbo_typeZone.addItem("button.type.classicFrame");
-        this.cbo_typeZone.addItem("button.type.reinforcementBlocks");
-        this.cbo_typeZone.addItem("button.type.opening");
-        this.cbo_formeZone.addItem("button.form.rectangle");
-        this.cbo_formeZone.addItem("button.form.triangle");
-        this.cbo_formeZone.addItem("button.form.truncatedTriangle");
-
-        this.ajouterRendererComboBox(this.cbo_typeZone);
-        this.ajouterRendererComboBox(this.cbo_formeZone);
+    private void addAction(AbstractButton button, Runnable action){
+        button.addActionListener(e -> {
+            action.run();
+            this.rafraichirUI();
+        });
     }
-    
-    private void ajouterRendererComboBox(JComboBox<String> comboBox) {
-        comboBox.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
 
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                
-                if (value instanceof String key) {
-                    //setText(LangueManager.tr(key));
+    private void initBoutonsAction() {
+        this.btn_deplacerZone.addActionListener(e -> {
+            boolean actuel = this.drawingPanel.getModeDeplacementZone();
+            this.arreterDessin();                                           
+            this.drawingPanel.setModeRedimensionnementZone(false); 
+            this.drawingPanel.setModeDeplacementZone(!actuel);
+        });
+        this.btn_redimensionnerZone.addActionListener(e -> {
+            boolean actuel = this.drawingPanel.getModeRedimensionnementZone();
+            this.arreterDessin();                       
+            this.drawingPanel.setModeDeplacementZone(false);   
+            this.drawingPanel.setModeRedimensionnementZone(!actuel);
+        });
+        this.btn_supprimerZone.addActionListener(e -> {
+            boolean actuel = this.modeSuppressionZone;
+            this.arreterDessin();
+            this.drawingPanel.setModeDeplacementZone(false);
+            this.drawingPanel.setModeRedimensionnementZone(false);
+            this.modeSuppressionZone = !actuel;
+            this.drawingPanel.setModeSuppressionZone(this.modeSuppressionZone);
+        });
+    }
+
+    private void initBoutonsZone() {
+        this.addZoneBoutonListener(this.btn_zoneArmatureClassique, TypeZone.ARMATURE_CLASSIQUE);
+        this.addZoneBoutonListener(this.btn_zoneArmatureBloc, TypeZone.ARMATURE_BLOCS);
+        this.addZoneBoutonListener(this.btn_zoneOuverture, TypeZone.OUVERTURE);
+    }
+
+    private void addZoneBoutonListener(AbstractButton button, TypeZone zone) {
+        button.addActionListener(e -> {
+            this.drawingPanel.setModeDeplacementZone(false);       
+            this.drawingPanel.setModeRedimensionnementZone(false); 
+            this.modeSuppressionZone = false;                                     
+            this.drawingPanel.setModeSuppressionZone(false); 
+            this.drawingPanel.setTypeZoneEnCours(zone);
+            this.typeChoisi = true;
+            this.verifierModeDessin();
+        });
+    }
+
+    private void initBoutonsForme() {
+        this.addFormeBoutonListener(this.btn_formeRectangle, TypeForme.RECTANGLE);
+        this.addFormeBoutonListener(this.btn_formeTriangle, TypeForme.TRIANGLE);
+        this.addFormeBoutonListener(this.btn_formeTriangleTronque, TypeForme.TRIANGLE_TRONQUE);
+    }
+
+    private void addFormeBoutonListener(AbstractButton button, TypeForme forme) {
+        button.addActionListener(e -> {
+            this.drawingPanel.setFormeEnCours(forme);
+            this.formeChoisie = true;
+            this.verifierModeDessin();
+        });
+    }
+
+    private void verifierModeDessin() {        
+        if (this.typeChoisi && this.formeChoisie) {
+            this.drawingPanel.setModeAjoutZone(true);
+            this.afficherBtnStop();
+        }
+    }
+
+    private void afficherBtnStop() {
+        if (this.btnStopZoneDrawing == null) {
+            this.btnStopZoneDrawing = new JButton("Dessin actif");
+            this.btnStopZoneDrawing.setPreferredSize(new Dimension(150, 30));
+            this.btnStopZoneDrawing.addActionListener(e -> this.arreterDessin());
+            this.panel_menu.add(this.btnStopZoneDrawing);
+            this.panel_menu.revalidate();
+            this.panel_menu.repaint();
+        }
+    }
+
+    private void arreterDessin() {
+        this.drawingPanel.setModeAjoutZone(false);
+        this.typeChoisi = false;
+        this.formeChoisie = false;
+        this.modeSuppressionZone = false;                        
+        this.drawingPanel.setModeSuppressionZone(false); 
+        if (this.btnStopZoneDrawing != null) {
+            this.panel_menu.remove(this.btnStopZoneDrawing);
+            this.btnStopZoneDrawing = null;
+            this.panel_menu.revalidate();
+            this.panel_menu.repaint();
+        }
+    }
+
+    private void initBoutonsVues() {
+        this.addAction(this.btn_vuePrecedente, this.controleur::naviguerVuePrecedente);
+        this.addAction(this.btn_vueSuivante, this.controleur::naviguerVueSuivante);
+        this.addAction(this.btn_zoomIn, this.drawingPanel::zoomInCenter);
+        this.addAction(this.btn_zoomOut, this.drawingPanel::zoomOutCenter);
+        this.btn_appliquerEchelle.addActionListener(e -> {
+            try {
+                String texte = this.txt_echelle.getText().trim();
+                double poucesParPixel = (texte.contains("'") || texte.contains("\"")) ? parserMesureImperiale(texte) : Double.parseDouble(texte);
+                if (poucesParPixel <= 0) {
+                    JOptionPane.showMessageDialog(this, this.getTexte("messageDialog.scaleSize"));
+                    return;
                 }
-                
-                return this;
+                this.controleur.setEchelleCourante(poucesParPixel);
+                this.rafraichirUI();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, this.getTexte("messageDialog.scaleSizeException"));
             }
         });
     }
-        
-    private void rafraichirVueCourante() {
-        VueDTO vue = this.controleur.getVueCourante();
-        if (this.drawingPanel != null) {
-            this.drawingPanel.afficherVue(vue);
-        }
-        
-        double echelle = this.controleur.getEchelleCourante();
-        this.spi_echelle.setValue(echelle);
+
+    private void initLabelFocus() {
+        this.addTextFieldFocus(this.lbl_largeurBloc, this.txt_largeurBloc);
+        this.addTextFieldFocus(this.lbl_hauteurBloc, this.txt_hauteurBloc);
+        this.addTextFieldFocus(this.lbl_coutParBloc, this.txt_coutParBloc);
+        this.addTextFieldFocus(this.lbl_echelle, this.txt_echelle);
     }
-    
-    private void changerLangueFenetreVues() {
-        if (this.panel_selectionVues != null && this.panel_selectionVues.isShowing()) {
-            //String action = LangueManager.tr(this.actionCourante);
-            //String titre = MessageFormat.format(LangueManager.tr("panel.selectViews"), action);
-            
-            if (this.panel_selectionVues.getBorder() instanceof TitledBorder border) {
-                //border.setTitle(titre);
+
+    private void addTextFieldFocus(JLabel label, JTextField field) {
+        label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        label.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                field.requestFocusInWindow();
             }
-            
-            this.panel_selectionVues.repaint();
-            
-            //this.btn_toutSelectionner.setText(LangueManager.tr("panel.selectAll"));
-            //this.btn_confirmerModification.setText(LangueManager.tr("panel.confirm"));
-            //this.btn_annulerModification.setText(LangueManager.tr("panel.cancel"));
-        }
-        this.changerLangueTitreFenetreVues();
+        });
     }
-    
-    private void changerLangueTitreFenetreVues() {
-        if (this.panel_selectionVues == null || !this.panel_selectionVues.isShowing() || this.actionCourante == null) {
-            return;
-        }
-        
-        //String action = LangueManager.tr(this.actionCourante);
-        //String titre = MessageFormat.format(LangueManager.tr("panel.selectViews"),action);
-        
-        if (this.panel_selectionVues.getBorder() instanceof TitledBorder tb) {
-            //tb.setTitle(titre);
-            this.panel_selectionVues.repaint();
+
+    private void rafraichirUI() {
+        this.rafraichirVue();
+        this.majEtatComposants();
+        this.panel_principal.revalidate();
+        this.panel_principal.repaint();
+    }
+
+    private void rafraichirVue() {
+        VueDTO vue = this.controleur.getVueCourante();
+        this.drawingPanel.afficherVue(vue);
+        this.lbl_vueCourante.setText(vue != null ? "Vue " + (vue.getIndex() + 1) : this.getTexte("label.noView"));
+        double echelle = this.controleur.getEchelleCourante();
+        if (echelle > 0) this.txt_echelle.setText(formaterEchelleImperiale(echelle));
+    }
+
+    private void majEtatComposants() {
+        boolean hasViews = !this.controleur.getVues().isEmpty();
+        for(JButton btn : this.boutonsVue) btn.setEnabled(hasViews);
+        for(JLabel label : this.labelsVue) label.setEnabled(hasViews);
+        for(JTextField textField : this.textFieldsVue) textField.setEnabled(hasViews);
+        this.btn_ajouterVue.setEnabled(true);
+    }
+
+    private void afficherSelectionVues(ActionVue action) {
+        this.actionVue = action;
+        this.retirerPanneauVues();
+        List<VueDTO> vues = this.controleur.getVues();
+        if (vues.isEmpty()) return;
+        this.initPanneauVues(this.construireTitre());
+        this.initMiniatures();
+        this.chargerMiniatures(vues);
+        this.ajouterBoutonsActions();
+        this.panel_principal.add(this.panneauVues, BorderLayout.SOUTH);
+        this.rafraichirUI();
+    }
+
+    private void retirerPanneauVues() {
+        if (this.panneauVues != null) {
+            this.panel_principal.remove(this.panneauVues);
+            this.panneauVues = null;
         }
     }
 
+    private String construireTitre() {
+        String titre = this.actionVue == ActionVue.DELETE ? this.getTexte("panel.delete").toLowerCase() : this.getTexte("panel.export").toLowerCase();
+        return MessageFormat.format(this.getTexte("panel.selectViews"), titre);
+    }
+
+    private void initPanneauVues(String titre) {
+        this.panneauVues = new JPanel(new BorderLayout());
+        this.panneauVues.setBorder(BorderFactory.createTitledBorder(titre));
+        this.panneauVues.setBackground(UIManager.getColor("Panel.background"));
+        Dimension dimensions = new Dimension(getWidth(), 200);
+        this.panneauVues.setPreferredSize(dimensions);
+        this.panneauVues.setMinimumSize(dimensions);
+        this.panneauVues.setMaximumSize(dimensions);
+    }
+
+    private void initMiniatures() {
+        this.viewsThumbnailPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        this.viewsThumbnailPanel.setBackground(UIManager.getColor("Panel.background"));
+        this.casesVues = new ArrayList<>();
+    }
+
+    private void chargerMiniatures(List<VueDTO> vues) {
+        for (VueDTO vue : vues) this.viewsThumbnailPanel.add(this.creerMiniature(vue));
+        this.panneauVues.add(new JScrollPane(this.viewsThumbnailPanel), BorderLayout.CENTER);
+    }
+
+    private JPanel creerMiniature(VueDTO vue) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(UIManager.getColor("Panel.background"));
+        BufferedImage miniature = this.createThumbnail(vue.getImage(), 100, 80);
+        JLabel lblMini = new JLabel(new ImageIcon(miniature));
+        lblMini.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        JCheckBox cb = new JCheckBox(vue.getNomVue(this.langueCourante));
+        cb.setBackground(UIManager.getColor("Panel.background"));
+        cb.addActionListener(e -> this.majSelection());
+        this.casesVues.add(cb);
+        lblMini.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                cb.setSelected(!cb.isSelected());
+                majSelection();
+            }
+        });
+        panel.add(lblMini, BorderLayout.CENTER);
+        panel.add(cb, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private BufferedImage createThumbnail(BufferedImage img, int w, int h) {
+        BufferedImage miniature = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = miniature.createGraphics();
+        g.drawImage(img, 0, 0, w, h, null);
+        g.dispose();
+        return miniature;
+    }
+
+    private void majSelection() {
+        boolean tousCoches = this.casesVues.stream().allMatch(JCheckBox::isSelected);
+        this.chkToutesVues.setSelected(tousCoches);
+    }
+
+    private void ajouterBoutonsActions() {
+        JPanel panelBoutons = new JPanel();
+        this.chkToutesVues = new JCheckBox(this.getTexte("panel.selectAll"));
+        this.btnConfirmerModif = new JButton(this.getTexte("panel.confirm"));
+        this.btnAnnulerModif = new JButton(this.getTexte("panel.cancel"));
+        this.chkToutesVues.addActionListener(e -> this.selectionnerTout());
+        this.btnConfirmerModif.addActionListener(e -> this.confirmerSelection());
+        this.btnAnnulerModif.addActionListener(e -> this.fermerSelection());
+        panelBoutons.add(this.chkToutesVues);
+        panelBoutons.add(this.btnConfirmerModif);
+        panelBoutons.add(this.btnAnnulerModif);
+        this.panneauVues.add(panelBoutons, BorderLayout.SOUTH);
+    }
+
+    private void selectionnerTout() {
+        boolean etat = this.chkToutesVues.isSelected();
+        for (JCheckBox cb : this.casesVues) cb.setSelected(etat);
+    }
+
+    private void confirmerSelection() {
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < this.casesVues.size(); i++) {
+            if (this.casesVues.get(i).isSelected()) indices.add(i);
+        }
+        if (!indices.isEmpty()) {
+            if (ActionVue.DELETE.equals(this.actionVue)) this.controleur.supprimerVues(indices);
+            else this.controleur.exporterVues(indices);
+        }
+        this.fermerSelection();
+    }
+
+    private void fermerSelection() {
+        this.retirerPanneauVues();
+        this.actionVue = null;
+        this.rafraichirUI();
+    }
+
+    private List<Integer> sauvegarderCasesCochees() {
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < this.casesVues.size(); i++) {
+            if (this.casesVues.get(i).isSelected()) indices.add(i);
+        }
+        return indices;
+    }
+
+    private void restaurerSelection(List<Integer> indices) {
+        for (int i : indices) if (i < this.casesVues.size()) this.casesVues.get(i).setSelected(true);
+    }
+
+    private void lancerSimulation() {
+        double prixUnitaire = parsePrixBloc();
+        SimulationDTO result = this.controleur.simulerVueCourante(prixUnitaire);
+        if (result == null) {
+            this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
+            this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
+        } else {
+            this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " " + result.nombreBlocs);
+            this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " " + String.format("%.2f $", result.coutTotal));
+        }
+        this.rafraichirUI();
+    }
+
+    private double parsePrixBloc() {
+        try {
+            String t = this.txt_coutParBloc.getText().trim();
+            return t.isEmpty() ? 0.0 : Double.parseDouble(t.replace(",", "."));
+        } catch (NumberFormatException ex) { return 0.0; }
+    }
+
+    private double parserMesureImperiale(String texte) {
+        double totalPouces = 0;
+        String regex = "(?:(\\d+)')?\\s*(?:(\\d+(?:\\.\\d+)?)\")?\\s*(?:(\\d+)/(\\d+))?";
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(regex).matcher(texte.trim());
+        if (m.find()) {
+            if (m.group(1) != null) totalPouces += Double.parseDouble(m.group(1)) * 12;
+            if (m.group(2) != null) totalPouces += Double.parseDouble(m.group(2));
+            if (m.group(3) != null && m.group(4) != null) {
+                double num = Double.parseDouble(m.group(3)), den = Double.parseDouble(m.group(4));
+                if (den != 0) totalPouces += num / den;
+            }
+        }
+        return totalPouces > 0 ? totalPouces : 1.0;
+    }
+
+    private String formaterEchelleImperiale(double echelle) {
+        int pieds = (int) (echelle / 12);
+        double reste = echelle % 12;
+        int pouces = (int) reste;
+        double frac = reste - pouces;
+        StringBuilder sb = new StringBuilder();
+        if (pieds > 0) sb.append(pieds).append("'");
+        if (pouces > 0 || frac > 0.01) {
+            if (pieds > 0) sb.append(" ");
+            sb.append(pouces);
+            if (frac >= 0.2 && frac < 0.4) sb.append(" 1/4");
+            else if (frac >= 0.4 && frac < 0.6) sb.append(" 1/2");
+            else if (frac >= 0.6 && frac < 0.9) sb.append(" 3/4");
+            sb.append("\"");
+        }
+        return sb.length() == 0 ? "1\"" : sb.toString().trim();
+    }
+
+    private String getTexte(String key) {
+        return this.resourceBundle.getString(key);
+    }
+ 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        btn_authentification = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
+        panel_boutons = new javax.swing.JPanel();
+        btn_annulerAction = new javax.swing.JButton();
+        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_retablirAction = new javax.swing.JButton();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_importerPdf = new javax.swing.JButton();
+        filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_exporterPdf = new javax.swing.JButton();
+        filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_ajouterVue = new javax.swing.JButton();
+        filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_supprimerVue = new javax.swing.JButton();
+        filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_rognerVue = new javax.swing.JButton();
+        filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
         btn_changerLangue = new javax.swing.JButton();
-        btn_precedent = new javax.swing.JButton();
-        btn_suivant = new javax.swing.JButton();
-        btn_importer = new javax.swing.JButton();
-        panel_blocs = new javax.swing.JPanel();
+        panel_menu = new javax.swing.JPanel();
+        lbl_blocsTitre = new javax.swing.JLabel();
+        panel_dimensionsBloc = new javax.swing.JPanel();
+        panel_largeurBloc = new javax.swing.JPanel();
         lbl_largeurBloc = new javax.swing.JLabel();
-        lbl_hauteurBloc = new javax.swing.JLabel();
         txt_largeurBloc = new javax.swing.JTextField();
+        panel_hauteurBloc = new javax.swing.JPanel();
+        lbl_hauteurBloc = new javax.swing.JLabel();
         txt_hauteurBloc = new javax.swing.JTextField();
-        lbl_prixParBloc = new javax.swing.JLabel();
-        txt_prixParBloc = new javax.swing.JTextField();
-        panel_vues = new javax.swing.JPanel();
-        btn_supprimer = new javax.swing.JButton();
-        btn_rogner = new javax.swing.JButton();
+        panel_coutParBloc = new javax.swing.JPanel();
+        lbl_coutParBloc = new javax.swing.JLabel();
+        txt_coutParBloc = new javax.swing.JTextField();
+        lbl_actionsTitre = new javax.swing.JLabel();
+        panel_boutonAction = new javax.swing.JPanel();
+        btn_deplacerZone = new javax.swing.JButton();
+        btn_redimensionnerZone = new javax.swing.JButton();
+        btn_supprimerZone = new javax.swing.JButton();
+        lbl_typeZoneTitre = new javax.swing.JLabel();
+        panel_typeZone = new javax.swing.JPanel();
+        btn_zoneArmatureClassique = new javax.swing.JButton();
+        btn_zoneArmatureBloc = new javax.swing.JButton();
+        btn_zoneOuverture = new javax.swing.JButton();
+        lbl_formeZoneTitre = new javax.swing.JLabel();
+        panel_formeZone = new javax.swing.JPanel();
+        btn_formeRectangle = new javax.swing.JButton();
+        btn_formeTriangle = new javax.swing.JButton();
+        btn_formeTriangleTronque = new javax.swing.JButton();
+        lbl_blocsTotaux = new javax.swing.JLabel();
+        lbl_coutTotal = new javax.swing.JLabel();
+        panel_simulation = new javax.swing.JPanel();
+        btn_simulation = new javax.swing.JButton();
+        panel_principal = new javax.swing.JPanel();
+        panel_echelle = new javax.swing.JPanel();
+        btn_vuePrecedente = new javax.swing.JButton();
+        filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_vueSuivante = new javax.swing.JButton();
+        filler9 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        lbl_vueCourante = new javax.swing.JLabel();
+        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        btn_appliquerEchelle = new javax.swing.JButton();
+        fille11 = new javax.swing.Box.Filler(new java.awt.Dimension(50, 30), new java.awt.Dimension(50, 30), new java.awt.Dimension(50, 30));
         lbl_echelle = new javax.swing.JLabel();
-        spi_echelle = new javax.swing.JSpinner();
-        panel_zones = new javax.swing.JPanel();
-        lbl_type = new javax.swing.JLabel();
-        cbo_typeZone = new javax.swing.JComboBox<>();
-        lbl_forme = new javax.swing.JLabel();
-        cbo_formeZone = new javax.swing.JComboBox<>();
-        btn_exporter = new javax.swing.JButton();
-        lbl_nombreBloc = new javax.swing.JLabel();
-        lbl_prixTotal = new javax.swing.JLabel();
-        txt_nbrTotalDeBloc = new javax.swing.JTextField();
-        txt_prixTotal = new javax.swing.JTextField();
-        jPanel1 = new javax.swing.JPanel();
-        btn_zoomer = new javax.swing.JButton();
-        btn_dezoomer = new javax.swing.JButton();
+        txt_echelle = new javax.swing.JTextField();
+        filler12 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
+        btn_zoomIn = new javax.swing.JButton();
+        filler13 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        btn_zoomOut = new javax.swing.JButton();
+        panel_vues = new javax.swing.JPanel();
+
+        jButton1.setText("jButton1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        btn_changerLangue.setName("btn_changerLangue"); // NOI18N
+        panel_boutons.setMaximumSize(new java.awt.Dimension(33897, 40));
+        panel_boutons.setMinimumSize(new java.awt.Dimension(1130, 40));
+        panel_boutons.setPreferredSize(new java.awt.Dimension(412, 40));
+        panel_boutons.setLayout(new javax.swing.BoxLayout(panel_boutons, javax.swing.BoxLayout.X_AXIS));
 
-        btn_precedent.setText("<");
+        btn_annulerAction.setIconTextGap(15);
+        btn_annulerAction.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_annulerAction.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_annulerAction.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_annulerAction);
+        panel_boutons.add(filler1);
 
-        btn_suivant.setText(">");
+        btn_retablirAction.setIconTextGap(15);
+        btn_retablirAction.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_retablirAction.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_retablirAction.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_retablirAction);
+        panel_boutons.add(filler2);
 
-        btn_importer.setPreferredSize(new java.awt.Dimension(85, 25));
+        btn_importerPdf.setIconTextGap(15);
+        btn_importerPdf.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_importerPdf.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_importerPdf.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_importerPdf);
+        panel_boutons.add(filler3);
 
-        panel_blocs.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Blocs", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
-        panel_blocs.setPreferredSize(new java.awt.Dimension(150, 100));
+        btn_exporterPdf.setIconTextGap(15);
+        btn_exporterPdf.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_exporterPdf.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_exporterPdf.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_exporterPdf);
+        panel_boutons.add(filler4);
 
-        lbl_largeurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
+        btn_ajouterVue.setIconTextGap(15);
+        btn_ajouterVue.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_ajouterVue.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_ajouterVue.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_ajouterVue);
+        panel_boutons.add(filler5);
 
-        lbl_hauteurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
+        btn_supprimerVue.setIconTextGap(15);
+        btn_supprimerVue.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_supprimerVue.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_supprimerVue.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_supprimerVue);
+        panel_boutons.add(filler6);
 
-        txt_largeurBloc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txt_largeurBloc.setText("0");
-        txt_largeurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
+        btn_rognerVue.setIconTextGap(15);
+        btn_rognerVue.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_rognerVue.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_rognerVue.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_boutons.add(btn_rognerVue);
+        panel_boutons.add(filler7);
 
-        txt_hauteurBloc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txt_hauteurBloc.setText("0");
-        txt_hauteurBloc.setPreferredSize(new java.awt.Dimension(95, 25));
+        btn_changerLangue.setMaximumSize(new java.awt.Dimension(50, 30));
+        btn_changerLangue.setMinimumSize(new java.awt.Dimension(50, 30));
+        btn_changerLangue.setPreferredSize(new java.awt.Dimension(50, 30));
+        panel_boutons.add(btn_changerLangue);
 
-        lbl_prixParBloc.setPreferredSize(new java.awt.Dimension(95, 25));
+        getContentPane().add(panel_boutons, java.awt.BorderLayout.PAGE_START);
 
-        txt_prixParBloc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txt_prixParBloc.setText("0");
-        txt_prixParBloc.setPreferredSize(new java.awt.Dimension(95, 25));
+        panel_menu.setMaximumSize(new java.awt.Dimension(300, 280));
+        panel_menu.setMinimumSize(new java.awt.Dimension(300, 280));
+        panel_menu.setPreferredSize(new java.awt.Dimension(300, 280));
 
-        javax.swing.GroupLayout panel_blocsLayout = new javax.swing.GroupLayout(panel_blocs);
-        panel_blocs.setLayout(panel_blocsLayout);
-        panel_blocsLayout.setHorizontalGroup(
-            panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panel_blocsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lbl_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        lbl_blocsTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_blocsTitre.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lbl_blocsTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        lbl_blocsTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_blocsTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_blocsTitre.setPreferredSize(new java.awt.Dimension(100, 30));
+        panel_menu.add(lbl_blocsTitre);
+
+        panel_dimensionsBloc.setMaximumSize(new java.awt.Dimension(300, 120));
+        panel_dimensionsBloc.setMinimumSize(new java.awt.Dimension(300, 120));
+        panel_dimensionsBloc.setPreferredSize(new java.awt.Dimension(300, 120));
+        panel_dimensionsBloc.setLayout(new javax.swing.BoxLayout(panel_dimensionsBloc, javax.swing.BoxLayout.Y_AXIS));
+
+        lbl_largeurBloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_largeurBloc.setMaximumSize(new java.awt.Dimension(110, 30));
+        lbl_largeurBloc.setMinimumSize(new java.awt.Dimension(110, 30));
+        lbl_largeurBloc.setPreferredSize(new java.awt.Dimension(110, 30));
+
+        txt_largeurBloc.setMaximumSize(new java.awt.Dimension(90, 30));
+        txt_largeurBloc.setMinimumSize(new java.awt.Dimension(90, 30));
+        txt_largeurBloc.setPreferredSize(new java.awt.Dimension(90, 30));
+
+        javax.swing.GroupLayout panel_largeurBlocLayout = new javax.swing.GroupLayout(panel_largeurBloc);
+        panel_largeurBloc.setLayout(panel_largeurBlocLayout);
+        panel_largeurBlocLayout.setHorizontalGroup(
+            panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panel_largeurBlocLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
                     .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txt_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGap(5, 5, 5)
+                    .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
         );
-        panel_blocsLayout.setVerticalGroup(
-            panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panel_blocsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+        panel_largeurBlocLayout.setVerticalGroup(
+            panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 40, Short.MAX_VALUE)
+            .addGroup(panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panel_largeurBlocLayout.createSequentialGroup()
+                    .addGap(0, 5, Short.MAX_VALUE)
+                    .addGroup(panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(0, 5, Short.MAX_VALUE)))
+        );
+
+        panel_dimensionsBloc.add(panel_largeurBloc);
+
+        lbl_hauteurBloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_hauteurBloc.setMaximumSize(new java.awt.Dimension(110, 30));
+        lbl_hauteurBloc.setMinimumSize(new java.awt.Dimension(110, 30));
+        lbl_hauteurBloc.setPreferredSize(new java.awt.Dimension(110, 30));
+
+        txt_hauteurBloc.setMaximumSize(new java.awt.Dimension(90, 30));
+        txt_hauteurBloc.setMinimumSize(new java.awt.Dimension(90, 30));
+        txt_hauteurBloc.setPreferredSize(new java.awt.Dimension(90, 30));
+
+        javax.swing.GroupLayout panel_hauteurBlocLayout = new javax.swing.GroupLayout(panel_hauteurBloc);
+        panel_hauteurBloc.setLayout(panel_hauteurBlocLayout);
+        panel_hauteurBlocLayout.setHorizontalGroup(
+            panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panel_hauteurBlocLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
                     .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panel_blocsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txt_prixParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGap(5, 5, 5)
+                    .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+        panel_hauteurBlocLayout.setVerticalGroup(
+            panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 40, Short.MAX_VALUE)
+            .addGroup(panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panel_hauteurBlocLayout.createSequentialGroup()
+                    .addGap(0, 5, Short.MAX_VALUE)
+                    .addGroup(panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(0, 5, Short.MAX_VALUE)))
         );
 
-        panel_vues.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Vues", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
-        panel_vues.setPreferredSize(new java.awt.Dimension(150, 100));
+        panel_dimensionsBloc.add(panel_hauteurBloc);
 
-        btn_supprimer.setPreferredSize(new java.awt.Dimension(95, 25));
+        lbl_coutParBloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_coutParBloc.setMaximumSize(new java.awt.Dimension(110, 30));
+        lbl_coutParBloc.setMinimumSize(new java.awt.Dimension(110, 30));
+        lbl_coutParBloc.setPreferredSize(new java.awt.Dimension(110, 30));
 
-        btn_rogner.setPreferredSize(new java.awt.Dimension(95, 25));
+        txt_coutParBloc.setMaximumSize(new java.awt.Dimension(90, 30));
+        txt_coutParBloc.setMinimumSize(new java.awt.Dimension(90, 30));
+        txt_coutParBloc.setPreferredSize(new java.awt.Dimension(90, 30));
 
-        lbl_echelle.setLabelFor(spi_echelle);
-        lbl_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
+        javax.swing.GroupLayout panel_coutParBlocLayout = new javax.swing.GroupLayout(panel_coutParBloc);
+        panel_coutParBloc.setLayout(panel_coutParBlocLayout);
+        panel_coutParBlocLayout.setHorizontalGroup(
+            panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panel_coutParBlocLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(lbl_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(5, 5, 5)
+                    .addComponent(txt_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+        panel_coutParBlocLayout.setVerticalGroup(
+            panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 40, Short.MAX_VALUE)
+            .addGroup(panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panel_coutParBlocLayout.createSequentialGroup()
+                    .addGap(0, 5, Short.MAX_VALUE)
+                    .addGroup(panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(lbl_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txt_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(0, 5, Short.MAX_VALUE)))
+        );
 
-        spi_echelle.setPreferredSize(new java.awt.Dimension(95, 25));
+        panel_dimensionsBloc.add(panel_coutParBloc);
+
+        panel_menu.add(panel_dimensionsBloc);
+
+        lbl_actionsTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_actionsTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        lbl_actionsTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_actionsTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_actionsTitre.setPreferredSize(new java.awt.Dimension(100, 30));
+        panel_menu.add(lbl_actionsTitre);
+
+        panel_boutonAction.setMaximumSize(new java.awt.Dimension(300, 40));
+        panel_boutonAction.setMinimumSize(new java.awt.Dimension(300, 40));
+        panel_boutonAction.setPreferredSize(new java.awt.Dimension(300, 40));
+
+        btn_deplacerZone.setIconTextGap(0);
+        btn_deplacerZone.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_deplacerZone.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_deplacerZone.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_boutonAction.add(btn_deplacerZone);
+
+        btn_redimensionnerZone.setIconTextGap(0);
+        btn_redimensionnerZone.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_redimensionnerZone.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_redimensionnerZone.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_boutonAction.add(btn_redimensionnerZone);
+
+        btn_supprimerZone.setIconTextGap(0);
+        btn_supprimerZone.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_supprimerZone.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_supprimerZone.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_boutonAction.add(btn_supprimerZone);
+
+        panel_menu.add(panel_boutonAction);
+
+        lbl_typeZoneTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_typeZoneTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        lbl_typeZoneTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_typeZoneTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_typeZoneTitre.setPreferredSize(new java.awt.Dimension(100, 30));
+        panel_menu.add(lbl_typeZoneTitre);
+
+        panel_typeZone.setMaximumSize(new java.awt.Dimension(300, 40));
+        panel_typeZone.setMinimumSize(new java.awt.Dimension(300, 40));
+        panel_typeZone.setPreferredSize(new java.awt.Dimension(300, 40));
+
+        btn_zoneArmatureClassique.setIconTextGap(0);
+        btn_zoneArmatureClassique.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_zoneArmatureClassique.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_zoneArmatureClassique.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_typeZone.add(btn_zoneArmatureClassique);
+
+        btn_zoneArmatureBloc.setIconTextGap(0);
+        btn_zoneArmatureBloc.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_zoneArmatureBloc.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_zoneArmatureBloc.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_typeZone.add(btn_zoneArmatureBloc);
+
+        btn_zoneOuverture.setIconTextGap(0);
+        btn_zoneOuverture.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_zoneOuverture.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_zoneOuverture.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_typeZone.add(btn_zoneOuverture);
+
+        panel_menu.add(panel_typeZone);
+
+        lbl_formeZoneTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_formeZoneTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        lbl_formeZoneTitre.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_formeZoneTitre.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_formeZoneTitre.setPreferredSize(new java.awt.Dimension(100, 30));
+        panel_menu.add(lbl_formeZoneTitre);
+
+        panel_formeZone.setMaximumSize(new java.awt.Dimension(300, 40));
+        panel_formeZone.setMinimumSize(new java.awt.Dimension(300, 40));
+        panel_formeZone.setPreferredSize(new java.awt.Dimension(300, 40));
+
+        btn_formeRectangle.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_formeRectangle.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_formeRectangle.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_formeZone.add(btn_formeRectangle);
+
+        btn_formeTriangle.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_formeTriangle.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_formeTriangle.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_formeZone.add(btn_formeTriangle);
+
+        btn_formeTriangleTronque.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_formeTriangleTronque.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_formeTriangleTronque.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_formeZone.add(btn_formeTriangleTronque);
+
+        panel_menu.add(panel_formeZone);
+
+        lbl_blocsTotaux.setMaximumSize(new java.awt.Dimension(140, 30));
+        lbl_blocsTotaux.setMinimumSize(new java.awt.Dimension(140, 30));
+        lbl_blocsTotaux.setPreferredSize(new java.awt.Dimension(140, 30));
+        panel_menu.add(lbl_blocsTotaux);
+
+        lbl_coutTotal.setMaximumSize(new java.awt.Dimension(140, 30));
+        lbl_coutTotal.setMinimumSize(new java.awt.Dimension(140, 30));
+        lbl_coutTotal.setPreferredSize(new java.awt.Dimension(140, 30));
+        panel_menu.add(lbl_coutTotal);
+
+        panel_simulation.setMaximumSize(new java.awt.Dimension(300, 40));
+        panel_simulation.setMinimumSize(new java.awt.Dimension(300, 40));
+        panel_simulation.setPreferredSize(new java.awt.Dimension(300, 40));
+
+        btn_simulation.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_simulation.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_simulation.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_simulation.add(btn_simulation);
+
+        panel_menu.add(panel_simulation);
+
+        getContentPane().add(panel_menu, java.awt.BorderLayout.LINE_START);
+
+        panel_principal.setMaximumSize(new java.awt.Dimension(32767, 35));
+        panel_principal.setMinimumSize(new java.awt.Dimension(85, 35));
+        panel_principal.setPreferredSize(new java.awt.Dimension(651, 35));
+        panel_principal.setLayout(new javax.swing.BoxLayout(panel_principal, javax.swing.BoxLayout.Y_AXIS));
+
+        panel_echelle.setMaximumSize(new java.awt.Dimension(33442, 40));
+        panel_echelle.setMinimumSize(new java.awt.Dimension(675, 40));
+        panel_echelle.setPreferredSize(new java.awt.Dimension(853, 40));
+        panel_echelle.setLayout(new javax.swing.BoxLayout(panel_echelle, javax.swing.BoxLayout.LINE_AXIS));
+
+        btn_vuePrecedente.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_vuePrecedente.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_vuePrecedente.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_echelle.add(btn_vuePrecedente);
+        panel_echelle.add(filler8);
+
+        btn_vueSuivante.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_vueSuivante.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_vueSuivante.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_echelle.add(btn_vueSuivante);
+        panel_echelle.add(filler9);
+
+        lbl_vueCourante.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
+        lbl_vueCourante.setMaximumSize(new java.awt.Dimension(100, 30));
+        lbl_vueCourante.setMinimumSize(new java.awt.Dimension(100, 30));
+        lbl_vueCourante.setPreferredSize(new java.awt.Dimension(100, 30));
+        panel_echelle.add(lbl_vueCourante);
+        panel_echelle.add(filler10);
+
+        btn_appliquerEchelle.setMaximumSize(new java.awt.Dimension(160, 30));
+        btn_appliquerEchelle.setMinimumSize(new java.awt.Dimension(160, 30));
+        btn_appliquerEchelle.setPreferredSize(new java.awt.Dimension(160, 30));
+        panel_echelle.add(btn_appliquerEchelle);
+        panel_echelle.add(fille11);
+
+        lbl_echelle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_echelle.setMaximumSize(new java.awt.Dimension(60, 30));
+        lbl_echelle.setMinimumSize(new java.awt.Dimension(60, 30));
+        lbl_echelle.setPreferredSize(new java.awt.Dimension(60, 30));
+        panel_echelle.add(lbl_echelle);
+
+        txt_echelle.setMaximumSize(new java.awt.Dimension(90, 30));
+        txt_echelle.setMinimumSize(new java.awt.Dimension(90, 30));
+        txt_echelle.setPreferredSize(new java.awt.Dimension(90, 30));
+        panel_echelle.add(txt_echelle);
+        panel_echelle.add(filler12);
+
+        btn_zoomIn.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_zoomIn.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_zoomIn.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_echelle.add(btn_zoomIn);
+        panel_echelle.add(filler13);
+
+        btn_zoomOut.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_zoomOut.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_zoomOut.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_echelle.add(btn_zoomOut);
+
+        panel_principal.add(panel_echelle);
 
         javax.swing.GroupLayout panel_vuesLayout = new javax.swing.GroupLayout(panel_vues);
         panel_vues.setLayout(panel_vuesLayout);
         panel_vuesLayout.setHorizontalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panel_vuesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btn_supprimer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lbl_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(spi_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_rogner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGap(0, 830, Short.MAX_VALUE)
         );
         panel_vuesLayout.setVerticalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panel_vuesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btn_supprimer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_rogner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spi_echelle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGap(0, 513, Short.MAX_VALUE)
         );
 
-        panel_zones.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Zones", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 18))); // NOI18N
-        panel_zones.setPreferredSize(new java.awt.Dimension(150, 100));
+        panel_principal.add(panel_vues);
 
-        lbl_type.setPreferredSize(new java.awt.Dimension(95, 25));
-
-        lbl_forme.setPreferredSize(new java.awt.Dimension(95, 25));
-
-        javax.swing.GroupLayout panel_zonesLayout = new javax.swing.GroupLayout(panel_zones);
-        panel_zones.setLayout(panel_zonesLayout);
-        panel_zonesLayout.setHorizontalGroup(
-            panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panel_zonesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lbl_forme, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lbl_type, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(cbo_typeZone, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cbo_formeZone, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        panel_zonesLayout.setVerticalGroup(
-            panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panel_zonesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_type, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cbo_typeZone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panel_zonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbl_forme, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cbo_formeZone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        btn_exporter.setPreferredSize(new java.awt.Dimension(85, 25));
-
-        lbl_nombreBloc.setPreferredSize(new java.awt.Dimension(120, 25));
-
-        lbl_prixTotal.setPreferredSize(new java.awt.Dimension(120, 25));
-
-        txt_nbrTotalDeBloc.setEditable(false);
-        txt_nbrTotalDeBloc.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-
-        txt_prixTotal.setEditable(false);
-        txt_prixTotal.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-
-        jPanel1.setBackground(new java.awt.Color(153, 153, 153));
-
-        btn_zoomer.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
-        btn_zoomer.setText("+");
-
-        btn_dezoomer.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
-        btn_dezoomer.setText("-");
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(btn_zoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btn_dezoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 392, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btn_dezoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_zoomer, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(btn_precedent)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btn_suivant)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btn_importer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btn_exporter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 232, Short.MAX_VALUE)
-                .addComponent(btn_changerLangue)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btn_authentification, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(panel_blocs, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
-                        .addComponent(panel_vues, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
-                        .addComponent(panel_zones, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lbl_nombreBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lbl_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txt_nbrTotalDeBloc, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txt_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btn_changerLangue, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(btn_authentification, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btn_precedent, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btn_suivant, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btn_importer, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(btn_exporter, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(panel_vues, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(panel_zones, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(panel_blocs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(24, 24, 24)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lbl_nombreBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txt_nbrTotalDeBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lbl_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txt_prixTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-        );
+        getContentPane().add(panel_principal, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btn_zoomerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_zoomerActionPerformed
-        // @ roneh . Zoomer avec le bouton +
-        //drawingPanel.zoomInCenter();
-    }//GEN-LAST:event_btn_zoomerActionPerformed
-
-    private void btn_dezoomerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_dezoomerActionPerformed
-        //@roneh pour dezoomer avec le bouton -
-         //drawingPanel.zoomOutCenter();
-    }//GEN-LAST:event_btn_dezoomerActionPerformed
-
-    private void afficherPanelVues(String actionKey) {
-        this.actionCourante = actionKey;
-        
-        if (this.panel_selectionVues != null) {
-            this.jPanel1.remove(this.panel_selectionVues);
-            this.panel_selectionVues = null;
-        }
-
-        List<VueDTO> vues = this.controleur.getVues();
-        if (vues.isEmpty()) return;
-
-        //Locale locale = (LangueManager.getLangageCourant() == Langage.FR)? Locale.FRENCH : Locale.ENGLISH;
-
-        //ResourceBundle bundle = ResourceBundle.getBundle("i18n.messages", locale);
-        //String action = bundle.getString(this.actionCourante);
-        //String titre = MessageFormat.format(bundle.getString("panel.selectViews"), action);
-
-        this.panel_selectionVues = new JPanel();
-        this.panel_selectionVues.setLayout(new BorderLayout());
-        //this.panel_selectionVues.setBorder(BorderFactory.createTitledBorder(titre));
-        this.panel_selectionVues.setBackground(new Color(240, 240, 240));
-
-        this.panel_miniatures = new JPanel();
-        this.panel_miniatures.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        this.panel_miniatures.setBackground(new Color(240, 240, 240));
-
-        this.checkboxes = new ArrayList<>();
-
-        for (int i = 0; i < vues.size(); i++) {
-            JPanel panelVue = new JPanel();
-            panelVue.setLayout(new BorderLayout());
-            panelVue.setBackground(new Color(240, 240, 240));
-
-            BufferedImage img = vues.get(i).getImage();
-            BufferedImage miniature = creerMiniature(img, 100, 80);
-            
-            JLabel lblMiniature = new JLabel(new ImageIcon(miniature));
-            
-            lblMiniature.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-
-            //JCheckBox cb = new JCheckBox(vues.get(i).getNomVue());
-            //cb.addActionListener(e -> majBoutonToutSelectionnerVues());
-            //cb.setBackground(new Color(240, 240, 240));
-            //this.checkboxes.add(cb);
-            
-            int indexFinal = i;
-            lblMiniature.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    JCheckBox check = checkboxes.get(indexFinal);
-                    check.setSelected(!check.isSelected());
-                    majBoutonToutSelectionnerVues();
-                }
-            });
-
-            panelVue.add(lblMiniature, BorderLayout.CENTER);
-            //panelVue.add(cb, BorderLayout.SOUTH);
-            this.panel_miniatures.add(panelVue);
-        }
-
-        JPanel panelBoutons = new JPanel();
-        //this.btn_toutSelectionner = new JCheckBox(LangueManager.tr("panel.selectAll"));
-        //this.btn_confirmerModification = new JButton(LangueManager.tr("panel.confirm"));
-        //this.btn_annulerModification = new JButton(LangueManager.tr("panel.cancel"));
-
-        this.btn_toutSelectionner.addActionListener(e -> this.onToggleSelectionnerVues());
-        this.btn_confirmerModification.addActionListener(e -> this.confirmerSupressionOuExportVues());
-        this.btn_annulerModification.addActionListener(e -> this.annulerSupressionOuExportVues());
-
-        panelBoutons.add(this.btn_toutSelectionner);
-        panelBoutons.add(this.btn_confirmerModification);
-        panelBoutons.add(this.btn_annulerModification);
-
-        this.panel_selectionVues.add(new JScrollPane(panel_miniatures), BorderLayout.CENTER);
-        this.panel_selectionVues.add(panelBoutons, BorderLayout.SOUTH);
-        this.panel_selectionVues.setPreferredSize(new Dimension(getWidth(), 180));
-
-        this.jPanel1.add(this.panel_selectionVues, BorderLayout.SOUTH);
-        revalidate();
-        repaint();
-    }
-
-    private BufferedImage creerMiniature(BufferedImage imageOriginal, int largeur, int hauteur) {
-        BufferedImage miniature = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = miniature.createGraphics();
-        g.drawImage(imageOriginal, 0, 0, largeur, hauteur, null);
-        g.dispose();
-        return miniature;
-    }
-    
-    private void majBoutonToutSelectionnerVues() {
-        boolean tousCoches = checkboxes.stream().allMatch(JCheckBox::isSelected);
-        this.btn_toutSelectionner.setSelected(tousCoches);
-    }
-
-    private void onToggleSelectionnerVues(){
-        boolean etat = this.btn_toutSelectionner.isSelected();
-
-        for (JCheckBox cb : checkboxes) {
-            cb.setSelected(etat);
-        }
-    }
-
-    private void confirmerSupressionOuExportVues() {
-        List<Integer> indices = new ArrayList<>();
-        for (int i = 0; i < checkboxes.size(); i++) {
-            if (checkboxes.get(i).isSelected()) {
-                indices.add(i);
-            }
-        }
-        if (!indices.isEmpty() && this.actionCourante.equalsIgnoreCase("panel.delete")) {
-            this.controleur.supprimerVues(indices);
-        }
-        else if (!indices.isEmpty() && this.actionCourante.equalsIgnoreCase("panel.export")){
-            this.controleur.exporterVues(indices);
-        }
-        
-        this.annulerSupressionOuExportVues();
-        this.rafraichirVueCourante();
-    }
-
-    private void annulerSupressionOuExportVues() {
-        this.jPanel1.remove(this.panel_selectionVues);
-        revalidate();
-        repaint();
-    }
-
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new MainWindow(new MainController()).setVisible(true));
-    }
-    
-
-   //@roneh  Methode du rognage de la vue Courante 
-   private void rognerVueCourante(Rectangle zoneAffichage) {
-    VueDTO vue = this.controleur.getVueCourante();
-
-    if (vue == null || vue.getImage() == null) {
-        return;
-    }
-
-    if (!(this.drawingPanel instanceof DrawingPanel panel)) {
-        return;
-    }
-
-    Rectangle zoneImage = panel.convertirSelectionEcranVersImage(zoneAffichage);
-    if (zoneImage == null) {
-        return;
-    }
-
-    this.controleur.rognerVueCourante(
-            new RognerVueDTO(
-                    zoneImage.x,
-                    zoneImage.y,
-                    zoneImage.width,
-                    zoneImage.height
-            )
-    );
-
-    this.modeRognage = false;
-    this.drawingPanel.setModeRognage(false);
-    //this.btn_rogner.setText(LangueManager.tr("button.crop"));
-
-    this.rafraichirVueCourante();
-}
-   
-   // @roneh pour le rognage inverse
-    private void initialiserPanelChoixRognage() {
-    this.panelChoixRognage = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    this.panelChoixRognage.setOpaque(false);
-
-    this.btn_appliquerRognageNormal = new JButton("Rognage normal");
-    this.btn_appliquerRognageInverse = new JButton("Rognage inverse");
-    this.btn_annulerRognage = new JButton("Annuler");
-
-    this.btn_appliquerRognageNormal.addActionListener(e -> appliquerRognageNormalEnAttente());
-    this.btn_appliquerRognageInverse.addActionListener(e -> appliquerRognageInverseEnAttente());
-    this.btn_annulerRognage.addActionListener(e -> annulerRognageEnAttente());
-
-    this.panelChoixRognage.add(this.btn_appliquerRognageNormal);
-    this.panelChoixRognage.add(this.btn_appliquerRognageInverse);
-    this.panelChoixRognage.add(this.btn_annulerRognage);
-
-    this.panelChoixRognage.setVisible(false);
-    this.jPanel1.add(this.panelChoixRognage, BorderLayout.NORTH);
-}
-   
-   private void preparerChoixRognage(Rectangle zoneAffichage) {
-    if (zoneAffichage == null || zoneAffichage.width <= 0 || zoneAffichage.height <= 0) {
-        return;
-    }
-
-    this.selectionRognageEnAttente = zoneAffichage;
-    this.panelChoixRognage.setVisible(true);
-
-    this.jPanel1.revalidate();
-    this.jPanel1.repaint();
-}
-
-private void appliquerRognageNormalEnAttente() {
-    if (this.selectionRognageEnAttente == null) {
-        return;
-    }
-
-    Rectangle zoneAffichage = this.selectionRognageEnAttente;
-    this.selectionRognageEnAttente = null;
-    this.panelChoixRognage.setVisible(false);
-
-    this.rognerVueCourante(zoneAffichage);
-}
-
-private void appliquerRognageInverseEnAttente() {
-    if (this.selectionRognageEnAttente == null) {
-        return;
-    }
-
-    VueDTO vue = this.controleur.getVueCourante();
-    if (vue == null || vue.getImage() == null) {
-        return;
-    }
-
-    if (!(this.drawingPanel instanceof DrawingPanel panel)) {
-        return;
-    }
-
-    Rectangle zoneAffichage = this.selectionRognageEnAttente;
-    Rectangle zoneImage = panel.convertirSelectionEcranVersImage(zoneAffichage);
-
-    if (zoneImage == null) {
-        return;
-    }
-
-    this.selectionRognageEnAttente = null;
-    this.panelChoixRognage.setVisible(false);
-
-    this.modeRognage = false;
-    this.drawingPanel.setModeRognage(false);
-    //this.btn_rogner.setText(LangueManager.tr("button.crop"));
-
-    this.rafraichirVueCourante();
-}
-
-private void annulerRognageEnAttente() {
-    this.selectionRognageEnAttente = null;
-    this.panelChoixRognage.setVisible(false);
-
-    this.modeRognage = false;
-    this.drawingPanel.setModeRognage(false);
-    //this.btn_rogner.setText(LangueManager.tr("button.crop"));
-
-    this.jPanel1.revalidate();
-    this.jPanel1.repaint();
-}
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btn_authentification;
+    private javax.swing.JButton btn_ajouterVue;
+    private javax.swing.JButton btn_annulerAction;
+    private javax.swing.JButton btn_appliquerEchelle;
     private javax.swing.JButton btn_changerLangue;
-    private javax.swing.JButton btn_dezoomer;
-    private javax.swing.JButton btn_exporter;
-    private javax.swing.JButton btn_importer;
-    private javax.swing.JButton btn_precedent;
-    private javax.swing.JButton btn_rogner;
-    private javax.swing.JButton btn_suivant;
-    private javax.swing.JButton btn_supprimer;
-    private javax.swing.JButton btn_zoomer;
-    private javax.swing.JComboBox<String> cbo_formeZone;
-    private javax.swing.JComboBox<String> cbo_typeZone;
-    private javax.swing.JPanel jPanel1;
+    private javax.swing.JButton btn_deplacerZone;
+    private javax.swing.JButton btn_exporterPdf;
+    private javax.swing.JButton btn_formeRectangle;
+    private javax.swing.JButton btn_formeTriangle;
+    private javax.swing.JButton btn_formeTriangleTronque;
+    private javax.swing.JButton btn_importerPdf;
+    private javax.swing.JButton btn_redimensionnerZone;
+    private javax.swing.JButton btn_retablirAction;
+    private javax.swing.JButton btn_rognerVue;
+    private javax.swing.JButton btn_simulation;
+    private javax.swing.JButton btn_supprimerVue;
+    private javax.swing.JButton btn_supprimerZone;
+    private javax.swing.JButton btn_vuePrecedente;
+    private javax.swing.JButton btn_vueSuivante;
+    private javax.swing.JButton btn_zoneArmatureBloc;
+    private javax.swing.JButton btn_zoneArmatureClassique;
+    private javax.swing.JButton btn_zoneOuverture;
+    private javax.swing.JButton btn_zoomIn;
+    private javax.swing.JButton btn_zoomOut;
+    private javax.swing.Box.Filler fille11;
+    private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler10;
+    private javax.swing.Box.Filler filler12;
+    private javax.swing.Box.Filler filler13;
+    private javax.swing.Box.Filler filler2;
+    private javax.swing.Box.Filler filler3;
+    private javax.swing.Box.Filler filler4;
+    private javax.swing.Box.Filler filler5;
+    private javax.swing.Box.Filler filler6;
+    private javax.swing.Box.Filler filler7;
+    private javax.swing.Box.Filler filler8;
+    private javax.swing.Box.Filler filler9;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JLabel lbl_actionsTitre;
+    private javax.swing.JLabel lbl_blocsTitre;
+    private javax.swing.JLabel lbl_blocsTotaux;
+    private javax.swing.JLabel lbl_coutParBloc;
+    private javax.swing.JLabel lbl_coutTotal;
     private javax.swing.JLabel lbl_echelle;
-    private javax.swing.JLabel lbl_forme;
+    private javax.swing.JLabel lbl_formeZoneTitre;
     private javax.swing.JLabel lbl_hauteurBloc;
     private javax.swing.JLabel lbl_largeurBloc;
-    private javax.swing.JLabel lbl_nombreBloc;
-    private javax.swing.JLabel lbl_prixParBloc;
-    private javax.swing.JLabel lbl_prixTotal;
-    private javax.swing.JLabel lbl_type;
-    private javax.swing.JPanel panel_blocs;
+    private javax.swing.JLabel lbl_typeZoneTitre;
+    private javax.swing.JLabel lbl_vueCourante;
+    private javax.swing.JPanel panel_boutonAction;
+    private javax.swing.JPanel panel_boutons;
+    private javax.swing.JPanel panel_coutParBloc;
+    private javax.swing.JPanel panel_dimensionsBloc;
+    private javax.swing.JPanel panel_echelle;
+    private javax.swing.JPanel panel_formeZone;
+    private javax.swing.JPanel panel_hauteurBloc;
+    private javax.swing.JPanel panel_largeurBloc;
+    private javax.swing.JPanel panel_menu;
+    private javax.swing.JPanel panel_principal;
+    private javax.swing.JPanel panel_simulation;
+    private javax.swing.JPanel panel_typeZone;
     private javax.swing.JPanel panel_vues;
-    private javax.swing.JPanel panel_zones;
-    private javax.swing.JSpinner spi_echelle;
+    private javax.swing.JTextField txt_coutParBloc;
+    private javax.swing.JTextField txt_echelle;
     private javax.swing.JTextField txt_hauteurBloc;
     private javax.swing.JTextField txt_largeurBloc;
-    private javax.swing.JTextField txt_nbrTotalDeBloc;
-    private javax.swing.JTextField txt_prixParBloc;
-    private javax.swing.JTextField txt_prixTotal;
     // End of variables declaration//GEN-END:variables
 }

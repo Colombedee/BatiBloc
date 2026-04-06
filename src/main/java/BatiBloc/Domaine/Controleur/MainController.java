@@ -8,6 +8,7 @@ import BatiBloc.Domaine.Dto.BlocDTO;
 import BatiBloc.Domaine.Services.ExportFichierPdfService;
 import BatiBloc.Domaine.Services.ImportFichierPdfService;
 import BatiBloc.Domaine.Dto.RognerVueDTO;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -90,9 +91,37 @@ public class MainController {
         this.undoRedoManager.retablir(this::creerMemento, this::restaurerMemento);
     }
     
-    public void ajouterVue(){
-        
+    public void ajouterVue() {
+    this.enregistrerEtatAvantModification();
+
+    // 1. Créer une image vide (blanche)
+    // On définit une taille par défaut si aucune vue n'existe déjà
+    int largeur = 1200;
+    int hauteur = 1600;
+
+    // Si une vue existe déjà, on peut reprendre ses dimensions pour la cohérence
+    if (!this.projetVues.isEmpty() && indexVueCourante != -1) {
+        BufferedImage actuelle = this.projetVues.get(indexVueCourante).getImage();
+        largeur = actuelle.getWidth();
+        hauteur = actuelle.getHeight();
     }
+
+    BufferedImage imageVide = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_INT_RGB);
+    
+    // 2. Remplir l'image de blanc
+    Graphics2D g = imageVide.createGraphics();
+    g.setColor(Color.WHITE);
+    g.fillRect(0, 0, largeur, hauteur);
+    g.dispose();
+
+    // 3. Créer la vue et l'ajouter au projet
+    Vue nouvelleVue = new Vue(imageVide);
+    nouvelleVue.setEchelle(ECHELLE_DEFAUT);
+    this.projetVues.add(nouvelleVue);
+
+    // 4. Mettre à jour l'index sur la nouvelle vue
+    this.indexVueCourante = this.projetVues.size() - 1;
+}
 
     public void importerPdf() {
         FichierImporteDTO fichier = ImportFichierPdfService.importer();

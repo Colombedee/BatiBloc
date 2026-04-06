@@ -1,7 +1,7 @@
 package BatiBloc;
 
 import BatiBloc.Domaine.Controleur.MainController;
-import BatiBloc.Vues.NewMainWindow;
+import BatiBloc.Vues.MainWindow;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -10,7 +10,7 @@ public class Main {
 
     private static void startApp() {
         MainController controller = new MainController();
-        NewMainWindow window = new NewMainWindow(controller);
+        MainWindow window = new MainWindow(controller);
         window.setVisible(true);
     }
 
