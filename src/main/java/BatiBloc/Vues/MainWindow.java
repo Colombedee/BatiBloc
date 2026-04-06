@@ -235,50 +235,7 @@ public class MainWindow extends JFrame {
         this.txt_hauteurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 1'2\"4/5");
         this.txt_coutParBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 5,00");
         this.txt_echelle.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 6\"");
-        this.ajouterListenerDimension(this.txt_largeurBloc);
-        this.ajouterListenerDimension(this.txt_hauteurBloc);
     }
-    
-    private void ajouterListenerDimension(JTextField champ) {
-    champ.addFocusListener(new java.awt.event.FocusAdapter() {
-        @Override
-        public void focusLost(java.awt.event.FocusEvent e) {
-            appliquerDimensionsBloc();
-        }
-    });
-    champ.addActionListener(e -> appliquerDimensionsBloc());
-    }
-
-    private void appliquerDimensionsBloc() {
-    String txtL = this.txt_largeurBloc.getText().trim();
-    String txtH = this.txt_hauteurBloc.getText().trim();
-    if (txtL.isEmpty() || txtH.isEmpty()) return;
-
-    double largeur = parserMesureImperiale(txtL);
-    double hauteur = parserMesureImperiale(txtH);
-
-    if (largeur < 6.0) {
-        JOptionPane.showMessageDialog(this,
-                "La longueur minimale d'un bloc est de 6 pouces.\n"
-                + "Exemples valides : 8'  |  12\"  |  1' 6\"  |  6\" 1/32",
-                "Valeur invalide", JOptionPane.WARNING_MESSAGE);
-        this.txt_largeurBloc.setText("");
-        this.txt_largeurBloc.requestFocusInWindow();
-        return;
-    }
-    if (hauteur < 6.0) {
-        JOptionPane.showMessageDialog(this,
-                "La hauteur minimale d'un bloc est de 6 pouces.\n"
-                + "Exemples valides : 12\"  |  1'  |  6\" 1/32",
-                "Valeur invalide", JOptionPane.WARNING_MESSAGE);
-        this.txt_hauteurBloc.setText("");
-        this.txt_hauteurBloc.requestFocusInWindow();
-        return;
-    }
-
-    this.controleur.modifierDimensionsBloc(largeur, hauteur);
-    this.rafraichirUI();
-}
 
     private void initListeners() {
         this.initBoutonsPrincipal();
@@ -625,48 +582,18 @@ public class MainWindow extends JFrame {
     }
 
     private double parserMesureImperiale(String texte) {
-        if (texte == null || texte.trim().isEmpty()) return 1.0;
-        texte = texte.trim();
-
-        double totalPouces = 0.0;
-        boolean qqChoseTrouve = false;
-
-        String pouce = String.valueOf((char)34); 
-
-        String regex = "(?:(\\d+(?:\\.\\d+)?)\\s*')?\\s*"
-             + "(?:(\\d+(?:\\.\\d+)?)\\s*" + pouce + ")?\\s*"
-             + "(?:(\\d+)\\s*/\\s*(\\d+))?";
-
-        java.util.regex.Matcher m =
-            java.util.regex.Pattern.compile(regex).matcher(texte);
-
+        double totalPouces = 0;
+        String regex = "(?:(\\d+)')?\\s*(?:(\\d+(?:\\.\\d+)?)\")?\\s*(?:(\\d+)/(\\d+))?";
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(regex).matcher(texte.trim());
         if (m.find()) {
-            if (m.group(1) != null) {
-                totalPouces += Double.parseDouble(m.group(1)) * 12.0;
-                qqChoseTrouve = true;
-            }
-            if (m.group(2) != null) {
-                totalPouces += Double.parseDouble(m.group(2));
-                qqChoseTrouve = true;
-            }
+            if (m.group(1) != null) totalPouces += Double.parseDouble(m.group(1)) * 12;
+            if (m.group(2) != null) totalPouces += Double.parseDouble(m.group(2));
             if (m.group(3) != null && m.group(4) != null) {
-                double den = Double.parseDouble(m.group(4));
-                if (den != 0) {
-                    totalPouces += Double.parseDouble(m.group(3)) / den;
-                    qqChoseTrouve = true;
-                }
+                double num = Double.parseDouble(m.group(3)), den = Double.parseDouble(m.group(4));
+                if (den != 0) totalPouces += num / den;
             }
         }
-
-        // Nombre seul sans symbole
-        if (!qqChoseTrouve) {
-            try {
-                totalPouces = Double.parseDouble(texte);
-                qqChoseTrouve = true;
-            } catch (NumberFormatException ignored) { }
-        }
-
-        return qqChoseTrouve && totalPouces > 0 ? totalPouces : 1.0;
+        return totalPouces > 0 ? totalPouces : 1.0;
     }
 
     private String formaterEchelleImperiale(double echelle) {

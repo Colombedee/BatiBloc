@@ -37,9 +37,6 @@ public class MainController {
     private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut (8 pieds)
     private double hauteurBlocDefaut = 12.0;   // 12 pouces
     
-    public double getLargeurBlocDefaut() { return this.largeurBlocDefaut; }
-    public double getHauteurBlocDefaut() { return this.hauteurBlocDefaut; }
-    
     private final UndoRedoManager<ProjetMemento> undoRedoManager = new UndoRedoManager<>();
     
     private static class ProjetMemento {
@@ -405,18 +402,18 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         return;
     }
 
-    this.enregistrerEtatAvantModification();
+    Vue vue = this.projetVues.get(indexVueCourante);
+    Zone zone = vue.getZoneSelectionnee();
 
-    // Appliquer à toutes les zones de toutes les vues
-    for (Vue vue : this.projetVues) {
-        for (Zone zone : vue.getZones()) {
-            if (zone instanceof ArmatureEnBlocs) {
-                zone.setLargeurBloc(largeur);
-                zone.setHauteurBloc(hauteur);
-            }
-        }
+    if (zone != null) {
+        zone.setLargeurBloc(largeur);
+        zone.setHauteurBloc(hauteur);
     }
     
+    this.enregistrerEtatAvantModification();
+    zone.setLargeurBloc(largeur);
+    zone.setHauteurBloc(hauteur);
+
     // Mémorise aussi les valeurs par défaut pour les prochaines zones
     this.largeurBlocDefaut = largeur;
     this.hauteurBlocDefaut = hauteur;
