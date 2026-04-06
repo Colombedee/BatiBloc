@@ -5,6 +5,7 @@
   <artifactId>BatiBloc</artifactId>
   <version>1.0-SNAPSHOT</version>
   <build>
+    <finalName>equipe07</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
