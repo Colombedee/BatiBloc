@@ -156,6 +156,11 @@ public class NewMainWindow extends JFrame {
         VueDTO vue = this.controleur.getVueCourante();
         this.drawingPanel.afficherVue(vue);
         this.lbl_vueCourante.setText(vue != null ? "Vue " + (vue.getIndex() + 1) : this.getTexte("label.noView"));
+        //Emmanuella - afficher échelle courante
+        double echelle = this.controleur.getEchelleCourante();
+        if (echelle > 0) {
+        this.txt_echelle.setText(formaterEchelleImperiale(echelle));
+    }
     }
     
     private void initBoutonsIcones() {
@@ -602,37 +607,49 @@ public class NewMainWindow extends JFrame {
     }
 
     private double parserMesureImperiale(String texte) {
-        double totalPouces = 0;
-
-        int indexPied = texte.indexOf('\'');
-        if (indexPied >= 0) {
-            String piedsStr = texte.substring(0, indexPied).trim();
-            totalPouces += Integer.parseInt(piedsStr) * 12;
-            texte = texte.substring(indexPied + 1).trim();
+    double totalPouces = 0;
+    // Regex pour capturer optionnellement : pieds('), pouces(") et fractions(/)
+    // Groupe 1: Pieds, Groupe 2: Pouces, Groupe 3: Numérateur, Groupe 4: Dénominateur
+    String regex = "(?:(\\d+)')?\\s*(?:(\\d+(?:\\.\\d+)?)\")?\\s*(?:(\\d+)/(\\d+))?";
+    java.util.regex.Matcher m = java.util.regex.Pattern.compile(regex).matcher(texte.trim());
+ 
+    if (m.find()) {
+        // 1. Pieds -> Pouces (x12)
+        if (m.group(1) != null) totalPouces += Double.parseDouble(m.group(1)) * 12;
+        // 2. Pouces
+        if (m.group(2) != null) totalPouces += Double.parseDouble(m.group(2));
+        // 3. Fraction (ex: 1/3)
+        if (m.group(3) != null && m.group(4) != null) {
+            double num = Double.parseDouble(m.group(3));
+            double den = Double.parseDouble(m.group(4));
+            if (den != 0) totalPouces += num / den;
         }
-
-        int indexPouce = texte.indexOf('"');
-        if (indexPouce >= 0) {
-            String poucesStr = texte.substring(0, indexPouce).trim();
-            totalPouces += Double.parseDouble(poucesStr);
-            texte = texte.substring(indexPouce + 1).trim();
-        }
-
-        texte = texte.trim();
-        if (!texte.isEmpty()) {
-            String[] parts = texte.split("/");
-            if (parts.length == 2) {
-                double num = Double.parseDouble(parts[0].trim());
-                double den = Double.parseDouble(parts[1].trim());
-                if (den != 0) totalPouces += num / den;
-            }
-        }
-
-        if (totalPouces <= 0) {
-            return 1.0;
-        }
-        return totalPouces;
     }
+ 
+    // Retourne la valeur calculée ou 1.0 par défaut (selon ta logique initiale)
+    return totalPouces > 0 ? totalPouces : 1.0;
+}
+    
+    
+// Emmanuella - formate une échelle en format impérial lisible
+private String formaterEchelleImperiale(double echelle) {
+    int pieds = (int) (echelle / 12);
+    double reste = echelle % 12;
+    int pouces = (int) reste;
+    double fraction = reste - pouces;
+
+    StringBuilder sb = new StringBuilder();
+    if (pieds > 0) sb.append(pieds).append("'");
+    if (pouces > 0 || fraction > 0.01) {
+        if (pieds > 0) sb.append(" ");
+        sb.append(pouces);
+        if (fraction >= 0.2 && fraction < 0.4) sb.append(" 1/4");
+        else if (fraction >= 0.4 && fraction < 0.6) sb.append(" 1/2");
+        else if (fraction >= 0.6 && fraction < 0.9) sb.append(" 3/4");
+        sb.append("\"");
+    }
+    return sb.length() == 0 ? "1\"" : sb.toString().trim();
+}
 
 
     

@@ -135,14 +135,10 @@ public class MainController {
     }
     
         //  Ajouter par Emmanuella 
-        // 1 unité PDF = 1/72 pouce
-        // Rendu à 150 DPI donc 1 pixel = (1/150) pouce
+        // 1 pouces par pixel
     private double lireEchellePdf(PDDocument doc, int pageIndex) {
-        try {
-            return 1.0 / DPI_RENDU;
-        } catch (Exception e) {
-            return ECHELLE_DEFAUT;
-        }
+            return 1.0 ;
+        
     }
             
     public void exporterVues(List<Integer> indices) {
