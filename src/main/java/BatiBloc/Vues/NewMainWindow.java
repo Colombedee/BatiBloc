@@ -35,6 +35,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
+import BatiBloc.Domaine.Dto.SimulationDTO;
 
 public class NewMainWindow extends JFrame {
     
@@ -99,7 +100,8 @@ private enum ActionVue{ EXPORT, DELETE }
             this.btn_formeTriangle,
             this.btn_formeTriangleTronque,
             this.btn_zoomIn,
-            this.btn_zoomOut
+            this.btn_zoomOut,
+            this.btn_simuler
         );
     }
     
@@ -236,6 +238,7 @@ private enum ActionVue{ EXPORT, DELETE }
         this.configBouton(this.btn_ajouterVue, "button.addView", "add_icon.svg");
         this.configBouton(this.btn_supprimerVue, "button.deleteView", "delete_icon.svg");
         this.configBouton(this.btn_rognerVue, "button.cropView", "crop_icon.svg");
+        this.btn_simuler.setText(this.getTexte("button.simulate")); // simulation
     }
     
     private void configBouton(JButton bouton, String nomBouton, String nomIcone) {
@@ -500,6 +503,8 @@ private enum ActionVue{ EXPORT, DELETE }
                     ? Locale.ENGLISH : Locale.FRENCH;
             this.majInterface();
         });
+        
+        this.btn_simuler.addActionListener(e -> this.lancerSimulation()); //@roneh Boutton pour la simulation 
     }
     
     private void addAction(AbstractButton button, Runnable action){
@@ -634,6 +639,37 @@ private enum ActionVue{ EXPORT, DELETE }
                 JOptionPane.showMessageDialog(this, this.getTexte("messageDialog.scaleSizeException"));
             }
         });
+    }
+    
+        // methode de simulation @roneh
+    private void lancerSimulation() {
+    double prixUnitaire = parsePrixBloc();
+
+    SimulationDTO result = this.controleur.simulerVueCourante(prixUnitaire);
+
+    if (result == null) {
+        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
+        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
+    } else {
+        this.lbl_blocsTotaux.setText(
+                this.getTexte("label.totalBlock") + " " + result.nombreBlocs);
+        this.lbl_coutTotal.setText(
+                this.getTexte("label.totalCost") + " "
+                + String.format("%.2f $", result.coutTotal));
+    }
+
+    this.rafraichirUI();
+    }
+
+    private double parsePrixBloc() {
+    try {
+        String texte = this.txt_coutParBloc.getText().trim();
+        if (texte.isEmpty()) return 0.0;
+        return Double.parseDouble(texte.replace(",", "."));
+    } catch (NumberFormatException ex) {
+        return 0.0;
+    }
+    
     }
     
     private void initLabelFocus() {

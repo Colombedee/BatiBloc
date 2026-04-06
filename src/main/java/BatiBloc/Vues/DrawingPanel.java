@@ -1,5 +1,6 @@
 package BatiBloc.Vues;
 import BatiBloc.Domaine.Controleur.MainController;
+import BatiBloc.Domaine.Dto.BlocDTO;
 import BatiBloc.Domaine.Dto.ZoneDTO;
 import BatiBloc.Domaine.Dto.TypeForme;
 import BatiBloc.Domaine.Dto.TypeZone;
@@ -640,6 +641,45 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.setColor(zone.isSelectionnee() ? Color.YELLOW : couleur.darker());
             g2d.setStroke(new BasicStroke(2));
             g2d.drawPolygon(xs, ys, pts.size());
+            
+            //  Rendu des blocs simulés (zones ARMATURE_BLOCS)@roneh
+            if (zone.getType() == TypeZone.ARMATURE_BLOCS && !zone.getBlocs().isEmpty()) {
+                int zoneXMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
+                int zoneYMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
+
+                java.awt.Polygon clipPoly = new java.awt.Polygon(xs, ys, pts.size());
+                java.awt.Shape clipPrecedent = g2d.getClip();
+                g2d.setClip(clipPoly);
+
+                int indexBloc = 0;
+                double dernierY = Double.NaN;
+                int indexRangee = -1;
+                for (BlocDTO bloc : zone.getBlocs()) {
+                    int bx = zoneXMin + (int) Math.round(bloc.x);
+                    int by = zoneYMin + (int) Math.round(bloc.y);
+                    int bw = (int) Math.round(bloc.largeur);
+                    int bh = (int) Math.round(bloc.hauteur);
+
+                    if (Double.isNaN(dernierY) || Math.abs(bloc.y - dernierY) > 0.5) {
+                        dernierY = bloc.y;
+                        indexRangee++;
+                    }
+                    boolean estPaire = (indexRangee % 2 == 0);
+                    Color remplissage = estPaire
+                            ? new Color(255, 200, 100, 180)   // orange clair
+                            : new Color(255, 230, 150, 180);  // jaune clair
+
+                    g2d.setColor(remplissage);
+                    g2d.fillRect(bx, by, bw, bh);
+                    g2d.setColor(new Color(150, 80, 0, 200));
+                    g2d.setStroke(new BasicStroke(1.0f));
+                    g2d.drawRect(bx, by, bw, bh);
+                    indexBloc++;
+                }
+
+                g2d.setClip(clipPrecedent);
+                g2d.setStroke(new BasicStroke(2));
+            }
             
             // Emmanuella - Afficher dimensions en pieds/pouces
             double echelle = this.vueCourante.getEchelle();
