@@ -38,8 +38,7 @@ import javax.swing.UIManager;
 
 public class NewMainWindow extends JFrame {
     
-      
-    private enum ActionVue{ EXPORT, DELETE }
+private enum ActionVue{ EXPORT, DELETE }
     private ActionVue actionVue;
     private boolean formeChoisie = false;
     private boolean modeRognage = false;
@@ -53,7 +52,9 @@ public class NewMainWindow extends JFrame {
     private JPanel panneauVues;
     private JPanel viewsThumbnailPanel;
     private Locale langueCourante = Locale.FRENCH;
-    private List<AbstractButton> boutonsVue;
+    private List<JButton> boutonsVue;
+    private List<JLabel> labelsVue;
+    private List<JTextField> textFieldsVue;
     private List<JCheckBox> casesVues;
     private final MainController controleur;
     private ResourceBundle resourceBundle;
@@ -65,8 +66,8 @@ public class NewMainWindow extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
-    private void initFormulaire(){
-        this.initListeBoutonsVue();
+    private void initFormulaire() {
+        this.initListes();
         this.initPanneauDessin();
         this.initBoutonsIcones();
         this.majInterface(); 
@@ -75,16 +76,21 @@ public class NewMainWindow extends JFrame {
         this.rafraichirUI();
     }
     
-    private void initListeBoutonsVue(){
-        this.boutonsVue = List.of(
-            this.btn_exporterPdf,
+    private void initListes() {
+        this.initListeBoutonsVue();
+        this.initListeLabelVue();
+        this.initListetextFieldVue();
+    }
+    
+    private void initListeBoutonsVue() {
+        this.boutonsVue = List.of(this.btn_exporterPdf,
             this.btn_supprimerVue,
             this.btn_rognerVue,
             this.btn_vuePrecedente,
             this.btn_vueSuivante,
             this.btn_appliquerEchelle,
             this.btn_deplacerZone,
-            this.btn_dimensionZone,
+            this.btn_redimensionnerZone,
             this.btn_supprimerZone,
             this.btn_zoneArmatureClassique,
             this.btn_zoneArmatureBloc,
@@ -97,15 +103,41 @@ public class NewMainWindow extends JFrame {
         );
     }
     
-    private void majEtatBoutons() {
+    private void initListeLabelVue() {
+        this.labelsVue = List.of(
+            this.lbl_largeurBloc,
+            this.lbl_hauteurBloc,
+            this.lbl_coutParBloc,
+            this.lbl_echelle
+        );
+    }
+    
+    private void initListetextFieldVue() {
+        this.textFieldsVue = List.of(
+            this.txt_largeurBloc,
+            this.txt_hauteurBloc,
+            this.txt_coutParBloc,
+            this.txt_echelle
+        );
+    }
+    
+    private void majEtatComposants() {
         boolean hasViews = !this.controleur.getVues().isEmpty();
 
-        for(AbstractButton btn : boutonsVue){
+        for(JButton btn : this.boutonsVue){
             btn.setEnabled(hasViews);
+        }
+        
+        for(JLabel label : this.labelsVue){
+            label.setEnabled(hasViews);
+        }
+        
+        for(JTextField textField : this.textFieldsVue){
+            textField.setEnabled(hasViews);
         }
     }
     
-    private void initPanneauDessin(){
+    private void initPanneauDessin() {
         this.drawingPanel = new DrawingPanel(this.controleur);
         this.drawingPanel.setOnRognageTermine(rect -> this.rognerVueCourante(rect));
         this.drawingPanel.setOnZoneAjoutee(() -> this.rafraichirUI());
@@ -141,13 +173,13 @@ public class NewMainWindow extends JFrame {
         this.rafraichirUI();
     }
     
-    private String getTexte(String key){
+    private String getTexte(String key) {
         return this.resourceBundle.getString(key);
     }
     
-        private void rafraichirUI(){
+        private void rafraichirUI() {
         this.rafraichirVue();
-        this.majEtatBoutons();
+        this.majEtatComposants();
         this.panel_principal.revalidate();
         this.panel_principal.repaint();
     }
@@ -156,16 +188,15 @@ public class NewMainWindow extends JFrame {
         VueDTO vue = this.controleur.getVueCourante();
         this.drawingPanel.afficherVue(vue);
         this.lbl_vueCourante.setText(vue != null ? "Vue " + (vue.getIndex() + 1) : this.getTexte("label.noView"));
-        //Emmanuella - afficher échelle courante
         double echelle = this.controleur.getEchelleCourante();
         if (echelle > 0) {
-        this.txt_echelle.setText(formaterEchelleImperiale(echelle));
-    }
+            this.txt_echelle.setText(formaterEchelleImperiale(echelle));
+        }
     }
     
     private void initBoutonsIcones() {
         this.btn_deplacerZone.setIcon(loadIcon("move_icon.svg", 25));
-        this.btn_dimensionZone.setIcon(loadIcon("resize_icon.svg", 25));
+        this.btn_redimensionnerZone.setIcon(loadIcon("resize_icon.svg", 25));
         this.btn_supprimerZone.setIcon(loadIcon("delete_icon.svg", 25));
         this.btn_zoneArmatureClassique.setIcon(loadIcon("classicZone_icon.svg", 25));
         this.btn_zoneArmatureBloc.setIcon(loadIcon("blockZone_icon.svg", 25));
@@ -179,7 +210,7 @@ public class NewMainWindow extends JFrame {
         this.btn_zoomOut.setIcon(loadIcon("zoomOut_icon.svg", 25));
     }
     
-        private FlatSVGIcon loadIcon(String name,int size){
+    private FlatSVGIcon loadIcon(String name,int size) {
         return new FlatSVGIcon("icones/" + name, size, size);
     }
     
@@ -191,6 +222,7 @@ public class NewMainWindow extends JFrame {
 
         this.configBoutons();
         this.configLabels();
+        this.configBoutonsMouseHover();
         this.majLanguePanneauVues();
 
         this.rafraichirUI();
@@ -206,7 +238,7 @@ public class NewMainWindow extends JFrame {
         this.configBouton(this.btn_rognerVue, "button.cropView", "crop_icon.svg");
     }
     
-    private void configBouton(JButton bouton, String nomBouton, String nomIcone){
+    private void configBouton(JButton bouton, String nomBouton, String nomIcone) {
         bouton.setText(this.getTexte(nomBouton));
         bouton.setIcon(new FlatSVGIcon("icones/" + nomIcone, 25, 25));
         bouton.setIconTextGap(10);
@@ -223,6 +255,18 @@ public class NewMainWindow extends JFrame {
         this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock"));
         this.lbl_coutTotal.setText(this.getTexte("label.totalCost"));
         this.lbl_echelle.setText(this.getTexte("label.scale"));
+    }
+    
+    private void configBoutonsMouseHover() {
+        this.initMouseHover(this.btn_deplacerZone, this.getTexte("button.move"));
+        this.initMouseHover(this.btn_redimensionnerZone, this.getTexte("button.resize"));
+        this.initMouseHover(this.btn_supprimerZone, this.getTexte("button.deleteZone"));
+        this.initMouseHover(this.btn_zoneArmatureClassique, this.getTexte("button.zoneClassicFrame"));
+        this.initMouseHover(this.btn_zoneArmatureBloc, this.getTexte("button.zoneReinforcementBlocks"));
+        this.initMouseHover(this.btn_zoneOuverture, this.getTexte("button.zoneOpening"));
+        this.initMouseHover(this.btn_formeRectangle, this.getTexte("button.formRectangle"));
+        this.initMouseHover(this.btn_formeTriangle, this.getTexte("button.formTriangle"));
+        this.initMouseHover(this.btn_formeTriangleTronque, this.getTexte("button.formTruncatedTriangle"));
     }
     
     private void majLanguePanneauVues() {
@@ -364,7 +408,7 @@ public class NewMainWindow extends JFrame {
         this.panneauVues.add(panelBoutons, BorderLayout.SOUTH);
     }
     
-    private void selectionnerTout(){
+    private void selectionnerTout() {
         boolean etat = this.chkToutesVues.isSelected();
 
         for (JCheckBox cb : this.casesVues) {
@@ -385,7 +429,6 @@ public class NewMainWindow extends JFrame {
                 this.controleur.exporterVues(indices);
             }
         }
-        
         this.fermerSelection();
     }
 
@@ -411,21 +454,21 @@ public class NewMainWindow extends JFrame {
         this.txt_largeurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 3'6\"1/3");
         this.txt_hauteurBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 1'2\"4/5");
         this.txt_coutParBloc.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 5,00");
-        this.txt_echelle.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 3'6\"1/3");
+        this.txt_echelle.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ex: 6\"");
     }
     
-    private void initListeners(){
+    private void initListeners() {
         this.initBoutonsPrincipal();
 	this.initBoutonsAction();
         this.initBoutonsZone();
         this.initBoutonsForme();
         this.initBoutonsVues();
-        this.initLabelFocus();
     }
     
-    private void initBoutonsPrincipal(){
+    private void initBoutonsPrincipal() {
         this.addAction(this.btn_annulerAction, this.controleur::annulerAction);
         this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
+        
         this.addAction(this.btn_importerPdf, () -> {
             this.controleur.importerPdf();
             this.rafraichirUI();
@@ -474,7 +517,7 @@ public class NewMainWindow extends JFrame {
             this.drawingPanel.setModeDeplacementZone(!actuel);
         });
 
-        this.btn_dimensionZone.addActionListener(e -> {
+        this.btn_redimensionnerZone.addActionListener(e -> {
             boolean actuel = this.drawingPanel.getModeRedimensionnementZone();
             this.arreterDessin();                       
             this.drawingPanel.setModeDeplacementZone(false);   
@@ -490,8 +533,12 @@ public class NewMainWindow extends JFrame {
             this.drawingPanel.setModeSuppressionZone(this.modeSuppressionZone);
         });
     }
+    
+    private void initMouseHover(JButton bouton, String texte) {
+        bouton.setToolTipText(texte);
+    }
 
-    private void initBoutonsZone(){
+    private void initBoutonsZone() {
         this.addZoneBoutonListener(this.btn_zoneArmatureClassique, TypeZone.ARMATURE_CLASSIQUE);
         this.addZoneBoutonListener(this.btn_zoneArmatureBloc, TypeZone.ARMATURE_BLOCS);
         this.addZoneBoutonListener(this.btn_zoneOuverture, TypeZone.OUVERTURE);
@@ -509,7 +556,7 @@ public class NewMainWindow extends JFrame {
         });
     }
     
-    private void initBoutonsForme(){
+    private void initBoutonsForme() {
         this.addFormeBoutonListener(this.btn_formeRectangle, TypeForme.RECTANGLE);
         this.addFormeBoutonListener(this.btn_formeTriangle, TypeForme.TRIANGLE);
         this.addFormeBoutonListener(this.btn_formeTriangleTronque, TypeForme.TRIANGLE_TRONQUE);
@@ -560,7 +607,7 @@ public class NewMainWindow extends JFrame {
         }
     }
     
-    private void initBoutonsVues(){
+    private void initBoutonsVues() {
         this.addAction(this.btn_vuePrecedente, this.controleur::naviguerVuePrecedente);
         this.addAction(this.btn_vueSuivante, this.controleur::naviguerVueSuivante);
         this.addAction(this.btn_zoomIn, this.drawingPanel::zoomInCenter);
@@ -607,31 +654,25 @@ public class NewMainWindow extends JFrame {
     }
 
     private double parserMesureImperiale(String texte) {
-    double totalPouces = 0;
-    // Regex pour capturer optionnellement : pieds('), pouces(") et fractions(/)
-    // Groupe 1: Pieds, Groupe 2: Pouces, Groupe 3: Numérateur, Groupe 4: Dénominateur
-    String regex = "(?:(\\d+)')?\\s*(?:(\\d+(?:\\.\\d+)?)\")?\\s*(?:(\\d+)/(\\d+))?";
-    java.util.regex.Matcher m = java.util.regex.Pattern.compile(regex).matcher(texte.trim());
- 
-    if (m.find()) {
-        // 1. Pieds -> Pouces (x12)
-        if (m.group(1) != null) totalPouces += Double.parseDouble(m.group(1)) * 12;
-        // 2. Pouces
-        if (m.group(2) != null) totalPouces += Double.parseDouble(m.group(2));
-        // 3. Fraction (ex: 1/3)
-        if (m.group(3) != null && m.group(4) != null) {
-            double num = Double.parseDouble(m.group(3));
-            double den = Double.parseDouble(m.group(4));
-            if (den != 0) totalPouces += num / den;
+        double totalPouces = 0;
+
+        String regex = "(?:(\\d+)')?\\s*(?:(\\d+(?:\\.\\d+)?)\")?\\s*(?:(\\d+)/(\\d+))?";
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(regex).matcher(texte.trim());
+
+        if (m.find()) {
+            if (m.group(1) != null) totalPouces += Double.parseDouble(m.group(1)) * 12;
+
+            if (m.group(2) != null) totalPouces += Double.parseDouble(m.group(2));
+
+            if (m.group(3) != null && m.group(4) != null) {
+                double num = Double.parseDouble(m.group(3));
+                double den = Double.parseDouble(m.group(4));
+                if (den != 0) totalPouces += num / den;
+            }
         }
+        return totalPouces > 0 ? totalPouces : 1.0;
     }
- 
-    // Retourne la valeur calculée ou 1.0 par défaut (selon ta logique initiale)
-    return totalPouces > 0 ? totalPouces : 1.0;
-}
-    
-    
-// Emmanuella - formate une échelle en format impérial lisible
+
 private String formaterEchelleImperiale(double echelle) {
     int pieds = (int) (echelle / 12);
     double reste = echelle % 12;
@@ -650,9 +691,7 @@ private String formaterEchelleImperiale(double echelle) {
     }
     return sb.length() == 0 ? "1\"" : sb.toString().trim();
 }
-
-
-    
+ 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -689,7 +728,7 @@ private String formaterEchelleImperiale(double echelle) {
         lbl_actionsTitre = new javax.swing.JLabel();
         panel_boutonAction = new javax.swing.JPanel();
         btn_deplacerZone = new javax.swing.JButton();
-        btn_dimensionZone = new javax.swing.JButton();
+        btn_redimensionnerZone = new javax.swing.JButton();
         btn_supprimerZone = new javax.swing.JButton();
         lbl_typeZoneTitre = new javax.swing.JLabel();
         panel_typeZone = new javax.swing.JPanel();
@@ -932,11 +971,11 @@ private String formaterEchelleImperiale(double echelle) {
         btn_deplacerZone.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_boutonAction.add(btn_deplacerZone);
 
-        btn_dimensionZone.setIconTextGap(0);
-        btn_dimensionZone.setMaximumSize(new java.awt.Dimension(75, 30));
-        btn_dimensionZone.setMinimumSize(new java.awt.Dimension(75, 30));
-        btn_dimensionZone.setPreferredSize(new java.awt.Dimension(75, 30));
-        panel_boutonAction.add(btn_dimensionZone);
+        btn_redimensionnerZone.setIconTextGap(0);
+        btn_redimensionnerZone.setMaximumSize(new java.awt.Dimension(75, 30));
+        btn_redimensionnerZone.setMinimumSize(new java.awt.Dimension(75, 30));
+        btn_redimensionnerZone.setPreferredSize(new java.awt.Dimension(75, 30));
+        panel_boutonAction.add(btn_redimensionnerZone);
 
         btn_supprimerZone.setIconTextGap(0);
         btn_supprimerZone.setMaximumSize(new java.awt.Dimension(75, 30));
@@ -1063,9 +1102,10 @@ private String formaterEchelleImperiale(double echelle) {
         panel_echelle.add(btn_appliquerEchelle);
         panel_echelle.add(fille11);
 
-        lbl_echelle.setMaximumSize(new java.awt.Dimension(50, 30));
-        lbl_echelle.setMinimumSize(new java.awt.Dimension(50, 30));
-        lbl_echelle.setPreferredSize(new java.awt.Dimension(50, 30));
+        lbl_echelle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_echelle.setMaximumSize(new java.awt.Dimension(60, 30));
+        lbl_echelle.setMinimumSize(new java.awt.Dimension(60, 30));
+        lbl_echelle.setPreferredSize(new java.awt.Dimension(60, 30));
         panel_echelle.add(lbl_echelle);
 
         txt_echelle.setMaximumSize(new java.awt.Dimension(90, 30));
@@ -1111,12 +1151,12 @@ private String formaterEchelleImperiale(double echelle) {
     private javax.swing.JButton btn_appliquerEchelle;
     private javax.swing.JButton btn_changerLangue;
     private javax.swing.JButton btn_deplacerZone;
-    private javax.swing.JButton btn_dimensionZone;
     private javax.swing.JButton btn_exporterPdf;
     private javax.swing.JButton btn_formeRectangle;
     private javax.swing.JButton btn_formeTriangle;
     private javax.swing.JButton btn_formeTriangleTronque;
     private javax.swing.JButton btn_importerPdf;
+    private javax.swing.JButton btn_redimensionnerZone;
     private javax.swing.JButton btn_retablirAction;
     private javax.swing.JButton btn_rognerVue;
     private javax.swing.JButton btn_simuler;
