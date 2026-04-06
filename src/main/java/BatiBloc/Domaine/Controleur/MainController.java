@@ -4,6 +4,7 @@ import BatiBloc.Domaine.Services.SimulationService;
 import BatiBloc.Domaine.Dto.SimulationDTO;
 import BatiBloc.Domaine.Modeles.*;
 import BatiBloc.Domaine.Dto.*;
+import BatiBloc.Domaine.Dto.BlocDTO;
 import BatiBloc.Domaine.Services.ExportFichierPdfService;
 import BatiBloc.Domaine.Services.ImportFichierPdfService;
 import BatiBloc.Domaine.Dto.RognerVueDTO;
@@ -29,6 +30,7 @@ public class MainController {
     private static final double DPI_RENDU = 150.0; // Échelle par défaut 1 pixel = 1/150 pouce
     private static final double DPI_ECRAN = 96.0;
     private static final double ECHELLE_DEFAUT = 1.0 / DPI_ECRAN;
+    private static final double COUT_UNITAIRE_PAR_BLOC_DEFAUT = 20.0;
     private final List<Vue> projetVues = new ArrayList<>();
     private int indexVueCourante = -1;
     private double largeurBlocDefaut = 96.0; // Largeur de bloc par défaut (8 pieds)
@@ -393,29 +395,49 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
     
     
     public SimulationDTO simulerZoneSelectionnee() {
-    if (indexVueCourante < 0) {
-        return null;
+        return simulerZoneSelectionnee(COUT_UNITAIRE_PAR_BLOC_DEFAUT);
     }
 
-    Vue vue = this.projetVues.get(indexVueCourante);
-    Zone zone = vue.getZoneSelectionnee();
+    public SimulationDTO simulerZoneSelectionnee(double prixUnitaireBloc) {
+        if (indexVueCourante < 0) return null;
 
-    if (zone == null) {
-        return null;
+        Vue vue = this.projetVues.get(indexVueCourante);
+        Zone zone = vue.getZoneSelectionnee();
+
+        if (zone == null)              return null;
+        if (zone instanceof Ouverture) return null;
+        if (!(zone instanceof ArmatureEnBlocs)) return null;
+
+        return SimulationService.simuler(zone, prixUnitaireBloc);
     }
 
-    // Livrable 4 : pas de simulation pour les ouvertures
-    if (zone instanceof Ouverture) {
-        return null;
-    }
+    /**
+     * Simule toutes les zones ARMATURE_BLOCS de la vue courante.
+     * @param prixUnitaireBloc prix d'un bloc (saisi par l'utilisateur)
+     * @return DTO global (somme de toutes les zones simulées)
+     */
+    public SimulationDTO simulerVueCourante(double prixUnitaireBloc) {
+        if (indexVueCourante < 0) return null;
 
-    // Version minimale honnête : simulation seulement des rectangles
-    if (!(zone.getForme() instanceof RectangleForme)) {
-        return null;
-    }
+        Vue vue = this.projetVues.get(indexVueCourante);
+        int   totalBlocs = 0;
+        double coutTotal = 0.0;
+        java.util.List<BlocDTO> tousBlocs = new java.util.ArrayList<>();
 
-    return SimulationService.simuler(zone);
-}
+        for (Zone zone : vue.getZones()) {
+            if (!(zone instanceof ArmatureEnBlocs)) continue;
+            if (prixUnitaireBloc < 0) prixUnitaireBloc = 0.0;
+
+            SimulationDTO dto = SimulationService.simuler(zone, prixUnitaireBloc);
+            if (dto == null) continue;
+
+            totalBlocs += dto.nombreBlocs;
+            coutTotal  += dto.coutTotal;
+            tousBlocs.addAll(dto.blocs);
+        }
+
+        return new SimulationDTO(tousBlocs, totalBlocs, coutTotal);
+    }
     
     public void commencerModificationComposee() {
         this.undoRedoManager.commencerModificationComposee();
@@ -553,10 +575,14 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         {
             TypeZone type = getTypeZone(z);
             TypeForme forme = getTypeForme(z.getForme());
-            zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(), 
-                    z == modeleVue.getZoneSelectionnee()));
+            List<BlocDTO> blocs = (type == TypeZone.ARMATURE_BLOCS)
+                    ? z.getBlocsSimules()
+                    : List.of();
+            zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(),
+                    z == modeleVue.getZoneSelectionnee(), blocs));
         }        
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos);
+        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos,
+                modeleVue.getEchelle());
     }
     
     public List<VueDTO> getVues() {
