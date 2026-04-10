@@ -36,6 +36,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import BatiBloc.Domaine.Dto.SimulationDTO;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 
 public class MainWindow extends JFrame {
     private enum ActionVue { EXPORT, DELETE }
@@ -187,16 +189,30 @@ public class MainWindow extends JFrame {
     }
 
     private void configLabels() {
-        this.lbl_blocsTitre.setText(this.getTexte("label.block"));
-        this.lbl_actionsTitre.setText(this.getTexte("label.action"));
         this.lbl_largeurBloc.setText(this.getTexte("label.width"));
         this.lbl_hauteurBloc.setText(this.getTexte("label.height"));
         this.lbl_coutParBloc.setText(this.getTexte("label.costPerBlock"));
-        this.lbl_typeZoneTitre.setText(this.getTexte("label.zoneType"));
-        this.lbl_formeZoneTitre.setText(this.getTexte("label.form"));
         this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock"));
         this.lbl_coutTotal.setText(this.getTexte("label.totalCost"));
         this.lbl_echelle.setText(this.getTexte("label.scale"));
+        
+        this.updatePanelTitle(this.panel_bloc, "label.block");
+        this.updatePanelTitle(this.panel_boutonAction, "label.action");
+        this.updatePanelTitle(this.panel_typeZone, "label.zoneType");
+        this.updatePanelTitle(this.panel_formeZone, "label.form");
+    }
+    
+    private void updatePanelTitle(JPanel panel, String key) {
+        Border border = panel.getBorder();
+
+        if (border instanceof TitledBorder tb) {
+            tb.setTitle(this.getTexte(key));
+            panel.repaint();
+        } else {
+            panel.setBorder(
+                BorderFactory.createTitledBorder(getTexte(key))
+            );
+        }
     }
 
     private void configBoutonsMouseHover() {
@@ -713,8 +729,7 @@ public class MainWindow extends JFrame {
         filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
         btn_changerLangue = new javax.swing.JButton();
         panel_menu = new javax.swing.JPanel();
-        lbl_blocsTitre = new javax.swing.JLabel();
-        panel_dimensionsBloc = new javax.swing.JPanel();
+        panel_bloc = new javax.swing.JPanel();
         panel_largeurBloc = new javax.swing.JPanel();
         lbl_largeurBloc = new javax.swing.JLabel();
         txt_largeurBloc = new javax.swing.JTextField();
@@ -724,17 +739,14 @@ public class MainWindow extends JFrame {
         panel_coutParBloc = new javax.swing.JPanel();
         lbl_coutParBloc = new javax.swing.JLabel();
         txt_coutParBloc = new javax.swing.JTextField();
-        lbl_actionsTitre = new javax.swing.JLabel();
         panel_boutonAction = new javax.swing.JPanel();
         btn_deplacerZone = new javax.swing.JButton();
         btn_redimensionnerZone = new javax.swing.JButton();
         btn_supprimerZone = new javax.swing.JButton();
-        lbl_typeZoneTitre = new javax.swing.JLabel();
         panel_typeZone = new javax.swing.JPanel();
         btn_zoneArmatureClassique = new javax.swing.JButton();
         btn_zoneArmatureBloc = new javax.swing.JButton();
         btn_zoneOuverture = new javax.swing.JButton();
-        lbl_formeZoneTitre = new javax.swing.JLabel();
         panel_formeZone = new javax.swing.JPanel();
         btn_formeRectangle = new javax.swing.JButton();
         btn_formeTriangle = new javax.swing.JButton();
@@ -826,22 +838,15 @@ public class MainWindow extends JFrame {
 
         getContentPane().add(panel_boutons, java.awt.BorderLayout.PAGE_START);
 
-        panel_menu.setMaximumSize(new java.awt.Dimension(300, 280));
-        panel_menu.setMinimumSize(new java.awt.Dimension(300, 280));
-        panel_menu.setPreferredSize(new java.awt.Dimension(300, 280));
+        panel_menu.setMaximumSize(new java.awt.Dimension(325, 280));
+        panel_menu.setMinimumSize(new java.awt.Dimension(325, 280));
+        panel_menu.setPreferredSize(new java.awt.Dimension(325, 280));
 
-        lbl_blocsTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        lbl_blocsTitre.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        lbl_blocsTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_blocsTitre.setMaximumSize(new java.awt.Dimension(100, 30));
-        lbl_blocsTitre.setMinimumSize(new java.awt.Dimension(100, 30));
-        lbl_blocsTitre.setPreferredSize(new java.awt.Dimension(100, 30));
-        panel_menu.add(lbl_blocsTitre);
-
-        panel_dimensionsBloc.setMaximumSize(new java.awt.Dimension(300, 120));
-        panel_dimensionsBloc.setMinimumSize(new java.awt.Dimension(300, 120));
-        panel_dimensionsBloc.setPreferredSize(new java.awt.Dimension(300, 120));
-        panel_dimensionsBloc.setLayout(new javax.swing.BoxLayout(panel_dimensionsBloc, javax.swing.BoxLayout.Y_AXIS));
+        panel_bloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        panel_bloc.setMaximumSize(new java.awt.Dimension(300, 150));
+        panel_bloc.setMinimumSize(new java.awt.Dimension(300, 150));
+        panel_bloc.setPreferredSize(new java.awt.Dimension(300, 150));
+        panel_bloc.setLayout(new javax.swing.BoxLayout(panel_bloc, javax.swing.BoxLayout.Y_AXIS));
 
         lbl_largeurBloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_largeurBloc.setMaximumSize(new java.awt.Dimension(110, 30));
@@ -867,17 +872,17 @@ public class MainWindow extends JFrame {
         );
         panel_largeurBlocLayout.setVerticalGroup(
             panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 40, Short.MAX_VALUE)
+            .addGap(0, 50, Short.MAX_VALUE)
             .addGroup(panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panel_largeurBlocLayout.createSequentialGroup()
-                    .addGap(0, 5, Short.MAX_VALUE)
+                    .addGap(0, 10, Short.MAX_VALUE)
                     .addGroup(panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(0, 5, Short.MAX_VALUE)))
+                    .addGap(0, 10, Short.MAX_VALUE)))
         );
 
-        panel_dimensionsBloc.add(panel_largeurBloc);
+        panel_bloc.add(panel_largeurBloc);
 
         lbl_hauteurBloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_hauteurBloc.setMaximumSize(new java.awt.Dimension(110, 30));
@@ -903,17 +908,17 @@ public class MainWindow extends JFrame {
         );
         panel_hauteurBlocLayout.setVerticalGroup(
             panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 40, Short.MAX_VALUE)
+            .addGap(0, 50, Short.MAX_VALUE)
             .addGroup(panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panel_hauteurBlocLayout.createSequentialGroup()
-                    .addGap(0, 5, Short.MAX_VALUE)
+                    .addGap(0, 10, Short.MAX_VALUE)
                     .addGroup(panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(0, 5, Short.MAX_VALUE)))
+                    .addGap(0, 10, Short.MAX_VALUE)))
         );
 
-        panel_dimensionsBloc.add(panel_hauteurBloc);
+        panel_bloc.add(panel_hauteurBloc);
 
         lbl_coutParBloc.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_coutParBloc.setMaximumSize(new java.awt.Dimension(110, 30));
@@ -939,43 +944,40 @@ public class MainWindow extends JFrame {
         );
         panel_coutParBlocLayout.setVerticalGroup(
             panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 40, Short.MAX_VALUE)
+            .addGap(0, 50, Short.MAX_VALUE)
             .addGroup(panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panel_coutParBlocLayout.createSequentialGroup()
-                    .addGap(0, 5, Short.MAX_VALUE)
+                    .addGap(0, 10, Short.MAX_VALUE)
                     .addGroup(panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(lbl_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(txt_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(0, 5, Short.MAX_VALUE)))
+                    .addGap(0, 10, Short.MAX_VALUE)))
         );
 
-        panel_dimensionsBloc.add(panel_coutParBloc);
+        panel_bloc.add(panel_coutParBloc);
 
-        panel_menu.add(panel_dimensionsBloc);
+        panel_menu.add(panel_bloc);
 
-        lbl_actionsTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        lbl_actionsTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_actionsTitre.setMaximumSize(new java.awt.Dimension(100, 30));
-        lbl_actionsTitre.setMinimumSize(new java.awt.Dimension(100, 30));
-        lbl_actionsTitre.setPreferredSize(new java.awt.Dimension(100, 30));
-        panel_menu.add(lbl_actionsTitre);
+        panel_boutonAction.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        panel_boutonAction.setMaximumSize(new java.awt.Dimension(300, 65));
+        panel_boutonAction.setMinimumSize(new java.awt.Dimension(300, 65));
+        panel_boutonAction.setPreferredSize(new java.awt.Dimension(300, 65));
 
-        panel_boutonAction.setMaximumSize(new java.awt.Dimension(300, 40));
-        panel_boutonAction.setMinimumSize(new java.awt.Dimension(300, 40));
-        panel_boutonAction.setPreferredSize(new java.awt.Dimension(300, 40));
-
+        btn_deplacerZone.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_deplacerZone.setIconTextGap(0);
         btn_deplacerZone.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_deplacerZone.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_deplacerZone.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_boutonAction.add(btn_deplacerZone);
 
+        btn_redimensionnerZone.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_redimensionnerZone.setIconTextGap(0);
         btn_redimensionnerZone.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_redimensionnerZone.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_redimensionnerZone.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_boutonAction.add(btn_redimensionnerZone);
 
+        btn_supprimerZone.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_supprimerZone.setIconTextGap(0);
         btn_supprimerZone.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_supprimerZone.setMinimumSize(new java.awt.Dimension(75, 30));
@@ -984,29 +986,26 @@ public class MainWindow extends JFrame {
 
         panel_menu.add(panel_boutonAction);
 
-        lbl_typeZoneTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        lbl_typeZoneTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_typeZoneTitre.setMaximumSize(new java.awt.Dimension(100, 30));
-        lbl_typeZoneTitre.setMinimumSize(new java.awt.Dimension(100, 30));
-        lbl_typeZoneTitre.setPreferredSize(new java.awt.Dimension(100, 30));
-        panel_menu.add(lbl_typeZoneTitre);
+        panel_typeZone.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        panel_typeZone.setMaximumSize(new java.awt.Dimension(300, 65));
+        panel_typeZone.setMinimumSize(new java.awt.Dimension(300, 65));
+        panel_typeZone.setPreferredSize(new java.awt.Dimension(300, 65));
 
-        panel_typeZone.setMaximumSize(new java.awt.Dimension(300, 40));
-        panel_typeZone.setMinimumSize(new java.awt.Dimension(300, 40));
-        panel_typeZone.setPreferredSize(new java.awt.Dimension(300, 40));
-
+        btn_zoneArmatureClassique.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_zoneArmatureClassique.setIconTextGap(0);
         btn_zoneArmatureClassique.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_zoneArmatureClassique.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_zoneArmatureClassique.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_typeZone.add(btn_zoneArmatureClassique);
 
+        btn_zoneArmatureBloc.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_zoneArmatureBloc.setIconTextGap(0);
         btn_zoneArmatureBloc.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_zoneArmatureBloc.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_zoneArmatureBloc.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_typeZone.add(btn_zoneArmatureBloc);
 
+        btn_zoneOuverture.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_zoneOuverture.setIconTextGap(0);
         btn_zoneOuverture.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_zoneOuverture.setMinimumSize(new java.awt.Dimension(75, 30));
@@ -1015,27 +1014,24 @@ public class MainWindow extends JFrame {
 
         panel_menu.add(panel_typeZone);
 
-        lbl_formeZoneTitre.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        lbl_formeZoneTitre.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lbl_formeZoneTitre.setMaximumSize(new java.awt.Dimension(100, 30));
-        lbl_formeZoneTitre.setMinimumSize(new java.awt.Dimension(100, 30));
-        lbl_formeZoneTitre.setPreferredSize(new java.awt.Dimension(100, 30));
-        panel_menu.add(lbl_formeZoneTitre);
+        panel_formeZone.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        panel_formeZone.setMaximumSize(new java.awt.Dimension(300, 65));
+        panel_formeZone.setMinimumSize(new java.awt.Dimension(300, 65));
+        panel_formeZone.setPreferredSize(new java.awt.Dimension(300, 65));
 
-        panel_formeZone.setMaximumSize(new java.awt.Dimension(300, 40));
-        panel_formeZone.setMinimumSize(new java.awt.Dimension(300, 40));
-        panel_formeZone.setPreferredSize(new java.awt.Dimension(300, 40));
-
+        btn_formeRectangle.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_formeRectangle.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_formeRectangle.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_formeRectangle.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_formeZone.add(btn_formeRectangle);
 
+        btn_formeTriangle.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_formeTriangle.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_formeTriangle.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_formeTriangle.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_formeZone.add(btn_formeTriangle);
 
+        btn_formeTriangleTronque.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_formeTriangleTronque.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_formeTriangleTronque.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_formeTriangleTronque.setPreferredSize(new java.awt.Dimension(75, 30));
@@ -1130,7 +1126,7 @@ public class MainWindow extends JFrame {
         panel_vues.setLayout(panel_vuesLayout);
         panel_vuesLayout.setHorizontalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 830, Short.MAX_VALUE)
+            .addGap(0, 805, Short.MAX_VALUE)
         );
         panel_vuesLayout.setVerticalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1182,21 +1178,17 @@ public class MainWindow extends JFrame {
     private javax.swing.Box.Filler filler8;
     private javax.swing.Box.Filler filler9;
     private javax.swing.JButton jButton1;
-    private javax.swing.JLabel lbl_actionsTitre;
-    private javax.swing.JLabel lbl_blocsTitre;
     private javax.swing.JLabel lbl_blocsTotaux;
     private javax.swing.JLabel lbl_coutParBloc;
     private javax.swing.JLabel lbl_coutTotal;
     private javax.swing.JLabel lbl_echelle;
-    private javax.swing.JLabel lbl_formeZoneTitre;
     private javax.swing.JLabel lbl_hauteurBloc;
     private javax.swing.JLabel lbl_largeurBloc;
-    private javax.swing.JLabel lbl_typeZoneTitre;
     private javax.swing.JLabel lbl_vueCourante;
+    private javax.swing.JPanel panel_bloc;
     private javax.swing.JPanel panel_boutonAction;
     private javax.swing.JPanel panel_boutons;
     private javax.swing.JPanel panel_coutParBloc;
-    private javax.swing.JPanel panel_dimensionsBloc;
     private javax.swing.JPanel panel_echelle;
     private javax.swing.JPanel panel_formeZone;
     private javax.swing.JPanel panel_hauteurBloc;
