@@ -254,15 +254,10 @@ public class MainController {
     }   
     
     public void supprimerVues(List<Integer> indices) {
-        indices.stream()
-            .sorted(Comparator.reverseOrder())
-            .forEach(i -> {
-                if (i >= 0 && i < this.projetVues.size()) {
-                    this.projetVues.remove((int) i);
-                }
-            });
-        
+        if (indices == null || indices.isEmpty()) return;
+
         this.enregistrerEtatAvantModification();
+        
         indices.stream()
             .sorted(Comparator.reverseOrder())
             .forEach(i -> {
