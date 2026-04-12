@@ -2,7 +2,7 @@ package BatiBloc.Vues;
 
 import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Domaine.Dto.VueDTO;
-import BatiBloc.Domaine.Dto.TypeZone;
+import BatiBloc.Domaine.Dto.TypeZoneDTO;
 import BatiBloc.Domaine.Dto.TypeForme;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
@@ -60,12 +60,50 @@ public class MainWindow extends JFrame {
     private List<JCheckBox> casesVues;
     private final MainController controleur;
     private ResourceBundle resourceBundle;
+    
+    private List<JButton> actionButtons;
+    private List<JButton> typeButtons;
+    private List<JButton> formeButtons;
 
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
         this.initComponents();
+        this.initGroupButton();
         this.initFormulaire();        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+    }
+    
+    private void initGroupButton() {
+        this.actionButtons = List.of(
+            this.btn_deplacerZone,
+            this.btn_redimensionnerZone,
+            this.btn_supprimerZone
+        );
+        
+        this.typeButtons = List.of(
+            this.btn_zoneArmatureClassique,
+            this.btn_zoneArmatureBloc,
+            this.btn_zoneOuverture
+        );
+
+        this.formeButtons = List.of(
+            this.btn_formeRectangle,
+            this.btn_formeTriangle,
+            this.btn_formeTriangleTronque
+        );
+    }
+    
+    private void selectButton(JButton selected, List<JButton> group) {
+        Border blueBorder = BorderFactory.createLineBorder(new Color(0, 120, 215), 2);
+        Border normalBorder = UIManager.getBorder("Button.border");
+
+        for (JButton b : group) {
+            if (b == selected) {
+                b.setBorder(blueBorder);
+            } else {
+                b.setBorder(normalBorder);
+            }
+        }
     }
 
     private void initFormulaire() {
@@ -345,18 +383,23 @@ public class MainWindow extends JFrame {
 
     private void initBoutonsAction() {
         this.btn_deplacerZone.addActionListener(e -> {
+            this.selectButton(this.btn_deplacerZone, this.actionButtons);
             boolean actuel = this.drawingPanel.getModeDeplacementZone();
             this.arreterDessin();                                           
             this.drawingPanel.setModeRedimensionnementZone(false); 
             this.drawingPanel.setModeDeplacementZone(!actuel);
         });
+        
         this.btn_redimensionnerZone.addActionListener(e -> {
+            this.selectButton(this.btn_redimensionnerZone, this.actionButtons);
             boolean actuel = this.drawingPanel.getModeRedimensionnementZone();
             this.arreterDessin();                       
             this.drawingPanel.setModeDeplacementZone(false);   
             this.drawingPanel.setModeRedimensionnementZone(!actuel);
         });
+        
         this.btn_supprimerZone.addActionListener(e -> {
+            this.selectButton(this.btn_supprimerZone, this.actionButtons);
             boolean actuel = this.modeSuppressionZone;
             this.arreterDessin();
             this.drawingPanel.setModeDeplacementZone(false);
@@ -367,13 +410,14 @@ public class MainWindow extends JFrame {
     }
 
     private void initBoutonsZone() {
-        this.addZoneBoutonListener(this.btn_zoneArmatureClassique, TypeZone.ARMATURE_CLASSIQUE);
-        this.addZoneBoutonListener(this.btn_zoneArmatureBloc, TypeZone.ARMATURE_BLOCS);
-        this.addZoneBoutonListener(this.btn_zoneOuverture, TypeZone.OUVERTURE);
+        this.addZoneBoutonListener(this.btn_zoneArmatureClassique, TypeZoneDTO.ARMATURE_CLASSIQUE);
+        this.addZoneBoutonListener(this.btn_zoneArmatureBloc, TypeZoneDTO.ARMATURE_BLOCS);
+        this.addZoneBoutonListener(this.btn_zoneOuverture, TypeZoneDTO.OUVERTURE);
     }
 
-    private void addZoneBoutonListener(AbstractButton button, TypeZone zone) {
+    private void addZoneBoutonListener(JButton button, TypeZoneDTO zone) {
         button.addActionListener(e -> {
+            this.selectButton(button, this.typeButtons);
             this.drawingPanel.setModeDeplacementZone(false);       
             this.drawingPanel.setModeRedimensionnementZone(false); 
             this.modeSuppressionZone = false;                                     
@@ -390,8 +434,9 @@ public class MainWindow extends JFrame {
         this.addFormeBoutonListener(this.btn_formeTriangleTronque, TypeForme.TRIANGLE_TRONQUE);
     }
 
-    private void addFormeBoutonListener(AbstractButton button, TypeForme forme) {
+    private void addFormeBoutonListener(JButton button, TypeForme forme) {
         button.addActionListener(e -> {
+            this.selectButton(button, this.formeButtons);
             this.drawingPanel.setFormeEnCours(forme);
             this.formeChoisie = true;
             this.verifierModeDessin();
@@ -711,7 +756,6 @@ public class MainWindow extends JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jButton1 = new javax.swing.JButton();
         panel_boutons = new javax.swing.JPanel();
         btn_annulerAction = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
@@ -772,8 +816,6 @@ public class MainWindow extends JFrame {
         filler13 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
         btn_zoomOut = new javax.swing.JButton();
         panel_vues = new javax.swing.JPanel();
-
-        jButton1.setText("jButton1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -1177,7 +1219,6 @@ public class MainWindow extends JFrame {
     private javax.swing.Box.Filler filler7;
     private javax.swing.Box.Filler filler8;
     private javax.swing.Box.Filler filler9;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel lbl_blocsTotaux;
     private javax.swing.JLabel lbl_coutParBloc;
     private javax.swing.JLabel lbl_coutTotal;

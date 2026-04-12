@@ -2,28 +2,44 @@ package BatiBloc.Domaine.Modeles;
 
 public class Bloc {
 
+    private double hauteur;
     private double largeur;
+    private double prix;
 
-    public Bloc(double largeur) {
-        if (largeur <= 0) {
-            throw new IllegalArgumentException("La largeur d'un bloc doit être positive.");
-        }
-        this.largeur = largeur;
+    public Bloc(double hauteur, double largeur, double prix) {
+        this.setHauteur(hauteur);
+        this.setLargeur(largeur);
+        this.setPrix(prix);
     }
-
-    public double getLargeur() {
-        return largeur;
+    
+    public double getHauteur() { 
+        return this.hauteur;
+    }
+    
+    public void setHauteur(double hauteur) {
+        if (hauteur <= 0) {
+            throw new IllegalArgumentException("blocHeightException");
+        }
+        this.hauteur = hauteur;
+    }
+    
+    public double getLargeur() { 
+        return this.largeur;
     }
 
     public void setLargeur(double largeur) {
         if (largeur <= 0) {
-            throw new IllegalArgumentException("La largeur d'un bloc doit être positive.");
+            throw new IllegalArgumentException("blocWidthException");
         }
         this.largeur = largeur;
     }
+    
+    public double getPrix() {
+        return this.prix;
+    }
 
-    @Override
-    public String toString() {
-        return "Bloc(" + largeur + ")";
+    public void setPrix(double prix) {
+        if (prix < 0) throw new IllegalArgumentException("blocPriceException");
+        this.prix = prix;
     }
 }

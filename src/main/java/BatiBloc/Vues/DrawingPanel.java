@@ -3,7 +3,7 @@ import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Domaine.Dto.BlocDTO;
 import BatiBloc.Domaine.Dto.ZoneDTO;
 import BatiBloc.Domaine.Dto.TypeForme;
-import BatiBloc.Domaine.Dto.TypeZone;
+import BatiBloc.Domaine.Dto.TypeZoneDTO;
 
 import BatiBloc.Domaine.Dto.VueDTO;
 import java.awt.BasicStroke;
@@ -39,7 +39,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     
     //Colombe
     private TypeForme formeEnCours = TypeForme.RECTANGLE;
-    private TypeZone typeEnCours = TypeZone.ARMATURE_CLASSIQUE;
+    private TypeZoneDTO typeEnCours = TypeZoneDTO.ARMATURE_CLASSIQUE;
     private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
     private boolean modeDeplacementZone = false;
     private boolean modeSuppressionZone = false;
@@ -449,7 +449,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         repaint();
     }
     
-    public void setTypeZoneEnCours(TypeZone type)
+    public void setTypeZoneEnCours(TypeZoneDTO type)
     {
         this.typeEnCours = type;
     }
@@ -631,7 +631,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             int[] xs = pts.stream().mapToInt(p -> (int) p.getX()).toArray();
             int[] ys = pts.stream().mapToInt(p -> (int) p.getY()).toArray();
             
-            Color couleur = zone.getType() == TypeZone.ARMATURE_CLASSIQUE
+            Color couleur = zone.getType() == TypeZoneDTO.ARMATURE_CLASSIQUE
                     ? new Color (34, 139, 34, 80)
                     : new Color (0, 0, 255, 80);
             
@@ -643,7 +643,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.drawPolygon(xs, ys, pts.size());
             
             //  Rendu des blocs simulés (zones ARMATURE_BLOCS)@roneh
-            if (zone.getType() == TypeZone.ARMATURE_BLOCS && !zone.getBlocs().isEmpty()) {
+            if (zone.getType() == TypeZoneDTO.ARMATURE_BLOCS && !zone.getBlocs().isEmpty()) {
                 int zoneXMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
                 int zoneYMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
 

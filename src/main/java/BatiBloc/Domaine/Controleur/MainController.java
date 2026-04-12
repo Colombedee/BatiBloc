@@ -1,5 +1,12 @@
 package BatiBloc.Domaine.Controleur;
 
+import BatiBloc.Domaine.Modeles.Zones.Ouverture;
+import BatiBloc.Domaine.Modeles.Zones.ArmatureBlocs;
+import BatiBloc.Domaine.Modeles.Zones.ArmatureClassique;
+import BatiBloc.Domaine.Modeles.Zones.Zone;
+import BatiBloc.Domaine.Modeles.Formes.Triangle;
+import BatiBloc.Domaine.Modeles.Formes.Forme;
+import BatiBloc.Domaine.Modeles.Formes.TriangleTronque;
 import BatiBloc.Domaine.Services.SimulationService;
 import BatiBloc.Domaine.Dto.SimulationDTO;
 import BatiBloc.Domaine.Modeles.*;
@@ -71,8 +78,8 @@ public class MainController {
             int[] xs = pts.stream().mapToInt(p -> p.x).toArray();
             int[] ys = pts.stream().mapToInt(p -> p.y).toArray();
 
-            TypeZone type = getTypeZone(z);
-            java.awt.Color couleur = type == TypeZone.ARMATURE_CLASSIQUE
+            TypeZoneDTO type = getTypeZone(z);
+            java.awt.Color couleur = type == TypeZoneDTO.ARMATURE_CLASSIQUE
                 ? new java.awt.Color(34, 139, 34, 80)
                 : new java.awt.Color(0, 0, 255, 80);
 
@@ -296,7 +303,7 @@ public class MainController {
 
 
     // ---GESTION DES ZONES --- (Ajoutée Par Colombe)
-    public void ajouterZone(TypeZone type, TypeForme forme, List<Point> points)
+    public void ajouterZone(TypeZoneDTO type, TypeForme forme, List<Point> points)
     {
         if (indexVueCourante < 0) return;
         Forme formeModele = creerForme(forme, points);
@@ -361,13 +368,13 @@ public class MainController {
         }
     }
               
-    private Zone creerZone(TypeZone type, Forme forme) {
+    private Zone creerZone(TypeZoneDTO type, Forme forme) {
         switch (type) {
             case ARMATURE_CLASSIQUE:
                 return new ArmatureClassique(forme, largeurBlocDefaut, hauteurBlocDefaut);
 
             case ARMATURE_BLOCS:
-                return new ArmatureEnBlocs(forme, largeurBlocDefaut, hauteurBlocDefaut);
+                return new ArmatureBlocs(forme, largeurBlocDefaut, hauteurBlocDefaut);
 
             case OUVERTURE:
             default:
@@ -377,17 +384,17 @@ public class MainController {
     }
 
             
-    private TypeZone getTypeZone(Zone zone)      
+    private TypeZoneDTO getTypeZone(Zone zone)      
     {
         if (zone instanceof ArmatureClassique) 
         {
-            return TypeZone.ARMATURE_CLASSIQUE;
+            return TypeZoneDTO.ARMATURE_CLASSIQUE;
         }
-        if (zone instanceof ArmatureEnBlocs)
+        if (zone instanceof ArmatureBlocs)
         {
-            return TypeZone.ARMATURE_BLOCS;
+            return TypeZoneDTO.ARMATURE_BLOCS;
         }
-        return TypeZone.OUVERTURE;
+        return TypeZoneDTO.OUVERTURE;
     }
     
     /**
@@ -405,7 +412,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
     // Appliquer à toutes les zones de toutes les vues
     for (Vue vue : this.projetVues) {
         for (Zone zone : vue.getZones()) {
-            if (zone instanceof ArmatureEnBlocs) {
+            if (zone instanceof ArmatureBlocs) {
                 zone.setLargeurBloc(largeur);
                 zone.setHauteurBloc(hauteur);
             }
@@ -433,7 +440,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
         if (zone == null)              return null;
         if (zone instanceof Ouverture) return null;
-        if (!(zone instanceof ArmatureEnBlocs)) return null;
+        if (!(zone instanceof ArmatureBlocs)) return null;
 
         return SimulationService.simuler(zone, prixUnitaireBloc);
     }
@@ -452,7 +459,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         java.util.List<BlocDTO> tousBlocs = new java.util.ArrayList<>();
 
         for (Zone zone : vue.getZones()) {
-            if (!(zone instanceof ArmatureEnBlocs)) continue;
+            if (!(zone instanceof ArmatureBlocs)) continue;
             if (prixUnitaireBloc < 0) prixUnitaireBloc = 0.0;
 
             SimulationDTO dto = SimulationService.simuler(zone, prixUnitaireBloc);
@@ -530,8 +537,8 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         if (zoneSource instanceof ArmatureClassique) {
             return new ArmatureClassique(formeCopie, zoneSource.getLargeurBloc(), zoneSource.getHauteurBloc());
         }
-        if (zoneSource instanceof ArmatureEnBlocs) {
-            return new ArmatureEnBlocs(formeCopie, zoneSource.getLargeurBloc(), zoneSource.getHauteurBloc());
+        if (zoneSource instanceof ArmatureBlocs) {
+            return new ArmatureBlocs(formeCopie, zoneSource.getLargeurBloc(), zoneSource.getHauteurBloc());
         }
         if (zoneSource instanceof Ouverture) {
             Ouverture ouverture = (Ouverture) zoneSource;
@@ -600,9 +607,9 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
         List<ZoneDTO> zoneDtos = new ArrayList<>();
         for (Zone z : modeleVue.getZones()) 
         {
-            TypeZone type = getTypeZone(z);
+            TypeZoneDTO type = getTypeZone(z);
             TypeForme forme = getTypeForme(z.getForme());
-            List<BlocDTO> blocs = (type == TypeZone.ARMATURE_BLOCS)
+            List<BlocDTO> blocs = (type == TypeZoneDTO.ARMATURE_BLOCS)
                     ? z.getBlocsSimules()
                     : List.of();
             zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(),
@@ -620,7 +627,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
             List<ZoneDTO> zoneDtos = new ArrayList<>();
 
             for (Zone z : v.getZones()) {
-                TypeZone type = getTypeZone(z);
+                TypeZoneDTO type = getTypeZone(z);
                 TypeForme forme = getTypeForme(z.getForme());
 
                 zoneDtos.add(new ZoneDTO(
