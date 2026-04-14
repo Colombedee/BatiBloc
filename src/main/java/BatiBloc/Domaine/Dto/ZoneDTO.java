@@ -1,33 +1,38 @@
 package BatiBloc.Domaine.Dto;
 
-import BatiBloc.Domaine.Modeles.Formes.Forme;
-import BatiBloc.Domaine.Modeles.Zones.Zone;
 import java.awt.Point;
 import java.util.List;
 
+
+/**
+ *
+ * @author ndanic
+ * Correction
+ */
+
+
 public final class ZoneDTO {
 
-    private final Zone type;
-    private final Forme forme;
+    private final TypeZoneDTO type;
+    private final TypeForme forme;
     private final List<Point> points;
     private final boolean selectionnee;
 
-    public ZoneDTO(Zone type,
-                   Forme forme,
+    public ZoneDTO(TypeZoneDTO type,
+                   TypeForme forme,
                    List<Point> points,
                    boolean selectionnee) {
-
         this.type = type;
         this.forme = forme;
         this.points = List.copyOf(points);
         this.selectionnee = selectionnee;
     }
 
-    public Zone getType() {
+    public TypeZoneDTO getType() {
         return type;
     }
 
-    public Forme getForme() {
+    public TypeForme getForme() {
         return forme;
     }
 

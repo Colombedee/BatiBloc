@@ -35,7 +35,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
-import BatiBloc.Domaine.Dto.SimulationDTO;
+import BatiBloc.Domaine.Dto.SimulationResultatDTO;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
@@ -665,18 +665,22 @@ public class MainWindow extends JFrame {
         for (int i : indices) if (i < this.casesVues.size()) this.casesVues.get(i).setSelected(true);
     }
 
-    private void lancerSimulation() {
-        double prixUnitaire = parsePrixBloc();
-        SimulationDTO result = this.controleur.simulerVueCourante(prixUnitaire);
-        if (result == null) {
-            this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
-            this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
-        } else {
-            this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " " + result.nombreBlocs);
-            this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " " + String.format("%.2f $", result.coutTotal));
-        }
-        this.rafraichirUI();
+private void lancerSimulation() {
+    double prixUnitaire = parsePrixBloc();
+    SimulationResultatDTO result = this.controleur.simulerVueCourante(prixUnitaire);
+
+    if (result == null) {
+        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
+        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
+    } else {
+        this.lbl_blocsTotaux.setText(
+                this.getTexte("label.totalBlock") + " " + result.getTotalBlocs());
+        this.lbl_coutTotal.setText(
+                this.getTexte("label.totalCost") + " " + String.format("%.2f $", result.getPrixTotal()));
     }
+
+    this.rafraichirUI();
+}
 
     private double parsePrixBloc() {
         try {

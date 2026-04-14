@@ -1,6 +1,5 @@
 package BatiBloc.Vues;
 import BatiBloc.Domaine.Controleur.MainController;
-import BatiBloc.Domaine.Dto.BlocDTO;
 import BatiBloc.Domaine.Dto.ZoneDTO;
 import BatiBloc.Domaine.Dto.TypeForme;
 import BatiBloc.Domaine.Dto.TypeZoneDTO;

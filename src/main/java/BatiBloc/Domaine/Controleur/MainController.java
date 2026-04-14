@@ -1,5 +1,9 @@
 package BatiBloc.Domaine.Controleur;
 
+
+import BatiBloc.Domaine.Dto.SimulationResultatDTO;
+import java.awt.geom.Point2D;
+import BatiBloc.Domaine.Modeles.Formes.Rectangle;
 import BatiBloc.Domaine.Modeles.Zones.Ouverture;
 import BatiBloc.Domaine.Modeles.Zones.ArmatureBlocs;
 import BatiBloc.Domaine.Modeles.Zones.ArmatureClassique;
@@ -8,10 +12,8 @@ import BatiBloc.Domaine.Modeles.Formes.Triangle;
 import BatiBloc.Domaine.Modeles.Formes.Forme;
 import BatiBloc.Domaine.Modeles.Formes.TriangleTronque;
 import BatiBloc.Domaine.Services.SimulationService;
-import BatiBloc.Domaine.Dto.SimulationDTO;
 import BatiBloc.Domaine.Modeles.*;
 import BatiBloc.Domaine.Dto.*;
-import BatiBloc.Domaine.Dto.BlocDTO;
 import BatiBloc.Domaine.Services.ExportFichierPdfService;
 import BatiBloc.Domaine.Services.ImportFichierPdfService;
 import BatiBloc.Domaine.Dto.RognerVueDTO;
@@ -126,7 +128,7 @@ public class MainController {
 
     // 3. Créer la vue et l'ajouter au projet
     Vue nouvelleVue = new Vue(imageVide);
-    nouvelleVue.setEchelle(ECHELLE_DEFAUT);
+    nouvelleVue.setEchelle(new Echelle(ECHELLE_DEFAUT)); // correction avec new Echelle (ndanic)
     this.projetVues.add(nouvelleVue);
 
     // 4. Mettre à jour l'index sur la nouvelle vue
@@ -156,7 +158,7 @@ public class MainController {
 
                     Vue vue = new Vue(img);
                     double echelle = lireEchellePdf(documentPdf, i); // Lire échelle du PDF si disponible 
-                    vue.setEchelle(echelle);                         // sinon on utilise la valeur par défaut 
+                    vue.setEchelle(new Echelle(echelle)); // correction avec new (ndanic)                         // sinon on utilise la valeur par défaut 
                     projetVues.add(vue);
                 }  
             } catch (IOException e) {
@@ -220,19 +222,21 @@ public class MainController {
             double totalPouces = (pieds * 12) + pouces;
             double echelle = totalPouces / distancePixels;
             this.enregistrerEtatAvantModification();
-            projetVues.get(indexVueCourante).setEchelle(echelle);
+            projetVues.get(indexVueCourante).setEchelle(new Echelle(echelle));// correction avec new par ndanic
         }
     }
     
-        public double getEchelleCourante() {
-        if (indexVueCourante < 0) return ECHELLE_DEFAUT;
-        return projetVues.get(indexVueCourante).getEchelle();
+    public double getEchelleCourante() { // correction
+        if (indexVueCourante < 0) {
+            return ECHELLE_DEFAUT;
+        }
+        return projetVues.get(indexVueCourante).getEchelle().getPouces();
     }
 
     public void setEchelleCourante(double echelle) {
         if (indexVueCourante >= 0 && echelle > 0) {
             this.enregistrerEtatAvantModification();
-            projetVues.get(indexVueCourante).setEchelle(echelle);
+            projetVues.get(indexVueCourante).setEchelle(new Echelle(echelle));
         }
     }
     
@@ -309,7 +313,7 @@ public class MainController {
         Forme formeModele = creerForme(forme, points);
 
         if (formeModele == null) return;
-        Zone zone = creerZone(type, formeModele);
+        Zone zone = creerZone(type, formeModele, points);
 
         if (zone == null) return;
         this.enregistrerEtatAvantModification();
@@ -357,31 +361,40 @@ public class MainController {
         this.enregistrerEtatAvantModification();
         projetVues.get(indexVueCourante).redimensionnerParBoundingBox(indexPoignee, dx, dy);
     }
-    private Forme creerForme(TypeForme type, List<Point> points)
-    {
-        switch (type)
-        {
-            case RECTANGLE: return new RectangleForme(points);
-            case TRIANGLE: return new Triangle(points);
-            case TRIANGLE_TRONQUE: return new TriangleTronque(points);
-            default: return null;   
-        }
-    }
-              
-    private Zone creerZone(TypeZoneDTO type, Forme forme) {
+    private Forme creerForme(TypeForme type, List<Point> points) {
+        List<Point2D.Double> pointsModele = convertirVersPoints2D(points);
+
         switch (type) {
-            case ARMATURE_CLASSIQUE:
-                return new ArmatureClassique(forme, largeurBlocDefaut, hauteurBlocDefaut);
-
-            case ARMATURE_BLOCS:
-                return new ArmatureBlocs(forme, largeurBlocDefaut, hauteurBlocDefaut);
-
-            case OUVERTURE:
+            case RECTANGLE:
+                return new Rectangle(pointsModele);
+            case TRIANGLE:
+                return new Triangle(pointsModele);
+            case TRIANGLE_TRONQUE:
+                return new TriangleTronque(pointsModele);
             default:
-                // Livrable 4 : on ne gère pas encore la simulation des ouvertures
                 return null;
         }
     }
+
+              
+    private Zone creerZone(TypeZoneDTO type, Forme forme, List<Point> points) {
+        List<Point2D.Double> pointsModele = convertirVersPoints2D(points);
+
+        switch (type) {
+            case ARMATURE_CLASSIQUE:
+                return new ArmatureClassique(hauteurBlocDefaut, forme, pointsModele);
+
+            case ARMATURE_BLOCS:
+                return new ArmatureBlocs(hauteurBlocDefaut, forme, pointsModele);
+
+            case OUVERTURE:
+                return new Ouverture(hauteurBlocDefaut, forme, pointsModele);
+
+            default:
+                return null;
+        }
+    }
+
 
             
     private TypeZoneDTO getTypeZone(Zone zone)      
@@ -428,21 +441,25 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
     
     
     
-    public SimulationDTO simulerZoneSelectionnee() {
+    public SimulationResultatDTO simulerZoneSelectionnee() { // correction (ndanic)
         return simulerZoneSelectionnee(COUT_UNITAIRE_PAR_BLOC_DEFAUT);
     }
 
-    public SimulationDTO simulerZoneSelectionnee(double prixUnitaireBloc) {
-        if (indexVueCourante < 0) return null;
+
+    public SimulationResultatDTO simulerZoneSelectionnee(double prixUnitaireBloc) {  // correction (ndanic)
+        if (indexVueCourante < 0) {
+            return null;
+        }
 
         Vue vue = this.projetVues.get(indexVueCourante);
         Zone zone = vue.getZoneSelectionnee();
 
-        if (zone == null)              return null;
-        if (zone instanceof Ouverture) return null;
-        if (!(zone instanceof ArmatureBlocs)) return null;
+        if (zone == null) {
+            return null;
+        }
 
-        return SimulationService.simuler(zone, prixUnitaireBloc);
+        SimulationService service = new SimulationService();
+        return service.simulerToutesLesZones(List.of(zone));
     }
 
     /**
@@ -450,28 +467,14 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
      * @param prixUnitaireBloc prix d'un bloc (saisi par l'utilisateur)
      * @return DTO global (somme de toutes les zones simulées)
      */
-    public SimulationDTO simulerVueCourante(double prixUnitaireBloc) {
-        if (indexVueCourante < 0) return null;
+   public SimulationResultatDTO simulerVueCourante(double prixUnitaireBloc) { // correction (ndanic)
+    if (indexVueCourante < 0) return null;
 
-        Vue vue = this.projetVues.get(indexVueCourante);
-        int   totalBlocs = 0;
-        double coutTotal = 0.0;
-        java.util.List<BlocDTO> tousBlocs = new java.util.ArrayList<>();
+    Vue vue = this.projetVues.get(indexVueCourante);
+    SimulationService service = new SimulationService();
+    return service.simulerToutesLesZones(vue.getZones());
+}
 
-        for (Zone zone : vue.getZones()) {
-            if (!(zone instanceof ArmatureBlocs)) continue;
-            if (prixUnitaireBloc < 0) prixUnitaireBloc = 0.0;
-
-            SimulationDTO dto = SimulationService.simuler(zone, prixUnitaireBloc);
-            if (dto == null) continue;
-
-            totalBlocs += dto.nombreBlocs;
-            coutTotal  += dto.coutTotal;
-            tousBlocs.addAll(dto.blocs);
-        }
-
-        return new SimulationDTO(tousBlocs, totalBlocs, coutTotal);
-    }
     
     public void commencerModificationComposee() {
         this.undoRedoManager.commencerModificationComposee();
@@ -583,43 +586,65 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
 
     
-    private TypeForme getTypeForme(Forme forme)
-    {
-        if (forme instanceof RectangleForme)
-        {
+    private TypeForme getTypeForme(Forme forme) {
+        if (forme instanceof Rectangle) {
             return TypeForme.RECTANGLE;
         }
-        if (forme instanceof Triangle)
-        {
+        if (forme instanceof Triangle) {
             return TypeForme.TRIANGLE;
         }
         return TypeForme.TRIANGLE_TRONQUE;
     }
+
     
-    public VueDTO getVueCourante() 
-    {
-        if (this.indexVueCourante < 0) 
-        {
+    public VueDTO getVueCourante() {
+        if (this.indexVueCourante < 0) {
             return null;
         }
-        
+
         Vue modeleVue = this.projetVues.get(indexVueCourante);
         List<ZoneDTO> zoneDtos = new ArrayList<>();
-        for (Zone z : modeleVue.getZones()) 
-        {
+
+        for (Zone z : modeleVue.getZones()) {
             TypeZoneDTO type = getTypeZone(z);
             TypeForme forme = getTypeForme(z.getForme());
-            List<BlocDTO> blocs = (type == TypeZoneDTO.ARMATURE_BLOCS)
-                    ? z.getBlocsSimules()
-                    : List.of();
-            zoneDtos.add(new ZoneDTO(type, forme, z.getForme().getPosition(),
-                    z == modeleVue.getZoneSelectionnee(), blocs));
-        }        
-        return new VueDTO(this.indexVueCourante, modeleVue.getImage(), zoneDtos,
-                modeleVue.getEchelle());
+
+            zoneDtos.add(new ZoneDTO(
+                    type,
+                    forme,
+                    convertirVersPoints(z.getPoints()),
+                    z == modeleVue.getZoneSelectionnee()
+            ));
+        }
+
+        return new VueDTO(
+                modeleVue.getImage(),
+                modeleVue.getEchelle().getPouces(),
+                this.indexVueCourante,
+                zoneDtos
+        );
     }
+
     
-    public List<VueDTO> getVues() {
+    
+    private List<Point2D.Double> convertirVersPoints2D(List<Point> points) { // Ajout (ndanic)
+        List<Point2D.Double> resultat = new ArrayList<>();
+        for (Point p : points) {
+            resultat.add(new Point2D.Double(p.x, p.y));
+        }
+        return resultat;
+    }
+
+    private List<Point> convertirVersPoints(List<Point2D.Double> points) {  // Ajout (ndanic)
+        List<Point> resultat = new ArrayList<>();
+        for (Point2D.Double p : points) {
+            resultat.add(new Point((int) Math.round(p.x), (int) Math.round(p.y)));
+        }
+        return resultat;
+    }
+
+    
+    public List<VueDTO> getVues() {  // correction (ndanic)
         List<VueDTO> dtos = new ArrayList<>();
 
         for (int i = 0; i < this.projetVues.size(); i++) {
@@ -633,15 +658,21 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
                 zoneDtos.add(new ZoneDTO(
                         type,
                         forme,
-                        z.getForme().getPosition(),
+                        convertirVersPoints(z.getPoints()),
                         z == v.getZoneSelectionnee()
                 ));
             }
 
-            dtos.add(new VueDTO(i, v.getImage(), zoneDtos));
+            dtos.add(new VueDTO(
+                    v.getImage(),
+                    v.getEchelle().getPouces(),
+                    i,
+                    zoneDtos
+            ));
         }
 
         return dtos;
     }
+
 
 }
