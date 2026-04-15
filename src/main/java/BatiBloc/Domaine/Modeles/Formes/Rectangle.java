@@ -1,5 +1,6 @@
 package BatiBloc.Domaine.Modeles.Formes;
 
+import BatiBloc.Domaine.Constantes.ConstantesForme;
 import java.awt.geom.Point2D;
 import java.util.List;
 
@@ -8,14 +9,12 @@ public class Rectangle extends Forme {
     public Rectangle(List<Point2D.Double> points) {
         super(points);
     }
-
-    @Override
-    protected void validerPoints(List<Point2D.Double> points) {
-        if (points.size() != 4) {
-            throw new IllegalArgumentException("rectangleSizeException");
-        }
-    }
     
+    @Override
+    public int nombreDePoints() {
+        return ConstantesForme.NB_SOMMET_RECTANGLE;
+    }
+
     @Override
     public List<Integer> pointsQuiSuiventEnX(int i) {
         return switch (i) {
@@ -36,5 +35,12 @@ public class Rectangle extends Forme {
             case 3 -> List.of(2);
             default -> List.of();
         };
+    }
+    
+    @Override
+    protected void validerPoints(List<Point2D.Double> points) {
+        if (points.size() != this.nombreDePoints()) {
+            throw new IllegalArgumentException("rectangleSizeException");
+        }
     }
 }

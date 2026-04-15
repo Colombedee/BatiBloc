@@ -31,8 +31,8 @@ public class Afficheur {
 
             g2.setColor(couleur);
             g2.fillPolygon(xs, ys, pts.size());
-            g2.setStroke(new BasicStroke(z.isSelectionnee() ? 3 : 2));
-            g2.setColor(z.isSelectionnee() ? Color.YELLOW : couleur.darker());
+            g2.setStroke(new BasicStroke(z.estSelectionne() ? 3 : 2));
+            g2.setColor(z.estSelectionne() ? Color.YELLOW : couleur.darker());
             g2.drawPolygon(xs, ys, pts.size());
         }
     }

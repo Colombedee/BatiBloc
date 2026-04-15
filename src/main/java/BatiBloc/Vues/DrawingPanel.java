@@ -1,7 +1,7 @@
 package BatiBloc.Vues;
 import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Domaine.Dto.ZoneDTO;
-import BatiBloc.Domaine.Dto.TypeForme;
+import BatiBloc.Domaine.Dto.TypeFormeDTO;
 import BatiBloc.Domaine.Dto.TypeZoneDTO;
 
 import BatiBloc.Domaine.Dto.VueDTO;
@@ -37,7 +37,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     private boolean modeAjoutZone = false; // Ajouter par Emmanuella 
     
     //Colombe
-    private TypeForme formeEnCours = TypeForme.RECTANGLE;
+    private TypeFormeDTO formeEnCours = TypeFormeDTO.RECTANGLE;
     private TypeZoneDTO typeEnCours = TypeZoneDTO.ARMATURE_CLASSIQUE;
     private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
     private boolean modeDeplacementZone = false;
@@ -91,7 +91,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     if (modeRedimensionnementZone) {
                         indexPoigneeSelectionnee = -1;
                         for (ZoneDTO zone : vueCourante.getZones()) {
-                            if (zone.isSelectionnee()) {
+                            if (zone.estSelectionne()) {
                                 Rectangle bb = calculerBoundingBox(zone.getPoints());
                                 Point[] poignees = calculerPoigneesBoundingBox(bb);
                                 for (int i = 0; i < poignees.length; i++) {
@@ -153,7 +153,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 // déplacement d’une zone sélectionnée (si pas en mode spécial)
                 if (modeDeplacementZone && dernierPointSouris != null) {
                     ZoneDTO zoneSel = vueCourante.getZones().stream()
-                            .filter(ZoneDTO::isSelectionnee)
+                            .filter(ZoneDTO::estSelectionne)
                             .findFirst()
                             .orElse(null);
                     //Colombe
@@ -252,7 +252,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     
                     java.util.List<Point> pts = null;
                     
-                    if (formeEnCours == TypeForme.RECTANGLE)
+                    if (formeEnCours == TypeFormeDTO.RECTANGLE)
                     {
                         pts = java.util.List.of
                         (
@@ -262,7 +262,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                           new Point(xMin, yMax)
                         );
                     }
-                    else if (formeEnCours == TypeForme.TRIANGLE)
+                    else if (formeEnCours == TypeFormeDTO.TRIANGLE)
                     {
                         pts = java.util.List.of
                         (
@@ -271,7 +271,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                             new Point(xCentre, yMin)
                         );
                     }
-                    else if (formeEnCours == TypeForme.TRIANGLE_TRONQUE)
+                    else if (formeEnCours == TypeFormeDTO.TRIANGLE_TRONQUE)
                     {
                         int largeurSommet = (xMax - xMin) /3;
                         pts = java.util.List.of
@@ -441,7 +441,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         return this.modeRedimensionnementZone;
     }
     //Colombe
-    public void setFormeEnCours(TypeForme forme)
+    public void setFormeEnCours(TypeFormeDTO forme)
     {
         this.formeEnCours = forme;
         this.pointsEnCours.clear();
@@ -637,7 +637,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.setColor(couleur);
             g2d.fillPolygon(xs, ys, pts.size());
             
-            g2d.setColor(zone.isSelectionnee() ? Color.YELLOW : couleur.darker());
+            g2d.setColor(zone.estSelectionne() ? Color.YELLOW : couleur.darker());
             g2d.setStroke(new BasicStroke(2));
             g2d.drawPolygon(xs, ys, pts.size());
             
@@ -709,7 +709,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             }
             
             //Colombe
-            if (modeRedimensionnementZone && zone.isSelectionnee()) {
+            if (modeRedimensionnementZone && zone.estSelectionne()) {
                 Rectangle bb = calculerBoundingBox(pts);
                 // Boîte en pointillés
                 g2d.setColor(Color.GRAY);
@@ -741,17 +741,17 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             int y2 = Math.max(pointDepart.y, pointFin.y);
             int xCentre = (x1 + x2) / 2;
             
-            if (formeEnCours == TypeForme.RECTANGLE)
+            if (formeEnCours == TypeFormeDTO.RECTANGLE)
             {
                 overlay.drawRect(x1, y1, x2 - x1, y2 - y1);
             }
-            else if (formeEnCours == TypeForme.TRIANGLE)
+            else if (formeEnCours == TypeFormeDTO.TRIANGLE)
             {
                 int[] xs = {x1, x2, xCentre};
                 int[] ys = {y2, y2, y1};
                 overlay.drawPolygon(xs, ys, 3);
             }
-            else if (formeEnCours == TypeForme.TRIANGLE_TRONQUE)
+            else if (formeEnCours == TypeFormeDTO.TRIANGLE_TRONQUE)
             {
                 int largeurSommet = (x2 - x1) / 3;
                 int[] xs = {x1, x2, xCentre + largeurSommet, xCentre - largeurSommet};

@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ArmatureClassique extends Zone {
 
-    public ArmatureClassique(double hauteur, Forme forme, List<Point2D.Double> points) {
-        super(hauteur, forme, points);
+    public ArmatureClassique(Forme forme, List<Point2D.Double> points) {
+        super(forme, points);
     }
 }

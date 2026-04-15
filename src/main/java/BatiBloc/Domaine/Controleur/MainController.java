@@ -1,6 +1,7 @@
 package BatiBloc.Domaine.Controleur;
 
 
+import BatiBloc.Domaine.Services.UndoRedoService;
 import BatiBloc.Domaine.Dto.SimulationResultatDTO;
 import java.awt.geom.Point2D;
 import BatiBloc.Domaine.Modeles.Formes.Rectangle;
@@ -16,7 +17,7 @@ import BatiBloc.Domaine.Modeles.*;
 import BatiBloc.Domaine.Dto.*;
 import BatiBloc.Domaine.Services.ExportFichierPdfService;
 import BatiBloc.Domaine.Services.ImportFichierPdfService;
-import BatiBloc.Domaine.Dto.RognerVueDTO;
+import BatiBloc.Domaine.Dto.VueRogneeDTO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -49,7 +50,7 @@ public class MainController {
     public double getLargeurBlocDefaut() { return this.largeurBlocDefaut; }
     public double getHauteurBlocDefaut() { return this.hauteurBlocDefaut; }
     
-    private final UndoRedoManager<ProjetMemento> undoRedoManager = new UndoRedoManager<>();
+    private final UndoRedoService<ProjetMemento> undoRedoManager = new UndoRedoService<>();
     
     private static class ProjetMemento {
     private final List<Vue> vues;
@@ -285,7 +286,7 @@ public class MainController {
     }
     
     // @roneh 
-    public void rognerVueCourante(RognerVueDTO zone) {
+    public void rognerVueCourante(VueRogneeDTO zone) {
         if (this.indexVueCourante < 0 || zone == null) {
             return;
         }
@@ -307,7 +308,7 @@ public class MainController {
 
 
     // ---GESTION DES ZONES --- (Ajoutée Par Colombe)
-    public void ajouterZone(TypeZoneDTO type, TypeForme forme, List<Point> points)
+    public void ajouterZone(TypeZoneDTO type, TypeFormeDTO forme, List<Point> points)
     {
         if (indexVueCourante < 0) return;
         Forme formeModele = creerForme(forme, points);
@@ -361,7 +362,7 @@ public class MainController {
         this.enregistrerEtatAvantModification();
         projetVues.get(indexVueCourante).redimensionnerParBoundingBox(indexPoignee, dx, dy);
     }
-    private Forme creerForme(TypeForme type, List<Point> points) {
+    private Forme creerForme(TypeFormeDTO type, List<Point> points) {
         List<Point2D.Double> pointsModele = convertirVersPoints2D(points);
 
         switch (type) {
@@ -481,7 +482,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
     }
 
     public void terminerModificationComposee() {
-        this.undoRedoManager.terminerModificationComposee();
+        this.undoRedoManager.modificationComposee();
     }
 
     private void enregistrerEtatAvantModification() {
@@ -586,14 +587,14 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
 
     
-    private TypeForme getTypeForme(Forme forme) {
+    private TypeFormeDTO getTypeForme(Forme forme) {
         if (forme instanceof Rectangle) {
-            return TypeForme.RECTANGLE;
+            return TypeFormeDTO.RECTANGLE;
         }
         if (forme instanceof Triangle) {
-            return TypeForme.TRIANGLE;
+            return TypeFormeDTO.TRIANGLE;
         }
-        return TypeForme.TRIANGLE_TRONQUE;
+        return TypeFormeDTO.TRIANGLE_TRONQUE;
     }
 
     
@@ -607,7 +608,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
         for (Zone z : modeleVue.getZones()) {
             TypeZoneDTO type = getTypeZone(z);
-            TypeForme forme = getTypeForme(z.getForme());
+            TypeFormeDTO forme = getTypeForme(z.getForme());
 
             zoneDtos.add(new ZoneDTO(
                     type,
@@ -653,7 +654,7 @@ public void modifierDimensionsBloc(double largeur, double hauteur) {
 
             for (Zone z : v.getZones()) {
                 TypeZoneDTO type = getTypeZone(z);
-                TypeForme forme = getTypeForme(z.getForme());
+                TypeFormeDTO forme = getTypeForme(z.getForme());
 
                 zoneDtos.add(new ZoneDTO(
                         type,

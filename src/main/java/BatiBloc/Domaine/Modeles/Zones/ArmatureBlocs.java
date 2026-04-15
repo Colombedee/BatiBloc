@@ -10,8 +10,8 @@ public class ArmatureBlocs extends Zone {
 
     private final List<RangeeBloc> rangees = new ArrayList<>();
 
-    public ArmatureBlocs(double hauteur,Forme forme, List<Point2D.Double> points) {
-        super(hauteur, forme, points);
+    public ArmatureBlocs(Forme forme, List<Point2D.Double> points) {
+        super(forme, points);
     }
 
     public void ajouterRangee(RangeeBloc rangee) {

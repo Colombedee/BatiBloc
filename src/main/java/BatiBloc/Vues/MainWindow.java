@@ -3,7 +3,7 @@ package BatiBloc.Vues;
 import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Domaine.Dto.VueDTO;
 import BatiBloc.Domaine.Dto.TypeZoneDTO;
-import BatiBloc.Domaine.Dto.TypeForme;
+import BatiBloc.Domaine.Dto.TypeFormeDTO;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import java.util.Locale;
@@ -29,7 +29,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import BatiBloc.Domaine.Dto.RognerVueDTO;
+import BatiBloc.Domaine.Dto.VueRogneeDTO;
 import java.awt.Cursor;
 import javax.swing.AbstractButton;
 import javax.swing.JOptionPane;
@@ -167,8 +167,7 @@ public class MainWindow extends JFrame {
         Rectangle zoneImage = this.drawingPanel.convertirSelectionEcranVersImage(zoneAffichage);
         if (zoneImage == null) return;
 
-        this.controleur.rognerVueCourante(
-            new RognerVueDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
+        this.controleur.rognerVueCourante(new VueRogneeDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
         );
 
         this.modeRognage = false;
@@ -429,12 +428,12 @@ public class MainWindow extends JFrame {
     }
 
     private void initBoutonsForme() {
-        this.addFormeBoutonListener(this.btn_formeRectangle, TypeForme.RECTANGLE);
-        this.addFormeBoutonListener(this.btn_formeTriangle, TypeForme.TRIANGLE);
-        this.addFormeBoutonListener(this.btn_formeTriangleTronque, TypeForme.TRIANGLE_TRONQUE);
+        this.addFormeBoutonListener(this.btn_formeRectangle, TypeFormeDTO.RECTANGLE);
+        this.addFormeBoutonListener(this.btn_formeTriangle, TypeFormeDTO.TRIANGLE);
+        this.addFormeBoutonListener(this.btn_formeTriangleTronque, TypeFormeDTO.TRIANGLE_TRONQUE);
     }
 
-    private void addFormeBoutonListener(JButton button, TypeForme forme) {
+    private void addFormeBoutonListener(JButton button, TypeFormeDTO forme) {
         button.addActionListener(e -> {
             this.selectButton(button, this.formeButtons);
             this.drawingPanel.setFormeEnCours(forme);

@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Ouverture extends Zone {
 
-    public Ouverture(double hauteur, Forme forme, List<Point2D.Double> points) {
-        super(hauteur, forme, points);
+    public Ouverture(Forme forme, List<Point2D.Double> points) {
+        super(forme, points);
     }
 }

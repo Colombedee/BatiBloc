@@ -10,7 +10,12 @@ public class SimulationService {
 
     private final ArmatureBlocsService armatureService = new ArmatureBlocsService();
 
-    public SimulationResultatDTO simulerToutesLesZones(List<Zone> zones) {
+    public SimulationResultatDTO simulerToutesLesZones(
+            List<Zone> zones,
+            double hauteurBloc,
+            double largeurBloc,
+            double prixBloc
+    ) {
 
         int totalBlocs = 0;
         double prixTotal = 0;
@@ -18,7 +23,12 @@ public class SimulationService {
         for (Zone z : zones) {
             if (z instanceof ArmatureBlocs armature) {
 
-                List<Bloc> blocs = armatureService.simuler(armature);
+                List<Bloc> blocs = armatureService.simuler(
+                        armature,
+                        hauteurBloc,
+                        largeurBloc,
+                        prixBloc
+                );
 
                 totalBlocs += blocs.size();
                 prixTotal += blocs.stream()

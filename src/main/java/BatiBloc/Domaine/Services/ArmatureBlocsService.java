@@ -1,9 +1,9 @@
 package BatiBloc.Domaine.Services;
 
 import BatiBloc.Domaine.Modeles.Zones.ArmatureBlocs;
-import BatiBloc.Domaine.Constantes.ConstantesBloc;
 import BatiBloc.Domaine.Modeles.Bloc;
 import BatiBloc.Domaine.Modeles.RangeeBloc;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,23 +11,22 @@ public class ArmatureBlocsService {
 
     private final ConstructeurRangeeService constructeur = new ConstructeurRangeeService();
 
-    public List<Bloc> simuler(ArmatureBlocs armature) {
+    public List<Bloc> simuler(ArmatureBlocs armature, double hauteurBloc,
+                              double largeurBloc, double prixBloc) {
 
         List<Bloc> blocsUtilises = new ArrayList<>();
 
         double hauteurTotale = armature.getHauteur();
-        double hauteurBloc = ConstantesBloc.HAUTEUR_DEFAUT;
-        double prixBloc = ConstantesBloc.PRIX_DEFAUT; // si tu en as un
         double resteBloc = 0;
         double y = 0;
 
         while (y < hauteurTotale) {
 
             double largeurDisponible = GeometryService.largeurDisponible(armature, y);
-            if (largeurDisponible < ConstantesBloc.LARGEUR_MINIMALE) break;
+            if (largeurDisponible < largeurBloc) break;
 
             ResultatRangee resultat = constructeur.construire(largeurDisponible,
-                    ConstantesBloc.LARGEUR_DEFAUT, hauteurBloc, prixBloc, y, resteBloc);
+                    largeurBloc, hauteurBloc, prixBloc, y, resteBloc);
 
             RangeeBloc rangee = resultat.rangee();
             armature.ajouterRangee(rangee);
@@ -39,8 +38,21 @@ public class ArmatureBlocsService {
         }
 
         double nouvelleHauteur = armature.getRangees().size() * hauteurBloc;
-        armature.setHauteur(nouvelleHauteur);
+        ajusterHauteur(armature, nouvelleHauteur);
 
         return blocsUtilises;
+    }
+
+    private void ajusterHauteur(ArmatureBlocs armature, double nouvelleHauteur) {
+        double ancienneHauteur = armature.getHauteur();
+        if (ancienneHauteur == 0) {
+            return;
+        }
+
+        double ratio = nouvelleHauteur / ancienneHauteur;
+
+        for (Point2D.Double p : armature.getPointsInternes()) {
+            p.y *= ratio;
+        }
     }
 }

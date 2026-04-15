@@ -16,18 +16,27 @@ public class ExportFichierPdfService {
             fichierChoisi.setCurrentDirectory(repertoire);
         }
 
-        FileNameExtensionFilter filtre = new FileNameExtensionFilter("PDF", "pdf");
-        fichierChoisi.setFileFilter(filtre);
+        FileNameExtensionFilter filtrePdf = new FileNameExtensionFilter("PDF", "pdf");
+        FileNameExtensionFilter filtrePng = new FileNameExtensionFilter("PNG (*.png)", "png");
+        
+        fichierChoisi.addChoosableFileFilter(filtrePdf);
+        fichierChoisi.addChoosableFileFilter(filtrePng);
+        fichierChoisi.setFileFilter(filtrePdf);
 
-        fichierChoisi.setDialogTitle("Exporter en PDF");
+        fichierChoisi.setDialogTitle("exportType");
         int resultat = fichierChoisi.showSaveDialog(null);
 
         if (resultat == JFileChooser.APPROVE_OPTION) {
             File fichier = fichierChoisi.getSelectedFile();
             String chemin = fichier.getAbsolutePath();
+            
+            String extension = "pdf";
+            if (fichierChoisi.getFileFilter() == filtrePng) {
+                extension = "png";
+            }
 
-            if (!chemin.toLowerCase().endsWith(".pdf")) {
-                fichier = new File(chemin + ".pdf");
+            if (!chemin.toLowerCase().endsWith("." + extension)) {
+                fichier = new File(chemin + "." + extension);
             }
             return fichier;
         }
