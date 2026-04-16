@@ -4,29 +4,45 @@ import BatiBloc.Domaine.Modeles.Bloc;
 import BatiBloc.Domaine.Modeles.RangeeBloc;
 import BatiBloc.Domaine.Constantes.ConstantesBloc;
 
+
+/**
+ * 
+ * @author nicky
+ * Correction : Ajout d'une surcharge pour la construction par segment.
+ */
+
 public class ConstructeurRangeeService {
 
-    public ResultatRangee construire(double largeurDisponible, double largeurBloc,
-                            double hauteurBloc, double prixBloc, double hauteur, double restePrecedent) {
+    private static final double EPSILON = 0.0001;
 
-        RangeeBloc rangee = new RangeeBloc(hauteur);
-        double x = 0;
+    public ResultatRangee construireSegment(
+            double xDepart,
+            double largeurDisponible,
+            double largeurBloc,
+            double hauteurBloc,
+            double prixBloc,
+            double positionY,
+            double restePrecedent
+    ) {
+        RangeeBloc rangee = new RangeeBloc(positionY);
+        double xCourant = xDepart;
 
-        if (restePrecedent >= ConstantesBloc.LARGEUR_MINIMALE) {
-            rangee.ajouterBloc(new Bloc(hauteurBloc, restePrecedent, prixBloc));
-            x += restePrecedent;
+        if (restePrecedent >= ConstantesBloc.LARGEUR_MINIMALE
+                && restePrecedent <= largeurDisponible + EPSILON) {
+            rangee.ajouterBloc(new Bloc(xCourant, positionY, restePrecedent, hauteurBloc, prixBloc));
+            xCourant += restePrecedent;
         }
 
-        while (x + largeurBloc <= largeurDisponible) {
-            rangee.ajouterBloc(new Bloc(hauteurBloc, largeurBloc, prixBloc));
-            x += largeurBloc;
+        while (xCourant + largeurBloc <= xDepart + largeurDisponible + EPSILON) {
+            rangee.ajouterBloc(new Bloc(xCourant, positionY, largeurBloc, hauteurBloc, prixBloc));
+            xCourant += largeurBloc;
         }
 
-        double restant = largeurDisponible - x;
-        double restePourProchaineRangee = 0;
+        double restant = (xDepart + largeurDisponible) - xCourant;
+        double restePourProchaineRangee = 0.0;
 
         if (restant >= ConstantesBloc.LARGEUR_MINIMALE) {
-            rangee.ajouterBloc(new Bloc(hauteurBloc, restant, prixBloc));
+            rangee.ajouterBloc(new Bloc(xCourant, positionY, restant, hauteurBloc, prixBloc));
             restePourProchaineRangee = largeurBloc - restant;
         }
 
