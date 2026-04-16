@@ -318,8 +318,10 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
 
                 List<ZoneDTO> zones = vueCourante.getZones();
-                for (int i = 0; i < zones.size(); i++) {
-                    if (zones.get(i).contientPoint(ptImage)) {
+                controller.selectionnerZone(ptImage);
+                vueCourante = controller.getVueCourante();
+                for (int i = 0; i < vueCourante.getZones().size(); i++) {
+                    if (vueCourante.getZones().get(i).estSelectionne()) {
                         controller.supprimerZone(i);
                         vueCourante = controller.getVueCourante();
                         repaint();
@@ -641,45 +643,52 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.setStroke(new BasicStroke(2));
             g2d.drawPolygon(xs, ys, pts.size());
             
-            //  Rendu des blocs simulés (zones ARMATURE_BLOCS)@roneh
-            if (zone.getType() == TypeZoneDTO.ARMATURE_BLOCS && !zone.getBlocs().isEmpty()) {
-                int zoneXMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
-                int zoneYMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
-
-                java.awt.Polygon clipPoly = new java.awt.Polygon(xs, ys, pts.size());
-                java.awt.Shape clipPrecedent = g2d.getClip();
-                g2d.setClip(clipPoly);
-
-                int indexBloc = 0;
-                double dernierY = Double.NaN;
-                int indexRangee = -1;
-                for (BlocDTO bloc : zone.getBlocs()) {
-                    int bx = zoneXMin + (int) Math.round(bloc.x);
-                    int by = zoneYMin + (int) Math.round(bloc.y);
-                    int bw = (int) Math.round(bloc.largeur);
-                    int bh = (int) Math.round(bloc.hauteur);
-
-                    if (Double.isNaN(dernierY) || Math.abs(bloc.y - dernierY) > 0.5) {
-                        dernierY = bloc.y;
-                        indexRangee++;
-                    }
-                    boolean estPaire = (indexRangee % 2 == 0);
-                    Color remplissage = estPaire
-                            ? new Color(255, 200, 100, 180)   // orange clair
-                            : new Color(255, 230, 150, 180);  // jaune clair
-
-                    g2d.setColor(remplissage);
-                    g2d.fillRect(bx, by, bw, bh);
-                    g2d.setColor(new Color(150, 80, 0, 200));
-                    g2d.setStroke(new BasicStroke(1.0f));
-                    g2d.drawRect(bx, by, bw, bh);
-                    indexBloc++;
-                }
-
-                g2d.setClip(clipPrecedent);
-                g2d.setStroke(new BasicStroke(2));
-            }
             
+            
+            
+            
+            //TODO: RENDU DES BLOCS, A DECOMMENTER APRES IMPLEMENTATION DE BLOCDTO.
+//            //  Rendu des blocs simulés (zones ARMATURE_BLOCS)@roneh
+//            if (zone.getType() == TypeZoneDTO.ARMATURE_BLOCS && !zone.getBlocs().isEmpty()) {
+//                int zoneXMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
+//                int zoneYMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
+//
+//                java.awt.Polygon clipPoly = new java.awt.Polygon(xs, ys, pts.size());
+//                java.awt.Shape clipPrecedent = g2d.getClip();
+//                g2d.setClip(clipPoly);
+//
+//                int indexBloc = 0;
+//                double dernierY = Double.NaN;
+//                int indexRangee = -1;
+//                for (BlocDTO bloc : zone.getBlocs()) {
+//                    int bx = zoneXMin + (int) Math.round(bloc.x);
+//                    int by = zoneYMin + (int) Math.round(bloc.y);
+//                    int bw = (int) Math.round(bloc.largeur);
+//                    int bh = (int) Math.round(bloc.hauteur);
+//
+//                    if (Double.isNaN(dernierY) || Math.abs(bloc.y - dernierY) > 0.5) {
+//                        dernierY = bloc.y;
+//                        indexRangee++;
+//                    }
+//                    boolean estPaire = (indexRangee % 2 == 0);
+//                    Color remplissage = estPaire
+//                            ? new Color(255, 200, 100, 180)   // orange clair
+//                            : new Color(255, 230, 150, 180);  // jaune clair
+//
+//                    g2d.setColor(remplissage);
+//                    g2d.fillRect(bx, by, bw, bh);
+//                    g2d.setColor(new Color(150, 80, 0, 200));
+//                    g2d.setStroke(new BasicStroke(1.0f));
+//                    g2d.drawRect(bx, by, bw, bh);
+//                    indexBloc++;
+//                }
+//
+//                g2d.setClip(clipPrecedent);
+//                g2d.setStroke(new BasicStroke(2));
+//            }
+            
+
+
             // Emmanuella - Afficher dimensions en pieds/pouces
             double echelle = this.vueCourante.getEchelle();
             if (echelle > 0 && pts.size() >= 2) {

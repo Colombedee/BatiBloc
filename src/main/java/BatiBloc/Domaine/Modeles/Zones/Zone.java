@@ -30,6 +30,10 @@ public class Zone {
         return forme.calculerLargeur(points);
     }
 
+    public Forme getForme() {
+        return this.forme;
+    }
+    
     public void redimensionner(int indexPoignee, double dx, double dy) {
         forme.redimensionner(points, indexPoignee, dx, dy);
     }
