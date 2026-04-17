@@ -32,8 +32,8 @@ import javax.swing.JScrollPane;
 import BatiBloc.Domaine.Dto.VueRogneeDTO;
 import java.awt.Cursor;
 import javax.swing.AbstractButton;
-import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import BatiBloc.Domaine.Dto.SimulationResultatDTO;
 import javax.swing.border.Border;
@@ -311,19 +311,11 @@ public class MainWindow extends JFrame {
     double hauteur = parserMesureImperiale(txtH);
 
     if (largeur < 6.0) {
-        JOptionPane.showMessageDialog(this,
-                "La longueur minimale d'un bloc est de 6 pouces.\n"
-                + "Exemples valides : 8'  |  12\"  |  1' 6\"  |  6\" 1/32",
-                "Valeur invalide", JOptionPane.WARNING_MESSAGE);
         this.txt_largeurBloc.setText("");
         this.txt_largeurBloc.requestFocusInWindow();
         return;
     }
     if (hauteur < 6.0) {
-        JOptionPane.showMessageDialog(this,
-                "La hauteur minimale d'un bloc est de 6 pouces.\n"
-                + "Exemples valides : 12\"  |  1'  |  6\" 1/32",
-                "Valeur invalide", JOptionPane.WARNING_MESSAGE);
         this.txt_hauteurBloc.setText("");
         this.txt_hauteurBloc.requestFocusInWindow();
         return;
@@ -451,7 +443,7 @@ public class MainWindow extends JFrame {
 
     private void afficherBtnStop() {
         if (this.btnStopZoneDrawing == null) {
-            this.btnStopZoneDrawing = new JButton("Dessin actif");
+            this.btnStopZoneDrawing = new JButton(this.getTexte("button.activeDrawing"));
             this.btnStopZoneDrawing.setPreferredSize(new Dimension(150, 30));
             this.btnStopZoneDrawing.addActionListener(e -> this.arreterDessin());
             this.panel_menu.add(this.btnStopZoneDrawing);
