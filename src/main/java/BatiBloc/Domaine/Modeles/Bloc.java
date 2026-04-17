@@ -3,7 +3,7 @@ package BatiBloc.Domaine.Modeles;
 /**
  * 
  * @author nicky
- * Correction retrait de this dans certains return car ce n'était pas nécessaire
+ * 
  * Il faut connaître la position réelle des blocs (avec x et y ). 
  * Le modèle Bloc précédent contenait hauteur/largeur/prix, mais pas de
  * coordonnées suffisantes pour l’affichage bloc par bloc.
@@ -30,15 +30,15 @@ public class Bloc {
     }
     
     public double getX(){
-        return x;
+        return this.x;
     }
     
     public double getY(){
-        return y;
+        return this.y;
     }
     
     public double getHauteur() { 
-        return hauteur;
+        return this.hauteur;
     }
     
     public void setHauteur(double hauteur) {
@@ -49,7 +49,7 @@ public class Bloc {
     }
     
     public double getLargeur() { 
-        return largeur;
+        return this.largeur;
     }
 
     public void setLargeur(double largeur) {
@@ -60,7 +60,7 @@ public class Bloc {
     }
     
     public double getPrix() {
-        return prix;
+        return this.prix;
     }
 
     public void setPrix(double prix) {
