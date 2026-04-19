@@ -17,26 +17,40 @@ Application de simulation de construction de bâtiments à partir de plans PDF, 
 
 ## Description du projet
 
-**BâtiBloc** est une application Java conçue pour assister la préparation de façades à partir de plans importés en PDF.  
-Le logiciel permet d’importer des vues, de les rogner, d’y définir des zones de travail de différentes formes, d’ajuster l’échelle, puis de lancer une simulation de placement de blocs selon des dimensions configurables.
+**BâtiBloc** est une application Java conçue pour assister la préparation de façades à partir de plans importés en PDF.
 
-Le livrable 4 vise notamment l’import PDF, la gestion des vues, l’édition de zones, le rognage, la calibration de l’échelle, la simulation de placement, le calcul du nombre de blocs, le zoom, ainsi que l’utilisation d’une interface claire sans fenêtres superflues. 
+Le logiciel permet :
+
+- d’importer des vues à partir d’un document PDF ;
+- de naviguer entre les vues ;
+- de rogner une façade ;
+- de définir différentes zones de travail ;
+- de modifier l’échelle ;
+- de manipuler les zones à la souris ;
+- de configurer les dimensions des blocs ;
+- de lancer une simulation de placement de blocs ;
+- d’estimer le nombre total de blocs et le coût total.
+
+Dans le cadre du **livrable 5**, ce README décrit l’état actuel de l’application, les fonctionnalités intégrées, les limites connues ainsi que les consignes de compilation et d’exécution.
+
 ---
 
 ## Fonctionnalités réalisées
 
 ### 1. Interface graphique modernisée
-L’application utilise une nouvelle interface `NewMainWindow` avec une apparence modernisée basée sur **FlatLaf**.  
+L’application utilise une interface `NewMainWindow` avec une apparence modernisée basée sur **FlatLaf**.
+
 L’interface comprend :
 
-- une **barre supérieure** pour les actions globales ;
-- un **panneau latéral** pour les opérations sur les zones et la simulation ;
+- une **barre supérieure** pour les actions principales ;
+- un **panneau latéral** pour la gestion des zones, des blocs et de la simulation ;
 - un **panneau central** pour l’affichage de la vue active ;
-- un système de **miniatures** pour la sélection multiple de vues.
+- un système de **miniatures** pour certaines opérations sur les vues.
 
 ### 2. Importation de plans PDF
-L’utilisateur peut importer un document PDF contenant une ou plusieurs pages.  
-Chaque page importée devient une **vue distincte** dans l’application, permettant de travailler façade par façade. Cette fonctionnalité fait partie des exigences du livrable 4. 
+L’utilisateur peut importer un document PDF contenant une ou plusieurs pages.
+
+Chaque page importée devient une **vue distincte** dans l’application, ce qui permet de travailler façade par façade ou page par page selon le contexte du plan.
 
 ### 3. Gestion des vues
 L’application permet de :
@@ -46,14 +60,15 @@ L’application permet de :
 - supprimer une ou plusieurs vues ;
 - exporter une ou plusieurs vues sélectionnées au format PDF.
 
-La suppression et l’exportation utilisent une interface par **miniatures** afin de faciliter la sélection multiple.
+La suppression et l’exportation peuvent utiliser une interface par **miniatures** afin de faciliter la sélection multiple.
 
 ### 4. Rognage d’une vue
-Une vue peut être rognée directement à l’écran en dessinant un rectangle de sélection.  
-Cette étape permet de conserver uniquement la portion utile d’une façade avant l’ajout de zones.
+Une vue peut être rognée directement à l’écran à l’aide d’un rectangle de sélection.
+
+Cette fonctionnalité permet d’isoler uniquement la portion pertinente du plan avant d’ajouter des zones ou de lancer une simulation.
 
 ### 5. Gestion des zones
-L’utilisateur peut créer des zones selon :
+L’utilisateur peut créer différents types de zones.
 
 #### Types de zones
 - armature classique ;
@@ -65,7 +80,8 @@ L’utilisateur peut créer des zones selon :
 - triangle ;
 - triangle tronqué.
 
-Le livrable 4 exige la définition, l’affichage, la sélection, la modification et la suppression de zones, avec interaction à la souris.
+Les zones sont affichées directement dans la vue et peuvent être utilisées comme base pour les opérations de simulation ou d’édition.
+
 ### 6. Manipulation interactive des zones
 Les zones peuvent être :
 
@@ -74,84 +90,102 @@ Les zones peuvent être :
 - redimensionnées ;
 - supprimées.
 
-L’application gère également la mise en évidence de la zone sélectionnée afin de rendre l’édition plus claire pour l’utilisateur.
+L’application met visuellement en évidence la zone sélectionnée afin de rendre l’édition plus claire.
 
 ### 7. Calibration et modification de l’échelle
-L’échelle d’une vue peut être définie ou modifiée directement dans l’interface.  
-Cette valeur est ensuite utilisée dans les traitements dépendant des dimensions réelles. La saisie et l’édition de mesures impériales font partie des attentes du livrable. 
+L’échelle d’une vue peut être définie ou modifiée directement dans l’interface.
 
-### 8. Simulation du placement des blocs
-L’application permet de lancer une simulation sur une zone admissible afin d’estimer :
+Cette valeur est utilisée pour relier les dimensions de l’image aux dimensions réelles nécessaires aux traitements et à la simulation.
 
-- le **nombre total de blocs** ;
-- le **coût total** selon un prix unitaire saisi par l’utilisateur.
-
-Le livrable 4 demande une simulation de placement avec dimensions minimales, réutilisation des chutes et affichage du nombre de blocs. 
-
-### 9. Paramétrage des blocs
+### 8. Paramétrage des blocs
 L’utilisateur peut modifier :
 
 - la largeur du bloc ;
 - la hauteur du bloc ;
 - le coût unitaire du bloc.
 
-Ces paramètres sont pris en compte dans la simulation.
+Ces paramètres sont utilisés lors de la simulation.
+
+### 9. Simulation du placement des blocs
+L’application permet de lancer une simulation sur une zone admissible afin d’estimer :
+
+- le **nombre total de blocs** ;
+- le **coût total** selon le prix unitaire saisi.
+
+La simulation tient compte des dimensions configurées pour les blocs et s’appuie sur le modèle interne des zones.
 
 ### 10. Zoom et navigation visuelle
-L’interface intègre des boutons de **zoom avant** et **zoom arrière** afin d’améliorer le confort de manipulation des vues.  
-Le zoom agit sur l’affichage et non sur les dimensions réelles du plan.
+L’interface intègre des boutons de **zoom avant** et **zoom arrière** afin d’améliorer le confort de manipulation.
+
+Le zoom agit sur l’affichage et n’altère pas l’échelle réelle du plan.
 
 ### 11. Undo / Redo
-L’application prend en charge un mécanisme de **memento** permettant :
+L’application prend en charge un mécanisme de type **memento** permettant :
 
 - d’annuler la dernière modification ;
 - de rétablir une modification annulée.
 
-Cette fonctionnalité couvre les opérations importantes sur les vues et les zones.
+Cette fonctionnalité s’applique aux opérations importantes sur les vues et les zones.
 
 ---
 
 ## Limites connues
 
-Les éléments suivants doivent être considérés comme des limites ou points de vigilance dans l’état actuel du livrable :
+Les éléments suivants doivent être considérés comme des limites ou des points de vigilance dans l’état actuel de l’application.
 
 ### 1. Simulation avancée des formes non rectangulaires
-La prise en charge des zones triangulaires et triangulaires tronquées dépend de la logique géométrique disponible dans le modèle.  
-Une validation supplémentaire peut être nécessaire pour garantir que la largeur utile varie correctement selon la hauteur de chaque rangée.
+La prise en charge des zones triangulaires et triangulaires tronquées dépend de la logique géométrique implantée dans le modèle.
+
+Selon l’état final du code remis, certaines validations ou adaptations supplémentaires peuvent encore être nécessaires pour garantir une simulation parfaitement cohérente sur toutes les formes.
 
 ### 2. Gestion complète des ouvertures dans la simulation
-Les ouvertures font partie des types de zones attendus dans le livrable, mais la simulation complète autour des ouvertures peut nécessiter des règles additionnelles, notamment pour le linteau, les dégagements minimaux et certaines armatures traditionnelles automatiques. Ces règles sont mentionnées dans l’énoncé. 
+Les ouvertures peuvent être représentées comme type de zone, mais leur prise en charge complète dans la simulation peut nécessiter des règles supplémentaires selon le comportement attendu dans le projet.
 
 ### 3. Cohérence du JAR exécutable
-Lors du développement, des écarts ont été observés entre l’exécution dans l’IDE et l’exécution à partir du JAR, notamment autour du rognage et de certains problèmes de reconstruction Maven. Un test systématique du JAR final demeure recommandé avant la remise.
+Comme dans tout projet Java avec génération Maven, il est recommandé de tester systématiquement le **JAR final** avant la remise, afin de vérifier qu’il reproduit bien le comportement observé dans l’environnement de développement.
 
-### 4. Ajouts futurs possibles
-Certaines validations métier plus poussées peuvent encore être raffinées, notamment :
+### 4. Raffinement de certains calculs métier
+Certaines améliorations futures peuvent concerner :
 
-- la comptabilisation exacte des blocs neufs versus les morceaux réutilisés ;
-- le comportement détaillé de la simulation sur toutes les formes ;
-- l’intégration complète de certaines règles métier propres aux ouvertures.
+- la distinction entre blocs complets et morceaux réutilisés ;
+- le calcul précis du coût dans les cas de réutilisation de chutes ;
+- l’ajustement de la logique de simulation selon toutes les formes supportées.
 
 ---
 
 ## Instructions de démonstration
 
-Le scénario de démonstration attendu pour le livrable 4 inclut notamment : lancer le JAR, importer une page par vue, conserver uniquement les façades utiles, rogner, saisir l’échelle, ajouter des zones rectangulaires et triangulaires, déplacer/redimensionner les zones, lancer la simulation, afficher le nombre de blocs, utiliser le zoom et supprimer une zone. ### Scénario recommandé
+Cette section propose un scénario de démonstration générique pour le **livrable 5**.  
+Il peut être ajusté selon les consignes officielles de remise ou de présentation.
+
+### Scénario recommandé
 
 1. **Lancer l’application**.
-2. **Importer un PDF** contenant une ou plusieurs façades.
+2. **Importer un PDF** contenant une ou plusieurs pages.
 3. **Naviguer entre les vues** importées.
-4. **Rogner** une vue pour conserver uniquement la façade utile.
-5. **Entrer l’échelle** dans le champ prévu puis cliquer sur **Appliquer**.
-6. **Choisir un type de zone** et une **forme** dans le panneau latéral.
+4. **Rogner** une vue afin de conserver uniquement la façade ou la portion utile.
+5. **Définir ou modifier l’échelle** de la vue.
+6. **Choisir un type de zone** puis une **forme** dans le panneau latéral.
 7. **Dessiner la zone** directement dans la vue.
 8. **Sélectionner la zone**, puis la **déplacer** ou la **redimensionner** au besoin.
 9. **Entrer les dimensions des blocs** ainsi que le **coût unitaire**.
-10. **Lancer la simulation** avec le bouton **Simuler**.
+10. **Lancer la simulation**.
 11. **Vérifier l’affichage** du nombre total de blocs et du coût total.
-12. Utiliser le **zoom** pour inspecter visuellement un détail de la vue.
-13. **Supprimer une zone** si nécessaire.
+12. Utiliser le **zoom** pour inspecter un détail de la vue.
+13. **Supprimer** ou **modifier** une zone si nécessaire.
 14. **Exporter** ou **supprimer plusieurs vues** à l’aide du panneau de miniatures.
+
+### Points importants à montrer pendant la démo
+Il est recommandé de mettre en évidence :
+
+- la fluidité de l’importation PDF ;
+- le fonctionnement du rognage ;
+- la gestion des différents types de zones ;
+- les interactions souris sur les zones ;
+- la modification de l’échelle ;
+- la configuration des blocs ;
+- la simulation et l’affichage des résultats ;
+- le mécanisme d’annulation et de rétablissement.
 
 ---
 

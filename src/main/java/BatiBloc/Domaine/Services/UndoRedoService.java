@@ -12,15 +12,57 @@ public class UndoRedoService<T> {
     private boolean modificationComposeeEnCours = false;
     private boolean etatComposeDejaSauvegarde = false;
 
+    /**
+     * Méthode conservée pour compatibilité avec le code existant.
+     * Elle agit comme un toggle, mais le code recommandé passe maintenant
+     * par commencerModificationComposee(...) et terminerModificationComposee().
+     */
     public void modificationComposee() {
-        this.modificationComposeeEnCours = !this.modificationComposeeEnCours;
+        if (!this.modificationComposeeEnCours) {
+            this.modificationComposeeEnCours = true;
+            this.etatComposeDejaSauvegarde = false;
+        } else {
+            this.modificationComposeeEnCours = false;
+            this.etatComposeDejaSauvegarde = false;
+        }
+    }
+
+    /**
+     * Démarre explicitement une modification composée.
+     * On sauvegarde immédiatement l'état initial une seule fois.
+     */
+    public void commencerModificationComposee(Supplier<T> createurEtat) {
+        if (this.modificationComposeeEnCours) {
+            return;
+        }
+
+        this.modificationComposeeEnCours = true;
+        this.etatComposeDejaSauvegarde = false;
+
+        if (createurEtat != null) {
+            this.pileAnnulation.push(createurEtat.get());
+            this.pileRetablissement.clear();
+            this.etatComposeDejaSauvegarde = true;
+        }
+    }
+
+    /**
+     * Termine explicitement une modification composée.
+     */
+    public void terminerModificationComposee() {
+        this.modificationComposeeEnCours = false;
         this.etatComposeDejaSauvegarde = false;
     }
 
     public void enregistrerEtatAvantModification(Supplier<T> createurEtat) {
+        if (createurEtat == null) {
+            return;
+        }
+
         if (this.modificationComposeeEnCours) {
-            if (this.etatComposeDejaSauvegarde) return;
-            
+            if (this.etatComposeDejaSauvegarde) {
+                return;
+            }
             this.etatComposeDejaSauvegarde = true;
         }
 
@@ -29,18 +71,34 @@ public class UndoRedoService<T> {
     }
 
     public void annuler(Supplier<T> createurEtatCourant, Consumer<T> restaurateurEtat) {
-        if (this.pileAnnulation.isEmpty()) return;
+        if (this.pileAnnulation.isEmpty() || createurEtatCourant == null || restaurateurEtat == null) {
+            return;
+        }
 
         this.pileRetablissement.push(createurEtatCourant.get());
         restaurateurEtat.accept(this.pileAnnulation.pop());
-        this.modificationComposee();
+
+        this.modificationComposeeEnCours = false;
+        this.etatComposeDejaSauvegarde = false;
     }
 
     public void retablir(Supplier<T> createurEtatCourant, Consumer<T> restaurateurEtat) {
-        if (this.pileRetablissement.isEmpty()) return;
+        if (this.pileRetablissement.isEmpty() || createurEtatCourant == null || restaurateurEtat == null) {
+            return;
+        }
 
         this.pileAnnulation.push(createurEtatCourant.get());
         restaurateurEtat.accept(this.pileRetablissement.pop());
-        this.modificationComposee();
+
+        this.modificationComposeeEnCours = false;
+        this.etatComposeDejaSauvegarde = false;
+    }
+
+    public boolean canUndo() {
+        return !this.pileAnnulation.isEmpty();
+    }
+
+    public boolean canRedo() {
+        return !this.pileRetablissement.isEmpty();
     }
 }

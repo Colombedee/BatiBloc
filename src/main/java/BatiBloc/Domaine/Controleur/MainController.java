@@ -120,6 +120,10 @@ public class MainController {
     }
 
     private void restaurerMemento(ProjetMemento memento) {
+        if (memento == null) {
+            return;
+        }
+
         this.projetVues.clear();
         this.projetVues.addAll(copierVues(memento.vues));
         this.indexVueCourante = memento.indexVueCourante;
@@ -137,11 +141,19 @@ public class MainController {
     }
 
     public void commencerModificationComposee() {
-        this.undoRedoManager.modificationComposee();
+        this.undoRedoManager.commencerModificationComposee(this::creerMemento);
     }
 
     public void terminerModificationComposee() {
-        this.undoRedoManager.modificationComposee();
+        this.undoRedoManager.terminerModificationComposee();
+    }
+
+    public boolean canUndo() {
+        return this.undoRedoManager.canUndo();
+    }
+
+    public boolean canRedo() {
+        return this.undoRedoManager.canRedo();
     }
 
     // =========================
@@ -182,8 +194,10 @@ public class MainController {
 
         if (!this.projetVues.isEmpty() && this.indexVueCourante >= 0) {
             BufferedImage courante = this.projetVues.get(this.indexVueCourante).getImage();
-            largeur = courante.getWidth();
-            hauteur = courante.getHeight();
+            if (courante != null) {
+                largeur = courante.getWidth();
+                hauteur = courante.getHeight();
+            }
         }
 
         BufferedImage imageVide = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_INT_RGB);
@@ -198,6 +212,7 @@ public class MainController {
         this.projetVues.add(nouvelleVue);
 
         this.indexVueCourante = this.projetVues.size() - 1;
+        this.interactionService.reinitialiser();
     }
 
     public void naviguerVuePrecedente() {
@@ -259,6 +274,10 @@ public class MainController {
 
         Vue vue = this.projetVues.get(this.indexVueCourante);
         BufferedImage imageOrigine = vue.getImage();
+
+        if (imageOrigine == null) {
+            return;
+        }
 
         int x = Math.max(0, zone.getX());
         int y = Math.max(0, zone.getY());
@@ -365,6 +384,10 @@ public class MainController {
         }
 
         double totalPouces = (pieds * 12.0) + pouces;
+        if (totalPouces <= 0) {
+            return;
+        }
+
         this.enregistrerEtatAvantModification();
         this.projetVues.get(this.indexVueCourante)
                 .setEchelle(new Echelle(totalPouces / distancePixels));
@@ -516,6 +539,11 @@ public class MainController {
     }
 
     public void modifierDimensionsBloc(double largeur, double hauteur) {
+        if (largeur <= 0 || hauteur <= 0) {
+            return;
+        }
+
+        this.enregistrerEtatAvantModification();
         this.largeurBlocDefaut = largeur;
         this.hauteurBlocDefaut = hauteur;
     }
@@ -609,6 +637,10 @@ public class MainController {
     private List<Vue> copierVues(List<Vue> vuesSource) {
         List<Vue> copies = new ArrayList<>();
 
+        if (vuesSource == null) {
+            return copies;
+        }
+
         for (Vue vueSource : vuesSource) {
             copies.add(this.copierVue(vueSource));
         }
@@ -626,10 +658,12 @@ public class MainController {
 
         for (Zone zoneSource : vueSource.getZones()) {
             Zone zoneCopie = copierZone(zoneSource);
-            copie.ajouterZone(zoneCopie);
+            if (zoneCopie != null) {
+                copie.ajouterZone(zoneCopie);
 
-            if (zoneSource == zoneSelectionneeSource) {
-                zoneSelectionneeCopie = zoneCopie;
+                if (zoneSource == zoneSelectionneeSource) {
+                    zoneSelectionneeCopie = zoneCopie;
+                }
             }
         }
 
@@ -638,6 +672,10 @@ public class MainController {
     }
 
     private Zone copierZone(Zone zoneSource) {
+        if (zoneSource == null) {
+            return null;
+        }
+
         List<Point2D.Double> pts = copierPoints2D(zoneSource.getPoints());
         Forme formeCopie = copierForme(zoneSource.getForme(), pts);
 
@@ -688,6 +726,10 @@ public class MainController {
 
     private List<Point2D.Double> copierPoints2D(List<Point2D.Double> src) {
         List<Point2D.Double> copies = new ArrayList<>();
+
+        if (src == null) {
+            return copies;
+        }
 
         for (Point2D.Double p : src) {
             copies.add(new Point2D.Double(p.x, p.y));
@@ -768,6 +810,10 @@ public class MainController {
 
     private BufferedImage genererImageAvecZones(Vue vue) {
         BufferedImage original = vue.getImage();
+        if (original == null) {
+            return null;
+        }
+
         BufferedImage resultat = new BufferedImage(
                 original.getWidth(),
                 original.getHeight(),

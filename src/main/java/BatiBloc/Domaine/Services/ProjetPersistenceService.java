@@ -1,10 +1,16 @@
 package BatiBloc.Domaine.Services;
 
 import BatiBloc.Domaine.Dto.ProjetDTO;
-import java.io.*;
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import javax.imageio.ImageIO;
 /**
  *
  * @author nicky
@@ -26,15 +32,22 @@ public final class ProjetPersistenceService {
     }
 
     public static byte[] imageVersBytes(BufferedImage image) throws IOException {
+        if (image == null) {
+            return null;
+        }
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
         return baos.toByteArray();
     }
 
     public static BufferedImage bytesVersImage(byte[] data) throws IOException {
+        if (data == null || data.length == 0) {
+            return null;
+        }
+
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
             return ImageIO.read(bais);
         }
     }
 }
-
