@@ -52,15 +52,13 @@ import org.apache.pdfbox.rendering.PDFRenderer;
  *    - regroupement logique des méthodes
  *    - simplification visuelle sans changer l’exécution
  *
- * 4) Conservation du bloc de code commenté :
- *    - le bloc de code commenté final est conservé tel quel, sans modification
- *
- * 5) Ajustements minimaux ajoutés :
+ * 4) Ajustements minimaux ajoutés :
  *    - simulerZoneSelectionnee(...) ajoute aussi les ouvertures de la vue courante
  *      quand la zone sélectionnée est une ArmatureBlocs ;
  *    - genererImageAvecZones(...) rend les ouvertures avec une couleur distincte ;
  *    - gardes défensives minimales dans ajouterZone(...) et selectionnerZone(...).
  */
+
 public class MainController {
 
     // =========================
