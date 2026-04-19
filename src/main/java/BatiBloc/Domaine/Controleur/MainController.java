@@ -847,37 +847,4 @@ public class MainController {
         g.dispose();
         return resultat;
     }
-
-//  
-//    /**
-// * Modifie les dimensions des blocs de la zone actuellement sélectionnée.
-// * Cette méthode doit être appelée avant la simulation pour appliquer
-// * les dimensions saisies par l'utilisateur dans l'interface.
-// */
-
-//    this.enregistrerEtatAvantModification();
-//
-//    // Appliquer à toutes les zones de toutes les vues
-//    for (Vue vue : this.projetVues) {
-//        for (Zone zone : vue.getZones()) {
-//            if (zone instanceof ArmatureBlocs) {
-//                zone.setLargeurBloc(largeur);
-//                zone.setHauteurBloc(hauteur);
-//            }
-//        }
-//    }
-//    
-//    // Mémorise aussi les valeurs par défaut pour les prochaines zones
-//    this.largeurBlocDefaut = largeur;
-//    this.hauteurBlocDefaut = hauteur;
-//}
-//  
-//    private List<Point> copierPoints(List<Point> pointsSource) {
-//        List<Point> copies = new ArrayList<>();
-//        for (Point point : pointsSource) {
-//            copies.add(new Point(point));
-//        }
-//        return copies;
-//    }
-
 }
