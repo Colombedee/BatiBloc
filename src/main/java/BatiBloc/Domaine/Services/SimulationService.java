@@ -21,6 +21,7 @@ import java.util.List;
 public class SimulationService {
 
     private final ArmatureBlocsService armatureService = new ArmatureBlocsService();
+    private final FusionService fusionService = new FusionService();
 
     /**
      * Version avec prix par défaut, mais dimensions explicites.
@@ -60,24 +61,25 @@ public class SimulationService {
                 .map(Ouverture.class::cast)
                 .toList();
 
+        List<List<ArmatureBlocs>> groupes =
+                fusionService.trouverGroupesFusionnables(zones, hauteurBloc);
+
         int totalBlocs = 0;
         double prixTotal = 0.0;
 
-        for (Zone z : zones) {
-            if (z instanceof ArmatureBlocs armature) {
-                List<Bloc> blocs = armatureService.simuler(
-                        armature,
-                        ouvertures,
-                        hauteurBloc,
-                        largeurBloc,
-                        prixUnitaireBloc
-                );
+        for (List<ArmatureBlocs> groupe : groupes) {
+            List<Bloc> blocs = armatureService.simulerGroupe(
+                    groupe,
+                    ouvertures,
+                    hauteurBloc,
+                    largeurBloc,
+                    prixUnitaireBloc
+            );
 
-                totalBlocs += blocs.size();
-                prixTotal += blocs.stream()
-                        .mapToDouble(Bloc::getPrix)
-                        .sum();
-            }
+            totalBlocs += blocs.size();
+            prixTotal += blocs.stream()
+                    .mapToDouble(Bloc::getPrix)
+                    .sum();
         }
 
         return new SimulationResultatDTO(totalBlocs, prixTotal);

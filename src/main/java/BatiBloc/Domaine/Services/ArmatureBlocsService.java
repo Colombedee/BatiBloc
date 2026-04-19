@@ -7,11 +7,13 @@ import BatiBloc.Domaine.Modeles.Zones.ArmatureBlocs;
 import BatiBloc.Domaine.Modeles.Zones.Ouverture;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
- * @author nicky  // modifier par @roneh pour la gestion des ouvertures
+ * @author nicky // modifier par @roneh pour la gestion des ouvertures et la fusion des zone
  *
  * Corrections apportées :
  * - compatibilité avec le projet actuel : aucun appel à setHauteur(...) ;
@@ -49,7 +51,41 @@ public class ArmatureBlocsService {
             double largeurBloc,
             double prixBloc
     ) {
-        if (armature == null || hauteurBloc <= 0 || largeurBloc <= 0 || prixBloc < 0) {
+        if (armature == null) {
+            return List.of();
+        }
+
+        return simulerGroupe(
+                List.of(armature),
+                ouvertures,
+                hauteurBloc,
+                largeurBloc,
+                prixBloc
+        );
+    }
+
+    /**
+     * Simulation d'un groupe temporaire de zones contiguës.
+     * Les zones restent distinctes dans le modèle, mais partagent
+     * la continuité des rangées pendant la simulation.
+     */
+    public List<Bloc> simulerGroupe(
+            List<ArmatureBlocs> groupe,
+            List<Ouverture> ouvertures,
+            double hauteurBloc,
+            double largeurBloc,
+            double prixBloc
+    ) {
+        if (groupe == null || groupe.isEmpty()
+                || hauteurBloc <= 0 || largeurBloc <= 0 || prixBloc < 0) {
+            return List.of();
+        }
+
+        List<ArmatureBlocs> groupeSecurise = groupe.stream()
+                .filter(z -> z != null)
+                .toList();
+
+        if (groupeSecurise.isEmpty()) {
             return List.of();
         }
 
@@ -64,15 +100,20 @@ public class ArmatureBlocsService {
             }
         }
 
-        armature.viderRangees();
+        for (ArmatureBlocs armature : groupeSecurise) {
+            armature.viderRangees();
+        }
+
         List<Bloc> blocsUtilises = new ArrayList<>();
 
-        double minY = armature.getPoints().stream()
+        double minY = groupeSecurise.stream()
+                .flatMap(z -> z.getPoints().stream())
                 .mapToDouble(p -> p.y)
                 .min()
                 .orElse(0.0);
 
-        double maxY = armature.getPoints().stream()
+        double maxY = groupeSecurise.stream()
+                .flatMap(z -> z.getPoints().stream())
                 .mapToDouble(p -> p.y)
                 .max()
                 .orElse(0.0);
@@ -84,7 +125,7 @@ public class ArmatureBlocsService {
             double yEchantillon = y + (hauteurBloc / 2.0);
 
             List<GeometryService.SegmentHorizontal> segmentsBase =
-                    new ArrayList<>(GeometryService.segmentsHorizontaux(armature, yEchantillon));
+                    segmentsFusionnesDuGroupe(groupeSecurise, yEchantillon);
 
             if (segmentsBase.isEmpty()) {
                 y += hauteurBloc;
@@ -156,8 +197,7 @@ public class ArmatureBlocsService {
                 continue;
             }
 
-            RangeeBloc rangeeComplete = new RangeeBloc(y);
-            boolean rangeeAjoutee = false;
+            RangeeBloc rangeeGlobale = new RangeeBloc(y);
 
             double resteFinRangee = construireBlocsSurSegments(
                     segments,
@@ -166,21 +206,20 @@ public class ArmatureBlocsService {
                     largeurBloc,
                     prixBloc,
                     resteBloc,
-                    rangeeComplete
+                    rangeeGlobale
             );
 
             for (Bloc linteau : linteaux) {
-                rangeeComplete.ajouterBloc(linteau);
-                rangeeAjoutee = true;
+                rangeeGlobale.ajouterBloc(linteau);
             }
 
-            if (!rangeeComplete.getBlocs().isEmpty()) {
-                rangeeAjoutee = true;
-            }
-
-            if (rangeeAjoutee) {
-                armature.ajouterRangee(rangeeComplete);
-                blocsUtilises.addAll(rangeeComplete.getBlocs());
+            if (!rangeeGlobale.getBlocs().isEmpty()) {
+                distribuerRangeeDansGroupe(
+                        rangeeGlobale,
+                        groupeSecurise,
+                        hauteurBloc
+                );
+                blocsUtilises.addAll(rangeeGlobale.getBlocs());
             }
 
             resteBloc = rangeeSpeciale ? 0.0 : resteFinRangee;
@@ -188,6 +227,101 @@ public class ArmatureBlocsService {
         }
 
         return blocsUtilises;
+    }
+
+    private List<GeometryService.SegmentHorizontal> segmentsFusionnesDuGroupe(
+            List<ArmatureBlocs> groupe,
+            double y
+    ) {
+        List<GeometryService.SegmentHorizontal> segments = new ArrayList<>();
+
+        for (ArmatureBlocs armature : groupe) {
+            segments.addAll(GeometryService.segmentsHorizontaux(armature, y));
+        }
+
+        return fusionnerSegments(segments);
+    }
+
+    private List<GeometryService.SegmentHorizontal> fusionnerSegments(
+            List<GeometryService.SegmentHorizontal> segments
+    ) {
+        if (segments == null || segments.isEmpty()) {
+            return List.of();
+        }
+
+        List<GeometryService.SegmentHorizontal> tries = new ArrayList<>(segments);
+        tries.sort(Comparator.comparingDouble(GeometryService.SegmentHorizontal::xMin));
+
+        List<GeometryService.SegmentHorizontal> resultat = new ArrayList<>();
+        GeometryService.SegmentHorizontal courant = tries.get(0);
+
+        for (int i = 1; i < tries.size(); i++) {
+            GeometryService.SegmentHorizontal suivant = tries.get(i);
+
+            if (suivant.xMin() <= courant.xMax() + EPSILON) {
+                courant = new GeometryService.SegmentHorizontal(
+                        courant.xMin(),
+                        Math.max(courant.xMax(), suivant.xMax())
+                );
+            } else {
+                resultat.add(courant);
+                courant = suivant;
+            }
+        }
+
+        resultat.add(courant);
+        return resultat;
+    }
+
+    private void distribuerRangeeDansGroupe(
+            RangeeBloc rangeeGlobale,
+            List<ArmatureBlocs> groupe,
+            double hauteurBloc
+    ) {
+        Map<ArmatureBlocs, RangeeBloc> rangeesParZone = new LinkedHashMap<>();
+
+        for (ArmatureBlocs armature : groupe) {
+            rangeesParZone.put(armature, new RangeeBloc(rangeeGlobale.getPositionY()));
+        }
+
+        for (Bloc bloc : rangeeGlobale.getBlocs()) {
+            for (ArmatureBlocs armature : groupe) {
+                if (blocChevaucheZone(armature, bloc, hauteurBloc)) {
+                    rangeesParZone.get(armature).ajouterBloc(bloc);
+                }
+            }
+        }
+
+        for (Map.Entry<ArmatureBlocs, RangeeBloc> entree : rangeesParZone.entrySet()) {
+            if (!entree.getValue().getBlocs().isEmpty()) {
+                entree.getKey().ajouterRangee(entree.getValue());
+            }
+        }
+    }
+
+    private boolean blocChevaucheZone(
+            ArmatureBlocs zone,
+            Bloc bloc,
+            double hauteurBloc
+    ) {
+        double yEchantillon = bloc.getY() + (hauteurBloc / 2.0);
+        double blocMinX = bloc.getX();
+        double blocMaxX = bloc.getX() + bloc.getLargeur();
+
+        List<GeometryService.SegmentHorizontal> segments =
+                GeometryService.segmentsHorizontaux(zone, yEchantillon);
+
+        for (GeometryService.SegmentHorizontal segment : segments) {
+            boolean chevauche =
+                    blocMaxX > segment.xMin() + EPSILON
+                    && blocMinX < segment.xMax() - EPSILON;
+
+            if (chevauche) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private double construireBlocsSurSegments(
