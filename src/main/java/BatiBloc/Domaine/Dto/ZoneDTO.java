@@ -9,13 +9,15 @@ public final class ZoneDTO {
     private final TypeFormeDTO forme;
     private final List<Point> points;
     private final boolean selectionnee;
+    private final List<BlocDTO> blocs;
 
     public ZoneDTO(TypeZoneDTO type, TypeFormeDTO forme, List<Point> points,
-                   boolean selectionnee) {
+                   boolean selectionnee,List<BlocDTO> blocs) {
         this.type = type;
         this.forme = forme;
         this.points = List.copyOf(points);
         this.selectionnee = selectionnee;
+        this.blocs = blocs == null ? List.of() : List.copyOf(blocs);
     }
 
     public TypeZoneDTO getType() {
@@ -32,5 +34,9 @@ public final class ZoneDTO {
 
     public boolean estSelectionne() {
         return this.selectionnee;
+    }    
+        
+    public List<BlocDTO> getBlocs() {
+        return this.blocs;    
     }
 }

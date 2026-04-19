@@ -558,27 +558,49 @@ public class MainController {
 
         return dtos;
     }
+    
+    
+    private List<BlocDTO> convertirBlocs(Zone zone) {
+    if (!(zone instanceof ArmatureBlocs armature)) {
+        return List.of();
+    }
+
+    List<BlocDTO> resultat = new ArrayList<>();
+
+    for (Bloc bloc : armature.getBlocsSimules()) {
+        resultat.add(new BlocDTO(
+                bloc.getX(),
+                bloc.getY(),
+                bloc.getLargeur(),
+                bloc.getHauteur(),
+                bloc.getPrix()
+        ));
+    }
+
+    return resultat;
+   }
 
     private VueDTO construireVueDTO(Vue vue, int index) {
-        List<ZoneDTO> zoneDtos = new ArrayList<>();
-        Zone selectionnee = vue.getZoneSelectionnee();
+    List<ZoneDTO> zoneDtos = new ArrayList<>();
+    Zone selectionnee = vue.getZoneSelectionnee();
 
-        for (Zone z : vue.getZones()) {
-            zoneDtos.add(new ZoneDTO(
-                    typeZone(z),
-                    typeForme(z.getForme()),
-                    convertirVersPoints(z.getPoints()),
-                    z == selectionnee
-            ));
-        }
-
-        return new VueDTO(
-                vue.getImage(),
-                vue.getEchelle().getPouces(),
-                index,
-                zoneDtos
-        );
+    for (Zone z : vue.getZones()) {
+        zoneDtos.add(new ZoneDTO(
+                typeZone(z),
+                typeForme(z.getForme()),
+                convertirVersPoints(z.getPoints()),
+                z == selectionnee,
+                convertirBlocs(z)
+        ));
     }
+
+    return new VueDTO(
+            vue.getImage(),
+            vue.getEchelle().getPouces(),
+            index,
+            zoneDtos
+    );
+  }
 
     // =========================
     // Copie profonde
