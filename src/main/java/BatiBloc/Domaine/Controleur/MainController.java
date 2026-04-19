@@ -469,7 +469,7 @@ public class MainController {
         }
 
         this.enregistrerEtatAvantModification();
-        this.interactionService.redimensionner(indexPoignee, dx, dy);
+        this.interactionService.redimensionnerParBoundingBox(indexPoignee, dx, dy);
     }
 
     // =========================

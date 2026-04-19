@@ -57,6 +57,12 @@ public final class ZoneInteractionService {
         }
     }
     
+    public void redimensionnerParBoundingBox(int indexPoignee, double dx, double dy) {
+        if (this.zoneSelectionnee != null) {
+            ZoneService.redimensionnerParBoundingBox(this.zoneSelectionnee, indexPoignee, dx, dy);
+        }
+    }
+    
     public void reinitialiser(){
         this.zoneSelectionnee = null;
         this.mode = ModeInteraction.NONE;
