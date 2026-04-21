@@ -84,4 +84,31 @@ public class SimulationService {
 
         return new SimulationResultatDTO(totalBlocs, prixTotal);
     }
+    
+    /** //@roneh
+ * Simule toutes les vues du projet et retourne le total cumulé.
+ * Chaque élément de la liste représente les zones d'une vue.
+ */
+    public SimulationResultatDTO simulerProjet(
+        List<List<Zone>> zonesParVue,
+        double hauteurBloc,
+        double largeurBloc,
+        double prixUnitaireBloc) 
+    {
+    if (zonesParVue == null || zonesParVue.isEmpty()) {
+        return new SimulationResultatDTO(0, 0.0);
+    }
+
+    int totalBlocs = 0;
+    double prixTotal = 0.0;
+
+    for (List<Zone> zones : zonesParVue) {
+        SimulationResultatDTO r = simulerToutesLesZones(
+                zones, hauteurBloc, largeurBloc, prixUnitaireBloc);
+        totalBlocs += r.getTotalBlocs();
+        prixTotal  += r.getPrixTotal();
+    }
+
+    return new SimulationResultatDTO(totalBlocs, prixTotal);
+   }
 }

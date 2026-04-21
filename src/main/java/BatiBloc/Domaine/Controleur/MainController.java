@@ -563,6 +563,54 @@ public class MainController {
                 prixUnitaireBloc
         );
     }
+    
+     /**    @roneh pour afficher prix et nombre de bloc du projets
+     * Nombre de blocs cumulé de toutes les vues du projet.
+     */
+    public int getNombreBlocsVueCourante(double prixUnitaireBloc) {
+    SimulationResultatDTO r = simulerVueCouranteInterne(prixUnitaireBloc);
+    return r == null ? -1 : r.getTotalBlocs();
+    }
+
+    public double getPrixVueCourante(double prixUnitaireBloc) {
+    SimulationResultatDTO r = simulerVueCouranteInterne(prixUnitaireBloc);
+    return r == null ? -1.0 : r.getPrixTotal();
+    }
+
+    private SimulationResultatDTO simulerVueCouranteInterne(double prixUnitaireBloc) {
+    if (this.indexVueCourante < 0) {
+        return null;
+    }
+    return new SimulationService().simulerToutesLesZones(
+            this.projetVues.get(this.indexVueCourante).getZones(),
+            this.hauteurBlocDefaut,
+            this.largeurBlocDefaut,
+            prixUnitaireBloc
+    );
+   }
+    
+    public int getNombreBlocsProjet(double prixUnitaireBloc) {
+        return simulerProjetInterne(prixUnitaireBloc).getTotalBlocs();
+    }
+
+    /**
+     * Prix total cumulé de toutes les vues du projet.
+     */
+    public double getPrixProjet(double prixUnitaireBloc) {
+        return simulerProjetInterne(prixUnitaireBloc).getPrixTotal();
+    }
+
+    private SimulationResultatDTO simulerProjetInterne(double prixUnitaireBloc) {
+        List<List<Zone>> zonesParVue = this.projetVues.stream()
+                .map(Vue::getZones)
+                .toList();
+        return new SimulationService().simulerProjet(
+                zonesParVue,
+                this.hauteurBlocDefaut,
+                this.largeurBlocDefaut,
+                prixUnitaireBloc
+        );
+    }
 
     // =========================
     // DTO exposés à l’interface utilisateur

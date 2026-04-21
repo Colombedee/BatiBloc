@@ -64,6 +64,8 @@ public class MainWindow extends JFrame {
     private List<JButton> actionButtons;
     private List<JButton> typeButtons;
     private List<JButton> formeButtons;
+    private JLabel lbl_blocsTotauxProjet; // nn
+    private JLabel lbl_coutTotalProjet; // nn
 
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
@@ -110,6 +112,7 @@ public class MainWindow extends JFrame {
         this.initListes();
         this.initPanneauDessin();
         this.initBoutonsIcones();
+        this.initLabelsProjet(); // nnn
         this.majInterface(); 
         this.initPlaceholders();
         this.initListeners();
@@ -120,6 +123,23 @@ public class MainWindow extends JFrame {
         this.initListeBoutonsVue();
         this.initListeLabelVue();
         this.initListetextFieldVue();
+    }
+    
+    // nnn on peut le changer.  Placer les labels
+    private void initLabelsProjet() {
+    this.lbl_blocsTotauxProjet = new JLabel();
+    this.lbl_coutTotalProjet   = new JLabel();
+
+    this.lbl_blocsTotauxProjet.setMaximumSize(new java.awt.Dimension(140, 30));
+    this.lbl_blocsTotauxProjet.setMinimumSize(new java.awt.Dimension(140, 30));
+    this.lbl_blocsTotauxProjet.setPreferredSize(new java.awt.Dimension(140, 30));
+
+    this.lbl_coutTotalProjet.setMaximumSize(new java.awt.Dimension(140, 30));
+    this.lbl_coutTotalProjet.setMinimumSize(new java.awt.Dimension(140, 30));
+    this.lbl_coutTotalProjet.setPreferredSize(new java.awt.Dimension(140, 30));
+
+    this.panel_menu.add(this.lbl_blocsTotauxProjet);
+    this.panel_menu.add(this.lbl_coutTotalProjet);
     }
 
     private void initListeBoutonsVue() {
@@ -231,6 +251,8 @@ public class MainWindow extends JFrame {
         this.lbl_coutParBloc.setText(this.getTexte("label.costPerBlock"));
         this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock"));
         this.lbl_coutTotal.setText(this.getTexte("label.totalCost"));
+        this.lbl_blocsTotauxProjet.setText(this.getTexte("label.totalBlockProject")); //nnn
+        this.lbl_coutTotalProjet.setText(this.getTexte("label.totalCostProject"));  // nnn
         this.lbl_echelle.setText(this.getTexte("label.scale"));
         
         this.updatePanelTitle(this.panel_bloc, "label.block");
@@ -656,19 +678,44 @@ public class MainWindow extends JFrame {
         for (int i : indices) if (i < this.casesVues.size()) this.casesVues.get(i).setSelected(true);
     }
 
-private void lancerSimulation() {
+//private void lancerSimulation() {
+//    double prixUnitaire = parsePrixBloc();
+//    SimulationResultatDTO result = this.controleur.simulerVueCourante(prixUnitaire);
+//
+//    if (result == null) {
+//        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
+//        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
+//    } else {
+//        this.lbl_blocsTotaux.setText(
+//                this.getTexte("label.totalBlock") + " " + result.getTotalBlocs());
+//        this.lbl_coutTotal.setText(
+//                this.getTexte("label.totalCost") + " " + String.format("%.2f $", result.getPrixTotal()));
+//    }
+//
+//    this.rafraichirUI();
+//}
+    
+    
+    
+    private void lancerSimulation() {
     double prixUnitaire = parsePrixBloc();
-    SimulationResultatDTO result = this.controleur.simulerVueCourante(prixUnitaire);
 
-    if (result == null) {
+    // --- Vue courante ---
+    int nbBlocsVue = this.controleur.getNombreBlocsVueCourante(prixUnitaire);
+    double prixVue = this.controleur.getPrixVueCourante(prixUnitaire);
+    if (nbBlocsVue < 0) {
         this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
         this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
     } else {
-        this.lbl_blocsTotaux.setText(
-                this.getTexte("label.totalBlock") + " " + result.getTotalBlocs());
-        this.lbl_coutTotal.setText(
-                this.getTexte("label.totalCost") + " " + String.format("%.2f $", result.getPrixTotal()));
+        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " " + nbBlocsVue);
+        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " " + String.format("%.2f $", prixVue));
     }
+
+    // --- Projet entier ---
+    int nbBlocsProjet = this.controleur.getNombreBlocsProjet(prixUnitaire);
+    double prixProjet = this.controleur.getPrixProjet(prixUnitaire);
+    this.lbl_blocsTotauxProjet.setText(this.getTexte("label.totalBlockProject") + " " + nbBlocsProjet);
+    this.lbl_coutTotalProjet.setText(this.getTexte("label.totalCostProject") + " " + String.format("%.2f $", prixProjet));
 
     this.rafraichirUI();
 }
