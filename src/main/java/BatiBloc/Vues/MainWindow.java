@@ -489,8 +489,14 @@ public class MainWindow extends JFrame {
     }
 
     private void initBoutonsVues() {
-        this.addAction(this.btn_vuePrecedente, this.controleur::naviguerVuePrecedente);
-        this.addAction(this.btn_vueSuivante, this.controleur::naviguerVueSuivante);
+        this.addAction(this.btn_vuePrecedente, () -> {
+            this.controleur.naviguerVuePrecedente();
+            this.lancerSimulation();
+        });
+        this.addAction(this.btn_vueSuivante, () -> {
+            this.controleur.naviguerVueSuivante();
+            this.lancerSimulation();
+        });
         this.addAction(this.btn_zoomIn, this.drawingPanel::zoomInCenter);
         this.addAction(this.btn_zoomOut, this.drawingPanel::zoomOutCenter);
         this.btn_appliquerEchelle.addActionListener(e -> {
