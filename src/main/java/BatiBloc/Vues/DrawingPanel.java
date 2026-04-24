@@ -232,8 +232,13 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     onRognageTermine.accept(new Rectangle(x, y, w, h));
                     
                 } else if (modeCalibration) {
-                    double distance = pointDepart.distance(pointFin);
-                    //TODO : Il faudrait le connecter à CalibrerEchelle() plus tard
+                  double distancePixels = pointDepart.distance(pointFin);
+                 
+                  int pieds = 1;  
+                  double pouces = 0;
+                  controller.calibrerEchelle(distancePixels, pieds, pouces);
+                  modeCalibration = false;
+                
                     
                 } else if (modeAjoutZone) //Colombe
                 {
@@ -288,7 +293,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                         controller.ajouterZone(typeEnCours, formeEnCours, pts);
                         vueCourante = controller.getVueCourante();
                         if (onZoneAjoutee != null) onZoneAjoutee.run();
-//                        modeDeplacementZone = false;
                         repaint();
                     }
                 }

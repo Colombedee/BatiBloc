@@ -8,7 +8,6 @@ import BatiBloc.Domaine.Constantes.ConstantesBloc;
 /**
  * 
  * @author nicky
- * Correction : Ajout d'une surcharge pour la construction par segment.
  */
 
 public class ConstructeurRangeeService {

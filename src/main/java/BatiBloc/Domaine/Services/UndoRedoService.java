@@ -12,11 +12,7 @@ public class UndoRedoService<T> {
     private boolean modificationComposeeEnCours = false;
     private boolean etatComposeDejaSauvegarde = false;
 
-    /**
-     * Méthode conservée pour compatibilité avec le code existant.
-     * Elle agit comme un toggle, mais le code recommandé passe maintenant
-     * par commencerModificationComposee(...) et terminerModificationComposee().
-     */
+
     public void modificationComposee() {
         if (!this.modificationComposeeEnCours) {
             this.modificationComposeeEnCours = true;
@@ -27,10 +23,7 @@ public class UndoRedoService<T> {
         }
     }
 
-    /**
-     * Démarre explicitement une modification composée.
-     * On sauvegarde immédiatement l'état initial une seule fois.
-     */
+
     public void commencerModificationComposee(Supplier<T> createurEtat) {
         if (this.modificationComposeeEnCours) {
             return;
@@ -46,9 +39,7 @@ public class UndoRedoService<T> {
         }
     }
 
-    /**
-     * Termine explicitement une modification composée.
-     */
+
     public void terminerModificationComposee() {
         this.modificationComposeeEnCours = false;
         this.etatComposeDejaSauvegarde = false;

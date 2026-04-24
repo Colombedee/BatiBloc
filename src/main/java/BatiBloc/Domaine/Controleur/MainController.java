@@ -335,7 +335,7 @@ public class MainController {
     // Ajoutée par Emmanuella
     // 1 pouces par pixel
     private double lireEchellePdf(PDDocument documentPdf, int pageIndex) {
-        return 1.0;
+        return ECHELLE_DEFAUT;
     }
 
     public void exporterVues(List<Integer> indices) {

@@ -8,24 +8,13 @@ import BatiBloc.Domaine.Modeles.Zones.Ouverture;
 import BatiBloc.Domaine.Modeles.Zones.Zone;
 import java.util.List;
 
-/**
- *
- * @author nicky
- *
- * Corrections apportées :
- * - suppression des appels inexistants getHauteurBloc() et getLargeurBloc() sur Zone
- * - les dimensions des blocs sont reçues en paramètres, conformément à l'architecture actuelle
- * - prise en compte des ouvertures de la vue lors de la simulation des ArmatureBlocs
- * - surcharge conservée uniquement avec dimensions explicites + prix par défaut
- */
+
 public class SimulationService {
 
     private final ArmatureBlocsService armatureService = new ArmatureBlocsService();
     private final FusionService fusionService = new FusionService();
 
-    /**
-     * Version avec prix par défaut, mais dimensions explicites.
-     */
+
     public SimulationResultatDTO simulerToutesLesZones(
             List<Zone> zones,
             double hauteurBloc,
@@ -39,9 +28,7 @@ public class SimulationService {
         );
     }
 
-    /**
-     * Version complète utilisée par le contrôleur.
-     */
+
     public SimulationResultatDTO simulerToutesLesZones(
             List<Zone> zones,
             double hauteurBloc,

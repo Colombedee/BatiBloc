@@ -35,7 +35,6 @@ import javax.swing.AbstractButton;
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import BatiBloc.Domaine.Dto.SimulationResultatDTO;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 

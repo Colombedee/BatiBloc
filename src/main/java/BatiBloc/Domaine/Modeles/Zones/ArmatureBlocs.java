@@ -10,7 +10,6 @@ import java.util.List;
 /**
  *
  * @author nicky
- * Ajout de deux méthodes utilitaires : viderRangees() et getBlocsSimules()
  */
 public class ArmatureBlocs extends Zone {
 

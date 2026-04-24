@@ -12,15 +12,6 @@ import java.util.List;
 /**
  *
  * @author nicky
- *
- * Corrections apportées :
- * - réintroduction de pointDansZone(...) pour compatibilité avec ZoneService ;
- * - ajout de pointDansPolygone(...) comme utilitaire géométrique central ;
- * - sécurisation des cas null pour éviter des NullPointerException ;
- * - conservation de la logique par segments horizontaux pour supporter
- *   correctement les triangles, triangles tronqués et les ouvertures ;
- * - soustraction des ouvertures à partir des segments constructibles
- *   plutôt qu’un simple calcul de largeur brute.
  */
 public final class GeometryService {
 
@@ -37,11 +28,7 @@ public final class GeometryService {
         }
     }
 
-    /**
-     * Correction :
-     * - méthode réintroduite pour compatibilité avec ZoneService ;
-     * - retourne false si le point ou la zone est null.
-     */
+
     public static boolean pointDansZone(Point2D.Double p, Zone zone) {
         if (p == null || zone == null) {
             return false;
@@ -49,9 +36,7 @@ public final class GeometryService {
         return pointDansPolygone(p, zone.getPoints());
     }
 
-    /**
-     * Détermine si un point est à l'intérieur d'un polygone.
-     */
+
     public static boolean pointDansPolygone(Point2D.Double p, List<Point2D.Double> poly) {
         if (p == null || poly == null || poly.size() < 3) {
             return false;
@@ -79,10 +64,7 @@ public final class GeometryService {
         return inside;
     }
 
-    /**
-     * Retourne la largeur totale disponible à la hauteur y
-     * en sommant tous les segments horizontaux.
-     */
+
     public static double largeurDisponible(Zone zone, double y) {
         if (zone == null) {
             return 0.0;
@@ -93,10 +75,7 @@ public final class GeometryService {
                 .sum();
     }
 
-    /**
-     * Retourne les segments horizontaux d'intersection entre la zone
-     * et la ligne y.
-     */
+
     public static List<SegmentHorizontal> segmentsHorizontaux(Zone zone, double y) {
         if (zone == null) {
             return List.of();
@@ -147,10 +126,7 @@ public final class GeometryService {
         return segments;
     }
 
-    /**
-     * Calcule les segments réellement constructibles pour une rangée :
-     * segments de l'armature moins les segments occupés par les ouvertures.
-     */
+
     public static List<SegmentHorizontal> segmentsConstructibles(
             ArmatureBlocs armature,
             List<Ouverture> ouvertures,
@@ -191,9 +167,7 @@ public final class GeometryService {
         return segments;
     }
 
-    /**
-     * Vérifie si une zone chevauche verticalement une rangée.
-     */
+
     private static boolean chevaucheVerticalement(Zone zone, double yBase, double hauteur) {
         if (zone == null || hauteur <= 0) {
             return false;
@@ -215,9 +189,7 @@ public final class GeometryService {
         return maxY > yTop + EPSILON && minY < yBottom - EPSILON;
     }
 
-    /**
-     * Soustrait une liste de segments de retrait à une liste de segments de base.
-     */
+
     private static List<SegmentHorizontal> soustraireSegments(
             List<SegmentHorizontal> bases,
             List<SegmentHorizontal> retraits
