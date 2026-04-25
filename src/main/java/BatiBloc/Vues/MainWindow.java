@@ -31,6 +31,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import BatiBloc.Domaine.Dto.VueRogneeDTO;
 import java.awt.Cursor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.AbstractButton;
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
@@ -39,6 +41,7 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 public class MainWindow extends JFrame {
+    
     private enum ActionVue { EXPORT, DELETE }
     private ActionVue actionVue;
     private boolean formeChoisie = false;
@@ -50,21 +53,20 @@ public class MainWindow extends JFrame {
     private JButton btnConfirmerModif;
     private JButton btnStopZoneDrawing;
     private JCheckBox chkToutesVues;
+    private JLabel lbl_blocsTotauxProjet;
+    private JLabel lbl_coutTotalProjet;
     private JPanel panneauVues;
     private JPanel viewsThumbnailPanel;
     private Locale langueCourante = Locale.FRENCH;
+    private List<JButton> actionButtons;
     private List<JButton> boutonsVue;
+    private List<JButton> typeButtons;
+    private List<JButton> formeButtons;
     private List<JLabel> labelsVue;
     private List<JTextField> textFieldsVue;
     private List<JCheckBox> casesVues;
     private final MainController controleur;
     private ResourceBundle resourceBundle;
-    
-    private List<JButton> actionButtons;
-    private List<JButton> typeButtons;
-    private List<JButton> formeButtons;
-    private JLabel lbl_blocsTotauxProjet; // nn
-    private JLabel lbl_coutTotalProjet; // nn
 
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
@@ -94,24 +96,60 @@ public class MainWindow extends JFrame {
         );
     }
     
-    private void selectButton(JButton selected, List<JButton> group) {
-        Border blueBorder = BorderFactory.createLineBorder(new Color(0, 120, 215), 2);
-        Border normalBorder = UIManager.getBorder("Button.border");
-
-        for (JButton b : group) {
-            if (b == selected) {
-                b.setBorder(blueBorder);
-            } else {
-                b.setBorder(normalBorder);
-            }
+    public void majPositionAucuneVue() {
+        this.lbl_position.setText("Position : —");
+    }
+    
+    public void majPositionSouris(int x, int y, double echelle) {
+        if (echelle <= 0) {
+            this.lbl_position.setText("Position : x=" + x + ", y=" + y);
+            return;
         }
+
+        String xImp = DrawingPanel.pixelsEnImperialStatic(x, echelle);
+        String yImp = DrawingPanel.pixelsEnImperialStatic(y, echelle);
+
+        this.lbl_position.setText(
+            "Position : " + xImp + "   |   " + yImp
+        );
+    }
+    
+    private void retirerBordureBoutonActif(List<JButton> liste) {
+        for (JButton b : liste) {
+            b.putClientProperty("JComponent.outline", null);
+        }
+    }
+    
+    private void selectAction(JButton selected) {
+        this.retirerBordureBoutonActif(this.actionButtons);
+        this.retirerBordureBoutonActif(this.formeButtons);
+        this.retirerBordureBoutonActif(this.typeButtons);
+        selected.putClientProperty("JComponent.outline", "blue");
+    }
+    
+    private void selectForme(JButton selected) {
+        this.retirerBordureBoutonActif(this.actionButtons);
+        this.retirerBordureBoutonActif(this.formeButtons);
+        selected.putClientProperty("JComponent.outline", "blue");
+    }
+    
+    private void selectType(JButton selected) {
+        this.retirerBordureBoutonActif(this.actionButtons);
+        this.retirerBordureBoutonActif(this.typeButtons);
+        selected.putClientProperty("JComponent.outline", "blue");
+    }
+    
+    private void clearAllSelections() {
+        this.retirerBordureBoutonActif(this.actionButtons);
+        this.retirerBordureBoutonActif(this.formeButtons);
+        this.retirerBordureBoutonActif(this.typeButtons);
     }
 
     private void initFormulaire() {
         this.initListes();
         this.initPanneauDessin();
         this.initBoutonsIcones();
-        this.initLabelsProjet(); // nnn
+        this.initLabelsProjet();
         this.majInterface(); 
         this.initPlaceholders();
         this.initListeners();
@@ -124,18 +162,17 @@ public class MainWindow extends JFrame {
         this.initListetextFieldVue();
     }
     
-    // nnn on peut le changer.  Placer les labels
     private void initLabelsProjet() {
     this.lbl_blocsTotauxProjet = new JLabel();
     this.lbl_coutTotalProjet   = new JLabel();
 
-    this.lbl_blocsTotauxProjet.setMaximumSize(new java.awt.Dimension(140, 30));
-    this.lbl_blocsTotauxProjet.setMinimumSize(new java.awt.Dimension(140, 30));
+    this.lbl_blocsTotauxProjet.setMaximumSize(new Dimension(140, 30));
+    this.lbl_blocsTotauxProjet.setMinimumSize(new Dimension(140, 30));
     this.lbl_blocsTotauxProjet.setPreferredSize(new java.awt.Dimension(140, 30));
 
-    this.lbl_coutTotalProjet.setMaximumSize(new java.awt.Dimension(140, 30));
-    this.lbl_coutTotalProjet.setMinimumSize(new java.awt.Dimension(140, 30));
-    this.lbl_coutTotalProjet.setPreferredSize(new java.awt.Dimension(140, 30));
+    this.lbl_coutTotalProjet.setMaximumSize(new Dimension(140, 30));
+    this.lbl_coutTotalProjet.setMinimumSize(new Dimension(140, 30));
+    this.lbl_coutTotalProjet.setPreferredSize(new Dimension(140, 30));
 
     this.panel_menu.add(this.lbl_blocsTotauxProjet);
     this.panel_menu.add(this.lbl_coutTotalProjet);
@@ -167,7 +204,7 @@ public class MainWindow extends JFrame {
     }
 
     private void initPanneauDessin() {
-        this.drawingPanel = new DrawingPanel(this.controleur);
+        this.drawingPanel = new DrawingPanel(this.controleur, this);
         this.drawingPanel.setOnRognageTermine(this::rognerVueCourante);
         this.drawingPanel.setOnZoneAjoutee(this::rafraichirUI);
         
@@ -250,8 +287,8 @@ public class MainWindow extends JFrame {
         this.lbl_coutParBloc.setText(this.getTexte("label.costPerBlock"));
         this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock"));
         this.lbl_coutTotal.setText(this.getTexte("label.totalCost"));
-        this.lbl_blocsTotauxProjet.setText(this.getTexte("label.totalBlockProject")); //nnn
-        this.lbl_coutTotalProjet.setText(this.getTexte("label.totalCostProject"));  // nnn
+        this.lbl_blocsTotauxProjet.setText(this.getTexte("label.totalBlockProject"));
+        this.lbl_coutTotalProjet.setText(this.getTexte("label.totalCostProject"));
         this.lbl_echelle.setText(this.getTexte("label.scale"));
         
         this.updatePanelTitle(this.panel_bloc, "label.block");
@@ -314,13 +351,14 @@ public class MainWindow extends JFrame {
     }
     
     private void ajouterListenerDimension(JTextField champ) {
-    champ.addFocusListener(new java.awt.event.FocusAdapter() {
-        @Override
-        public void focusLost(java.awt.event.FocusEvent e) {
-            appliquerDimensionsBloc();
-        }
-    });
-    champ.addActionListener(e -> appliquerDimensionsBloc());
+        champ.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                appliquerDimensionsBloc();
+            }
+        });
+    
+        champ.addActionListener(e -> appliquerDimensionsBloc());
     }
 
     private void appliquerDimensionsBloc() {
@@ -359,31 +397,40 @@ public class MainWindow extends JFrame {
         this.addAction(this.btn_annulerAction, this.controleur::annulerAction);
         this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
         this.addAction(this.btn_importerPdf, () -> {
+            this.clearAllSelections();
             this.controleur.importerPdf();
             this.rafraichirUI();
         });
         this.addAction(this.btn_ajouterVue, () -> {
+            this.clearAllSelections();
             this.controleur.ajouterVue();
             this.rafraichirUI();
         });
         this.btn_exporterPdf.addActionListener(e -> {
+            this.clearAllSelections();
             this.actionVue = ActionVue.EXPORT;
             this.afficherSelectionVues(this.actionVue);
         });
         this.btn_supprimerVue.addActionListener(e -> {
+            this.clearAllSelections();
             this.actionVue = ActionVue.DELETE;
             this.afficherSelectionVues(this.actionVue);
         });
         this.btn_rognerVue.addActionListener(e -> {
+            this.clearAllSelections();
             this.modeRognage = !this.modeRognage;
             this.drawingPanel.setModeRognage(this.modeRognage);
             this.btn_rognerVue.setText(this.modeRognage ? this.getTexte("button.activeCropping") : this.getTexte("button.cropView"));
         });
         this.btn_changerLangue.addActionListener(e -> {
+            this.clearAllSelections();
             this.langueCourante = (this.langueCourante.equals(Locale.FRENCH)) ? Locale.ENGLISH : Locale.FRENCH;
             this.majInterface();
         });
-        this.btn_simulation.addActionListener(e -> this.lancerSimulation());
+        this.btn_simulation.addActionListener(e -> {
+            this.clearAllSelections();
+            this.lancerSimulation();
+        });
     }
 
     private void addAction(AbstractButton button, Runnable action){
@@ -395,25 +442,31 @@ public class MainWindow extends JFrame {
 
     private void initBoutonsAction() {
         this.btn_deplacerZone.addActionListener(e -> {
-            this.selectButton(this.btn_deplacerZone, this.actionButtons);
+            this.selectAction(this.btn_deplacerZone);
             boolean actuel = this.drawingPanel.getModeDeplacementZone();
-            this.arreterDessin();                                           
+            this.drawingPanel.setModeAjoutZone(false);
+            this.typeChoisi = false;
+            this.formeChoisie = false;                                         
             this.drawingPanel.setModeRedimensionnementZone(false); 
             this.drawingPanel.setModeDeplacementZone(!actuel);
         });
         
         this.btn_redimensionnerZone.addActionListener(e -> {
-            this.selectButton(this.btn_redimensionnerZone, this.actionButtons);
+            this.selectAction(this.btn_redimensionnerZone);
             boolean actuel = this.drawingPanel.getModeRedimensionnementZone();
-            this.arreterDessin();                       
+            this.drawingPanel.setModeAjoutZone(false);
+            this.typeChoisi = false;
+            this.formeChoisie = false;                       
             this.drawingPanel.setModeDeplacementZone(false);   
             this.drawingPanel.setModeRedimensionnementZone(!actuel);
         });
         
         this.btn_supprimerZone.addActionListener(e -> {
-            this.selectButton(this.btn_supprimerZone, this.actionButtons);
+            this.selectAction(this.btn_supprimerZone);
             boolean actuel = this.modeSuppressionZone;
-            this.arreterDessin();
+            this.drawingPanel.setModeAjoutZone(false);
+            this.typeChoisi = false;
+            this.formeChoisie = false;
             this.drawingPanel.setModeDeplacementZone(false);
             this.drawingPanel.setModeRedimensionnementZone(false);
             this.modeSuppressionZone = !actuel;
@@ -429,7 +482,7 @@ public class MainWindow extends JFrame {
 
     private void addZoneBoutonListener(JButton button, TypeZoneDTO zone) {
         button.addActionListener(e -> {
-            this.selectButton(button, this.typeButtons);
+            this.selectType(button);
             this.drawingPanel.setModeDeplacementZone(false);       
             this.drawingPanel.setModeRedimensionnementZone(false); 
             this.modeSuppressionZone = false;                                     
@@ -448,7 +501,7 @@ public class MainWindow extends JFrame {
 
     private void addFormeBoutonListener(JButton button, TypeFormeDTO forme) {
         button.addActionListener(e -> {
-            this.selectButton(button, this.formeButtons);
+            this.selectForme(button);
             this.drawingPanel.setFormeEnCours(forme);
             this.formeChoisie = true;
             this.verifierModeDessin();
@@ -526,6 +579,7 @@ public class MainWindow extends JFrame {
         label.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                clearAllSelections();
                 field.requestFocusInWindow();
             }
         });
@@ -541,7 +595,19 @@ public class MainWindow extends JFrame {
     private void rafraichirVue() {
         VueDTO vue = this.controleur.getVueCourante();
         this.drawingPanel.afficherVue(vue);
-        this.lbl_vueCourante.setText(vue != null ? "Vue " + (vue.getIndex() + 1) : this.getTexte("label.noView"));
+        if (vue == null || vue.getImage() == null) {
+            this.majPositionAucuneVue();
+        }
+        
+        if (vue != null) {
+            String texteVue = MessageFormat.format(
+                this.getTexte("panel.viewName"),
+                vue.getIndex() + 1
+            );
+            this.lbl_vueCourante.setText(texteVue);
+        } else {
+            this.lbl_vueCourante.setText(this.getTexte("label.noView"));
+        }
         double echelle = this.controleur.getEchelleCourante();
         if (echelle > 0) this.txt_echelle.setText(formaterEchelleImperiale(echelle));
     }
@@ -681,49 +747,29 @@ public class MainWindow extends JFrame {
 
     private void restaurerSelection(List<Integer> indices) {
         for (int i : indices) if (i < this.casesVues.size()) this.casesVues.get(i).setSelected(true);
-    }
-
-//private void lancerSimulation() {
-//    double prixUnitaire = parsePrixBloc();
-//    SimulationResultatDTO result = this.controleur.simulerVueCourante(prixUnitaire);
-//
-//    if (result == null) {
-//        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
-//        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
-//    } else {
-//        this.lbl_blocsTotaux.setText(
-//                this.getTexte("label.totalBlock") + " " + result.getTotalBlocs());
-//        this.lbl_coutTotal.setText(
-//                this.getTexte("label.totalCost") + " " + String.format("%.2f $", result.getPrixTotal()));
-//    }
-//
-//    this.rafraichirUI();
-//}
-    
-    
+    }    
     
     private void lancerSimulation() {
-    double prixUnitaire = parsePrixBloc();
+        double prixUnitaire = parsePrixBloc();
 
-    // --- Vue courante ---
-    int nbBlocsVue = this.controleur.getNombreBlocsVueCourante(prixUnitaire);
-    double prixVue = this.controleur.getPrixVueCourante(prixUnitaire);
-    if (nbBlocsVue < 0) {
-        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
-        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
-    } else {
-        this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " " + nbBlocsVue);
-        this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " " + String.format("%.2f $", prixVue));
+        int nbBlocsVue = this.controleur.getNombreBlocsVueCourante(prixUnitaire);
+        double prixVue = this.controleur.getPrixVueCourante(prixUnitaire);
+        if (nbBlocsVue < 0) {
+            this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " —");
+            this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " —");
+        } else {
+            this.lbl_blocsTotaux.setText(this.getTexte("label.totalBlock") + " " + nbBlocsVue);
+            this.lbl_coutTotal.setText(this.getTexte("label.totalCost") + " " + String.format("%.2f $", prixVue));
+        }
+
+        // --- Projet entier ---
+        int nbBlocsProjet = this.controleur.getNombreBlocsProjet(prixUnitaire);
+        double prixProjet = this.controleur.getPrixProjet(prixUnitaire);
+        this.lbl_blocsTotauxProjet.setText(this.getTexte("label.totalBlockProject") + " " + nbBlocsProjet);
+        this.lbl_coutTotalProjet.setText(this.getTexte("label.totalCostProject") + " " + String.format("%.2f $", prixProjet));
+
+        this.rafraichirUI();
     }
-
-    // --- Projet entier ---
-    int nbBlocsProjet = this.controleur.getNombreBlocsProjet(prixUnitaire);
-    double prixProjet = this.controleur.getPrixProjet(prixUnitaire);
-    this.lbl_blocsTotauxProjet.setText(this.getTexte("label.totalBlockProject") + " " + nbBlocsProjet);
-    this.lbl_coutTotalProjet.setText(this.getTexte("label.totalCostProject") + " " + String.format("%.2f $", prixProjet));
-
-    this.rafraichirUI();
-}
 
     private double parsePrixBloc() {
         try {
@@ -745,8 +791,8 @@ public class MainWindow extends JFrame {
              + "(?:(\\d+(?:\\.\\d+)?)\\s*" + pouce + ")?\\s*"
              + "(?:(\\d+)\\s*/\\s*(\\d+))?";
 
-        java.util.regex.Matcher m =
-            java.util.regex.Pattern.compile(regex).matcher(texte);
+        Matcher m =
+           Pattern.compile(regex).matcher(texte);
 
         if (m.find()) {
             if (m.group(1) != null) {
@@ -851,16 +897,18 @@ public class MainWindow extends JFrame {
         btn_vuePrecedente = new javax.swing.JButton();
         filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
         btn_vueSuivante = new javax.swing.JButton();
-        filler9 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        filler9 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
         lbl_vueCourante = new javax.swing.JLabel();
-        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
         btn_appliquerEchelle = new javax.swing.JButton();
-        fille11 = new javax.swing.Box.Filler(new java.awt.Dimension(50, 30), new java.awt.Dimension(50, 30), new java.awt.Dimension(50, 30));
+        filler11 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
         lbl_echelle = new javax.swing.JLabel();
         txt_echelle = new javax.swing.JTextField();
-        filler12 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
+        filler12 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
+        lbl_position = new javax.swing.JLabel();
+        filler13 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
         btn_zoomIn = new javax.swing.JButton();
-        filler13 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
+        filler14 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0));
         btn_zoomOut = new javax.swing.JButton();
         panel_vues = new javax.swing.JPanel();
 
@@ -953,11 +1001,11 @@ public class MainWindow extends JFrame {
             .addGap(0, 300, Short.MAX_VALUE)
             .addGroup(panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panel_largeurBlocLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGap(0, 47, Short.MAX_VALUE)
                     .addComponent(lbl_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(5, 5, 5)
                     .addComponent(txt_largeurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addGap(0, 48, Short.MAX_VALUE)))
         );
         panel_largeurBlocLayout.setVerticalGroup(
             panel_largeurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -989,11 +1037,11 @@ public class MainWindow extends JFrame {
             .addGap(0, 300, Short.MAX_VALUE)
             .addGroup(panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panel_hauteurBlocLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGap(0, 47, Short.MAX_VALUE)
                     .addComponent(lbl_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(5, 5, 5)
                     .addComponent(txt_hauteurBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addGap(0, 48, Short.MAX_VALUE)))
         );
         panel_hauteurBlocLayout.setVerticalGroup(
             panel_hauteurBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1025,11 +1073,11 @@ public class MainWindow extends JFrame {
             .addGap(0, 300, Short.MAX_VALUE)
             .addGroup(panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panel_coutParBlocLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGap(0, 47, Short.MAX_VALUE)
                     .addComponent(lbl_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(5, 5, 5)
                     .addComponent(txt_coutParBloc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addGap(0, 48, Short.MAX_VALUE)))
         );
         panel_coutParBlocLayout.setVerticalGroup(
             panel_coutParBlocLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1174,17 +1222,20 @@ public class MainWindow extends JFrame {
         panel_echelle.add(filler9);
 
         lbl_vueCourante.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
+        lbl_vueCourante.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbl_vueCourante.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         lbl_vueCourante.setMaximumSize(new java.awt.Dimension(100, 30));
         lbl_vueCourante.setMinimumSize(new java.awt.Dimension(100, 30));
         lbl_vueCourante.setPreferredSize(new java.awt.Dimension(100, 30));
         panel_echelle.add(lbl_vueCourante);
         panel_echelle.add(filler10);
 
+        btn_appliquerEchelle.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btn_appliquerEchelle.setMaximumSize(new java.awt.Dimension(160, 30));
         btn_appliquerEchelle.setMinimumSize(new java.awt.Dimension(160, 30));
         btn_appliquerEchelle.setPreferredSize(new java.awt.Dimension(160, 30));
         panel_echelle.add(btn_appliquerEchelle);
-        panel_echelle.add(fille11);
+        panel_echelle.add(filler11);
 
         lbl_echelle.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lbl_echelle.setMaximumSize(new java.awt.Dimension(60, 30));
@@ -1198,11 +1249,19 @@ public class MainWindow extends JFrame {
         panel_echelle.add(txt_echelle);
         panel_echelle.add(filler12);
 
+        lbl_position.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lbl_position.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        lbl_position.setMaximumSize(new java.awt.Dimension(200, 30));
+        lbl_position.setMinimumSize(new java.awt.Dimension(200, 30));
+        lbl_position.setPreferredSize(new java.awt.Dimension(200, 30));
+        panel_echelle.add(lbl_position);
+        panel_echelle.add(filler13);
+
         btn_zoomIn.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_zoomIn.setMinimumSize(new java.awt.Dimension(75, 30));
         btn_zoomIn.setPreferredSize(new java.awt.Dimension(75, 30));
         panel_echelle.add(btn_zoomIn);
-        panel_echelle.add(filler13);
+        panel_echelle.add(filler14);
 
         btn_zoomOut.setMaximumSize(new java.awt.Dimension(75, 30));
         btn_zoomOut.setMinimumSize(new java.awt.Dimension(75, 30));
@@ -1215,7 +1274,7 @@ public class MainWindow extends JFrame {
         panel_vues.setLayout(panel_vuesLayout);
         panel_vuesLayout.setHorizontalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 805, Short.MAX_VALUE)
+            .addGap(0, 955, Short.MAX_VALUE)
         );
         panel_vuesLayout.setVerticalGroup(
             panel_vuesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1253,11 +1312,12 @@ public class MainWindow extends JFrame {
     private javax.swing.JButton btn_zoneOuverture;
     private javax.swing.JButton btn_zoomIn;
     private javax.swing.JButton btn_zoomOut;
-    private javax.swing.Box.Filler fille11;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler10;
+    private javax.swing.Box.Filler filler11;
     private javax.swing.Box.Filler filler12;
     private javax.swing.Box.Filler filler13;
+    private javax.swing.Box.Filler filler14;
     private javax.swing.Box.Filler filler2;
     private javax.swing.Box.Filler filler3;
     private javax.swing.Box.Filler filler4;
@@ -1272,6 +1332,7 @@ public class MainWindow extends JFrame {
     private javax.swing.JLabel lbl_echelle;
     private javax.swing.JLabel lbl_hauteurBloc;
     private javax.swing.JLabel lbl_largeurBloc;
+    private javax.swing.JLabel lbl_position;
     private javax.swing.JLabel lbl_vueCourante;
     private javax.swing.JPanel panel_bloc;
     private javax.swing.JPanel panel_boutonAction;

@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class Echelle {
 
-    private final double pouces; // 1 unité = X pouces
+    private final double pouces;
 
     public Echelle(double pouces) {
         this.pouces = pouces;
@@ -15,7 +15,7 @@ public class Echelle {
     public static Echelle parse(String texte) {
 
         if (texte == null || texte.isBlank()) {
-            throw new IllegalArgumentException("scaleEmptyException");
+            throw new IllegalArgumentException("exception.scaleEmpty");
         }
 
         // Nettoyage : enlever espaces et caractères parasites
@@ -45,14 +45,14 @@ public class Echelle {
         if (mFraction.find()) {
             double num = Double.parseDouble(mFraction.group(1));
             double den = Double.parseDouble(mFraction.group(2));
-            if (den == 0) throw new IllegalArgumentException("scaleFractionException");
+            if (den == 0) throw new IllegalArgumentException("exception.scaleFraction");
             totalPouces += num / den;
             texte = texte.replaceFirst("\\d+/\\d+", "");
         }
 
         // 4. S'il reste des chiffres → erreur
         if (texte.matches(".*\\d.*")) {
-            throw new IllegalArgumentException("scaleFormatException");
+            throw new IllegalArgumentException("exception.scaleFormat");
         }
 
         // 5. Normalisation automatique

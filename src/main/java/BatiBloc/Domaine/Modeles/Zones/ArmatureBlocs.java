@@ -7,10 +7,6 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author nicky
- */
 public class ArmatureBlocs extends Zone {
 
     private final List<RangeeBloc> rangees = new ArrayList<>();

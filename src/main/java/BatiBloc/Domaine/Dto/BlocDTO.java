@@ -1,34 +1,28 @@
-
 package BatiBloc.Domaine.Dto;
 
-import java.io.Serializable;
+public final class BlocDTO {
 
-/**
- *
- * @author nicky
- */
-public final class BlocDTO implements Serializable {
-
-    private final double x;
-    private final double y;
+    private final double positionX;
+    private final double positionY;
     private final double largeur;
     private final double hauteur;
     private final double prix;
 
-    public BlocDTO(double x, double y, double largeur, double hauteur, double prix) {
-        this.x = x;
-        this.y = y;
+    public BlocDTO(double positionX, double positionY, double largeur, 
+            double hauteur, double prix) {
+        this.positionX = positionX;
+        this.positionY = positionY;
         this.largeur = largeur;
         this.hauteur = hauteur;
         this.prix = prix;
     }
 
-    public double getX() {
-        return this.x;
+    public double getPositionX() {
+        return this.positionX;
     }
 
-    public double getY() {
-        return this.y;
+    public double getPositionY() {
+        return this.positionY;
     }
 
     public double getLargeur() {
@@ -43,4 +37,3 @@ public final class BlocDTO implements Serializable {
         return this.prix;
     }
 }
-

@@ -34,7 +34,7 @@ public class ImportFichierPdfService {
                     return new FichierImporteDTO(fichier.getName(), documentPdf);
                 }
                 else {
-                    throw new IllegalArgumentException("Type de fichier non supporté.");
+                    throw new IllegalArgumentException("exception.extensionNotSupported");
                 }       
             } 
             catch (IOException e) {

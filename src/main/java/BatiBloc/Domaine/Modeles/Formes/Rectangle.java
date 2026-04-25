@@ -40,7 +40,7 @@ public class Rectangle extends Forme {
     @Override
     protected void validerPoints(List<Point2D.Double> points) {
         if (points.size() != this.nombreDePoints()) {
-            throw new IllegalArgumentException("rectangleSizeException");
+            throw new IllegalArgumentException("exception.rectangleSize");
         }
     }
 }

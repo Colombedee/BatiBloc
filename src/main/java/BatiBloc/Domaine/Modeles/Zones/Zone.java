@@ -12,7 +12,7 @@ public class Zone {
 
     public Zone(Forme forme, List<Point2D.Double> points) {
         if (points.size() != forme.nombreDePoints()) {
-            throw new IllegalArgumentException("verticeNumberException");
+            throw new IllegalArgumentException("exception.verticeNumber");
         }
 
         this.forme = forme;

@@ -1,18 +1,9 @@
 package BatiBloc.Domaine.Modeles;
 
-/**
- * 
- * @author nicky
- * 
- * Il faut connaître la position réelle des blocs (avec x et y ). 
- * Le modèle Bloc précédent contenait hauteur/largeur/prix, mais pas de
- * coordonnées suffisantes pour l’affichage bloc par bloc.
- */
-
 public class Bloc {
     
-    private double x;
-    private double y;
+    private double positionX;
+    private double positionY;
     private double hauteur;
     private double largeur;
     private double prix;
@@ -21,20 +12,20 @@ public class Bloc {
        this(0.0, 0.0, largeur, hauteur, prix);
    }
 
-    public Bloc( double x, double y, double largeur, double hauteur, double prix) {
-        this.x = x;
-        this.y = y;
+    public Bloc(double positionX, double positionY, double largeur, double hauteur, double prix) {
+        this.positionX = positionX;
+        this.positionY = positionY;
         this.setHauteur(hauteur);
         this.setLargeur(largeur);
         this.setPrix(prix);
     }
     
     public double getX(){
-        return this.x;
+        return this.positionX;
     }
     
     public double getY(){
-        return this.y;
+        return this.positionY;
     }
     
     public double getHauteur() { 
@@ -43,7 +34,7 @@ public class Bloc {
     
     public void setHauteur(double hauteur) {
         if (hauteur <= 0) {
-            throw new IllegalArgumentException("blocHeightException");
+            throw new IllegalArgumentException("exception.blockHeight");
         }
         this.hauteur = hauteur;
     }
@@ -54,7 +45,7 @@ public class Bloc {
 
     public void setLargeur(double largeur) {
         if (largeur <= 0) {
-            throw new IllegalArgumentException("blocWidthException");
+            throw new IllegalArgumentException("exception.blockWidth");
         }
         this.largeur = largeur;
     }
@@ -64,7 +55,7 @@ public class Bloc {
     }
 
     public void setPrix(double prix) {
-        if (prix < 0) throw new IllegalArgumentException("blocPriceException");
+        if (prix < 0) throw new IllegalArgumentException("exception.blockPrice");
         this.prix = prix;
     }
 }

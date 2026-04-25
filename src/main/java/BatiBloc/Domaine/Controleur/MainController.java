@@ -277,8 +277,8 @@ public class MainController {
             return;
         }
 
-        int x = Math.max(0, zone.getX());
-        int y = Math.max(0, zone.getY());
+        int x = Math.max(0, zone.getPositionX());
+        int y = Math.max(0, zone.getPositionY());
         int w = Math.min(zone.getLargeur(), imageOrigine.getWidth() - x);
         int h = Math.min(zone.getHauteur(), imageOrigine.getHeight() - y);
 
@@ -343,7 +343,7 @@ public class MainController {
             return;
         }
 
-        File fichierSortie = ExportFichierPdfService.fichierExporteDTO();
+        File fichierSortie = ExportFichierService.fichierExporteDTO();
         if (fichierSortie == null) {
             return;
         }
@@ -660,11 +660,11 @@ public class MainController {
 
     for (Zone z : vue.getZones()) {
         zoneDtos.add(new ZoneDTO(
-                typeZone(z),
-                typeForme(z.getForme()),
-                convertirVersPoints(z.getPoints()),
                 z == selectionnee,
-                convertirBlocs(z)
+                convertirBlocs(z),
+                convertirVersPoints(z.getPoints()),
+                typeForme(z.getForme()),
+                typeZone(z)     
         ));
     }
 

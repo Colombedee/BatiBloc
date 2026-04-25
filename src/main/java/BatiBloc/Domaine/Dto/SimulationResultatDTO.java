@@ -1,6 +1,7 @@
 package BatiBloc.Domaine.Dto;
 
 public class SimulationResultatDTO {
+    
     private final int totalBlocs;
     private final double prixTotal;
 

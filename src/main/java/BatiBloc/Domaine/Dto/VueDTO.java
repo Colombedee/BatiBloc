@@ -20,20 +20,20 @@ public final class VueDTO {
         this.zones = zones != null ? List.copyOf(zones) : List.of();
     }
 
-    public int getIndex() {
-        return this.index;
-    }
-
     public BufferedImage getImage() {
         return this.image;
     }
-
-    public List<ZoneDTO> getZones() {
-        return this.zones;
-    }
-
+    
     public double getEchelle() {
         return this.echelle;
+    }
+    
+    public int getIndex() {
+        return this.index;
+    }
+    
+    public List<ZoneDTO> getZones() {
+        return this.zones;
     }
 
     public String getNomVue(Locale locale) {

@@ -4,7 +4,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class ExportFichierPdfService {
+public class ExportFichierService {
 
     public static File fichierExporteDTO() {
 
@@ -16,7 +16,7 @@ public class ExportFichierPdfService {
             fichierChoisi.setCurrentDirectory(repertoire);
         }
 
-        FileNameExtensionFilter filtrePdf = new FileNameExtensionFilter("PDF", "pdf");
+        FileNameExtensionFilter filtrePdf = new FileNameExtensionFilter("PDF (*.pdf)", "pdf");
         FileNameExtensionFilter filtrePng = new FileNameExtensionFilter("PNG (*.png)", "png");
         
         fichierChoisi.addChoosableFileFilter(filtrePdf);

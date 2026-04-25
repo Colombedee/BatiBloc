@@ -1,18 +1,17 @@
 package BatiBloc.Vues;
+
 import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Domaine.Dto.ZoneDTO;
 import BatiBloc.Domaine.Dto.TypeFormeDTO;
 import BatiBloc.Domaine.Dto.TypeZoneDTO;
-
 import BatiBloc.Domaine.Dto.VueDTO;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font; //Emmanuella 
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -25,19 +24,14 @@ import java.awt.geom.Point2D;
 import java.awt.event.MouseWheelEvent;
 import BatiBloc.Domaine.Dto.BlocDTO;
 
-
-
-public class DrawingPanel extends JPanel implements IPanelAffichage
-{
-
+public class DrawingPanel extends JPanel implements IPanelAffichage {
+    
     private final MainController controller;
-
     private VueDTO vueCourante;
     private boolean modeRognage = false;
     private boolean modeCalibration = false;
-    private boolean modeAjoutZone = false; // Ajouter par Emmanuella 
+    private boolean modeAjoutZone = false;
     
-    //Colombe
     private TypeFormeDTO formeEnCours = TypeFormeDTO.RECTANGLE;
     private TypeZoneDTO typeEnCours = TypeZoneDTO.ARMATURE_CLASSIQUE;
     private java.util.List<Point> pointsEnCours = new java.util.ArrayList<>();
@@ -49,22 +43,46 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     private Point pointDepart;
     private Point pointFin;
     
-    private Consumer<Rectangle> onRognageTermine; // C'est une variable qui stock une fonction qui prend un rectangle en paramètre 
+    private Consumer<Rectangle> onRognageTermine;
     private Runnable onZoneAjoutee;
-    
-    // @roneh Attributs pour la navigation(comportement map) et zoom
+
     private boolean enDeplacement = false;
     private Point dernierPointSouris;
 
     private double zoom = 1.0;
     private double offsetX = 0.0;
     private double offsetY = 0.0;
+    private MainWindow mainWindow;
 
     private boolean vueInitialisee = false;
-                                                  
-    public DrawingPanel(MainController controller){ //Ajouter par Emmanuella -prend MainController en paramètre 
     
+    public static String pixelsEnImperialStatic(double pixels, double echelle) {
+        double totalPouces = pixels * echelle;
+        int pieds = (int) (totalPouces / 12);
+        double reste = totalPouces % 12;
+        int pouces = (int) reste;
+        double fraction = reste - pouces;
+
+        StringBuilder sb = new StringBuilder();
+        if (pieds > 0) sb.append(pieds).append("'");
+
+        if (pouces > 0 || fraction > 0.1) {
+            if (pieds > 0) sb.append(" ");
+            sb.append(pouces);
+
+            if (fraction >= 0.2 && fraction < 0.4) sb.append(" 1/4");
+            else if (fraction >= 0.4 && fraction < 0.6) sb.append(" 1/2");
+            else if (fraction >= 0.6 && fraction < 0.9) sb.append(" 3/4");
+
+            sb.append("\"");
+        }
+
+        return sb.length() == 0 ? "0\"" : sb.toString().trim();
+    }
+                                                  
+    public DrawingPanel(MainController controller, MainWindow mainWindow) {
         this.controller = controller;
+        this.mainWindow = mainWindow;
  
         setBackground(new Color(153, 153, 153));
 
@@ -75,20 +93,18 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     return;
                 }
 
-                // Rognage / calibration / ajout zone / sélection au clic gauche
-                //Colombe modifie le 02avril
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     if (modeDeplacementZone) {
                         Point2D imgPoint = screenToImage(e.getX(), e.getY());
                         Point ptImage = new Point((int) imgPoint.getX(), (int) imgPoint.getY());
                         controller.selectionnerZone(ptImage);
-                        controller.commencerModificationComposee(); // Undo/Redo
+                        controller.commencerModificationComposee();
                         vueCourante = controller.getVueCourante();
                         dernierPointSouris = e.getPoint();
                         repaint();
                         return;
                     }
-                    //Colombe
+
                     if (modeRedimensionnementZone) {
                         indexPoigneeSelectionnee = -1;
                         for (ZoneDTO zone : vueCourante.getZones()) {
@@ -108,7 +124,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                                 }
                             }
                         }
-                        // Aucune poignée → sélectionner zone
                         Point2D imgPoint = screenToImage(e.getX(), e.getY());
                         controller.selectionnerZone(new Point((int)imgPoint.getX(), (int)imgPoint.getY()));
                         vueCourante = controller.getVueCourante();
@@ -125,7 +140,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     return;
                 }
 
-                // Déplacement avec clic molette
                 if (SwingUtilities.isMiddleMouseButton(e)) {
                     enDeplacement = true;
                     dernierPointSouris = e.getPoint();
@@ -138,7 +152,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 if (vueCourante == null || vueCourante.getImage() == null) {
                     return;
                 }
-                // deplacemnt avec le clic de la molette
                 if (enDeplacement && dernierPointSouris != null) {
                     int dx = e.getX() - dernierPointSouris.x;
                     int dy = e.getY() - dernierPointSouris.y;
@@ -151,13 +164,11 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     return;
                 }
 
-                // déplacement d’une zone sélectionnée (si pas en mode spécial)
                 if (modeDeplacementZone && dernierPointSouris != null) {
                     ZoneDTO zoneSel = vueCourante.getZones().stream()
                             .filter(ZoneDTO::estSelectionne)
                             .findFirst()
                             .orElse(null);
-                    //Colombe
                     if (zoneSel != null) {
                         Point2D imgActuel = screenToImage(e.getX(), e.getY());
                         Point2D imgDernier = screenToImage(dernierPointSouris.x, dernierPointSouris.y);
@@ -170,7 +181,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                         return;
                     }
                 }
-                //Colombe
                 if (modeRedimensionnementZone && indexPoigneeSelectionnee >= 0 && dernierPointSouris != null) {
                     Point2D imgActuel = screenToImage(e.getX(), e.getY());
                     Point2D imgDernier = screenToImage(dernierPointSouris.x, dernierPointSouris.y);
@@ -191,6 +201,20 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 pointFin = e.getPoint();
                 repaint();
             }
+            
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (vueCourante == null || vueCourante.getImage() == null) {
+                    mainWindow.majPositionAucuneVue();
+                    return;
+                }
+
+                Point2D p = screenToImage(e.getX(), e.getY());
+                int ix = (int) p.getX();
+                int iy = (int) p.getY();
+
+                mainWindow.majPositionSouris(ix, iy, vueCourante.getEchelle());
+            }
 
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -209,7 +233,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 }
                 
                     if (SwingUtilities.isLeftMouseButton(e) && (modeDeplacementZone || modeRedimensionnementZone)) {
-                    controller.terminerModificationComposee(); // Undo/Redo 
+                    controller.terminerModificationComposee();
                     indexPoigneeSelectionnee = -1;
                     dernierPointSouris = null;
                     return;
@@ -221,9 +245,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
 
                 pointFin = e.getPoint();
                 
-               
-                //Modification Emmmanuella - Mode Rognage : on va calculer le rectangle 
-                // sélectionner par l'utilisateur et on envoie le rectangle à MainWIndow via le callback
                 if (modeRognage && onRognageTermine != null) {
                     int x = Math.min(pointDepart.x, pointFin.x);
                     int y = Math.min(pointDepart.y, pointFin.y);
@@ -232,15 +253,16 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                     onRognageTermine.accept(new Rectangle(x, y, w, h));
                     
                 } else if (modeCalibration) {
-                  double distancePixels = pointDepart.distance(pointFin);
-                 
-                  int pieds = 1;  
-                  double pouces = 0;
-                  controller.calibrerEchelle(distancePixels, pieds, pouces);
-                  modeCalibration = false;
-                
+                    double distance = pointDepart.distance(pointFin);
+                    //TODO : Il faudrait le connecter à CalibrerEchelle() plus tard
+                    double distancePixels = pointDepart.distance(pointFin);
+
+                    int pieds = 1;
+                    double pouces = 0;
+                    controller.calibrerEchelle(distancePixels, pieds, pouces);
+                    modeCalibration = false;
                     
-                } else if (modeAjoutZone) //Colombe
+                } else if (modeAjoutZone)
                 {
                     Point2D imgDepart = screenToImage(pointDepart.x, pointDepart.y);
                     Point2D imgFin = screenToImage(pointFin.x, pointFin.y);
@@ -293,6 +315,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                         controller.ajouterZone(typeEnCours, formeEnCours, pts);
                         vueCourante = controller.getVueCourante();
                         if (onZoneAjoutee != null) onZoneAjoutee.run();
+                        //modeDeplacementZone = false;
                         repaint();
                     }
                 }
@@ -302,7 +325,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 repaint();
             }
             
-             @Override  // roneh
+             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
                 if (vueCourante == null || vueCourante.getImage() == null) {
                     return;
@@ -312,7 +335,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 appliquerZoom(facteur, e.getX(), e.getY());
             }
             
-            //Colombe 
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (vueCourante == null || !modeSuppressionZone) return;
@@ -338,9 +360,8 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         
         this.addMouseListener(mouseHandler);
         this.addMouseMotionListener(mouseHandler);
-        this.addMouseWheelListener(mouseHandler); // @roneh
+        this.addMouseWheelListener(mouseHandler);
         
-        //@roneh
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
@@ -378,27 +399,19 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         this.onRognageTermine = callback;
     }
     
-    public void setOnZoneAjoutee(Runnable callback){ //Colombe
+    public void setOnZoneAjoutee(Runnable callback){
         this.onZoneAjoutee = callback;
     }
-
+    
     @Override
     public void setModeRognage(boolean actif) {
         
-        //Modification par Emmanuella
         this.modeRognage = actif;
         this.modeCalibration = false;
         this.modeAjoutZone = false;
-            repaint();
-        }
+        repaint();
+    }
     
-
-      
-      //Emmanuella - Ajout d'une nouvelle fonction
-      // Permet à l'utilisateur au logiciel d'estimer l'echelle 
-      // du plan lorsque l'utilisateur forme un zone par exemple 
-
-      
     @Override
     public void setModeCalibration(boolean actif){
         this.modeCalibration = actif;
@@ -406,8 +419,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         this.modeAjoutZone = false;
         repaint();
     }
-
-      
+    
     @Override
     public void setModeAjoutZone(boolean actif) {
         this.modeAjoutZone = actif;
@@ -416,7 +428,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         //this.modeDeplacementZone = false;
         repaint();
     }
-    //Colombe
+    
     public void setModeDeplacementZone(boolean actif) {
         this.modeDeplacementZone = actif;
         this.modeRognage = false;
@@ -424,6 +436,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         this.modeCalibration = false;
         repaint();
     }
+    
     public void setModeSuppressionZone(boolean actif) {
         this.modeSuppressionZone = actif;
         this.modeRognage = false;
@@ -431,11 +444,11 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         this.modeCalibration = false;
         repaint();
     }
+    
     public boolean getModeDeplacementZone() {
         return this.modeDeplacementZone;
     }
     
-    //Colombe
     public void setModeRedimensionnementZone(boolean actif) {
         this.modeRedimensionnementZone = actif;
         this.modeRognage = false;
@@ -447,7 +460,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
     public boolean getModeRedimensionnementZone() {
         return this.modeRedimensionnementZone;
     }
-    //Colombe
+    
     public void setFormeEnCours(TypeFormeDTO forme)
     {
         this.formeEnCours = forme;
@@ -460,7 +473,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         this.typeEnCours = type;
     }
     
-
     public void zoomInCenter() {
         appliquerZoom(1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
@@ -469,7 +481,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         appliquerZoom(1.0 / 1.1, getWidth() / 2.0, getHeight() / 2.0);
     }
     
-    // Emmanuella - convertit pixels en format pieds/pouces
     private String pixelsEnImperial(double pixels, double echelle) {
         double totalPouces = pixels * echelle;
         int pieds = (int) (totalPouces / 12);
@@ -489,7 +500,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         }
         return sb.length() == 0 ? "0\"" : sb.toString().trim();
     }
-    
     
     public Rectangle convertirSelectionEcranVersImage(Rectangle zoneEcran) {
         if (vueCourante == null || vueCourante.getImage() == null || zoneEcran == null) {
@@ -589,7 +599,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         double imageY = (screenY - currentOffsetY) / currentZoom;
         return new Point2D.Double(imageX, imageY);
     }
-    //Colombe
+    
     private Rectangle calculerBoundingBox(java.util.List<Point> pts) {
         int xMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
         int yMin = pts.stream().mapToInt(p -> p.y).min().orElse(0);
@@ -597,7 +607,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         int yMax = pts.stream().mapToInt(p -> p.y).max().orElse(0);
         return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
     }
-    //Colombe
+    
     private Point[] calculerPoigneesBoundingBox(Rectangle bb) {
         int x = bb.x, y = bb.y, w = bb.width, h = bb.height;
         return new Point[] {
@@ -624,10 +634,9 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         
-        //Dessiner le PDF
-        g2d.translate(offsetX, offsetY);  //@roneh
-        g2d.scale(zoom, zoom); //@roneh
-        g2d.drawImage(this.vueCourante.getImage(), 0, 0, this);  // modifier par @roneh en supprimant {getWidth() et getHeignt()}
+        g2d.translate(offsetX, offsetY);
+        g2d.scale(zoom, zoom);
+        g2d.drawImage(this.vueCourante.getImage(), 0, 0, this);
 
         // 2. Dessiner les zones        
         List<ZoneDTO> zones = this.vueCourante.getZones();
@@ -648,9 +657,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
             g2d.setStroke(new BasicStroke(2));
             g2d.drawPolygon(xs, ys, pts.size());
             
-            
-
-        // Nouvelle methode adapte aux changements : Rendu des blocs simulés @roneh
         if (zone.getType() == TypeZoneDTO.ARMATURE_BLOCS && !zone.getBlocs().isEmpty()) {
         java.awt.Polygon clipPoly = new java.awt.Polygon(xs, ys, pts.size());
         java.awt.Shape clipPrecedent = g2d.getClip();
@@ -660,13 +666,13 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         int indexRangee = -1;
 
         for (BlocDTO bloc : zone.getBlocs()) {
-            int bx = (int) Math.round(bloc.getX());
-            int by = (int) Math.round(bloc.getY());
+            int bx = (int) Math.round(bloc.getPositionX());
+            int by = (int) Math.round(bloc.getPositionY());
             int bw = (int) Math.round(bloc.getLargeur());
             int bh = (int) Math.round(bloc.getHauteur());
 
-            if (Double.isNaN(dernierY) || Math.abs(bloc.getY() - dernierY) > 0.5) {
-                dernierY = bloc.getY();
+            if (Double.isNaN(dernierY) || Math.abs(bloc.getPositionX() - dernierY) > 0.5) {
+                dernierY = bloc.getPositionY();
                 indexRangee++;
             }
 
@@ -686,10 +692,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         g2d.setClip(clipPrecedent);
         g2d.setStroke(new BasicStroke(2));
     }
-            
-
-
-            // Emmanuella - Afficher dimensions en pieds/pouces
             double echelle = this.vueCourante.getEchelle();
             if (echelle > 0 && pts.size() >= 2) {
                 int xMin = pts.stream().mapToInt(p -> p.x).min().orElse(0);
@@ -701,7 +703,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                              + " "
                              + pixelsEnImperial(yMax - yMin, echelle);
 
-                // Convertir coordonnées image vers écran
                 int centreEcranX = (int)(((xMin + xMax) / 2.0) * zoom + offsetX);
                 int centreEcranY = (int)(((yMin + yMax) / 2.0) * zoom + offsetY);
 
@@ -717,15 +718,12 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
                 gTexte.dispose();
             }
             
-            //Colombe
             if (modeRedimensionnementZone && zone.estSelectionne()) {
                 Rectangle bb = calculerBoundingBox(pts);
-                // Boîte en pointillés
                 g2d.setColor(Color.GRAY);
                 g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER,
                     10, new float[]{4}, 0));
                 g2d.drawRect(bb.x, bb.y, bb.width, bb.height);
-                // 8 poignées
                 g2d.setStroke(new BasicStroke(1));
                 for (Point p : calculerPoigneesBoundingBox(bb)) {
                     g2d.setColor(Color.WHITE);
@@ -737,9 +735,6 @@ public class DrawingPanel extends JPanel implements IPanelAffichage
         }
         g2d.dispose();
         
- 
-
-        // 3. Dessiner l'action en cours
         if (pointDepart != null && pointFin != null && modeAjoutZone) {
             Graphics2D overlay = (Graphics2D) g.create();
             overlay.setColor(Color.RED);

@@ -5,38 +5,38 @@ import java.util.List;
 
 public final class ZoneDTO {
 
-    private final TypeZoneDTO type;
-    private final TypeFormeDTO forme;
-    private final List<Point> points;
     private final boolean selectionnee;
     private final List<BlocDTO> blocs;
+    private final List<Point> points;
+    private final TypeFormeDTO forme;
+    private final TypeZoneDTO type;
 
-    public ZoneDTO(TypeZoneDTO type, TypeFormeDTO forme, List<Point> points,
-                   boolean selectionnee,List<BlocDTO> blocs) {
-        this.type = type;
-        this.forme = forme;
-        this.points = List.copyOf(points);
+    public ZoneDTO(boolean selectionnee, List<BlocDTO> blocs, List<Point> points,
+            TypeFormeDTO forme, TypeZoneDTO type) {
         this.selectionnee = selectionnee;
         this.blocs = blocs == null ? List.of() : List.copyOf(blocs);
+        this.points = List.copyOf(points);        
+        this.forme = forme;
+        this.type = type;
     }
-
-    public TypeZoneDTO getType() {
-        return this.type;
+    
+    public boolean estSelectionne() {
+        return this.selectionnee;
     }
-
+    
+    public List<BlocDTO> getBlocs() {
+        return this.blocs;    
+    }
+    
+    public List<Point> getPoints() {
+        return this.points;
+    }
+    
     public TypeFormeDTO getForme() {
         return this.forme;
     }
 
-    public List<Point> getPoints() {
-        return this.points;
-    }
-
-    public boolean estSelectionne() {
-        return this.selectionnee;
-    }    
-        
-    public List<BlocDTO> getBlocs() {
-        return this.blocs;    
+    public TypeZoneDTO getType() {
+        return this.type;
     }
 }

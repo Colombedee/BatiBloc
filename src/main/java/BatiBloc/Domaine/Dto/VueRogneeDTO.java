@@ -2,24 +2,24 @@ package BatiBloc.Domaine.Dto;
 
 public class VueRogneeDTO {
 
-    private final int x;
-    private final int y;
+    private final int positionX;
+    private final int positionY;
     private final int largeur;
     private final int hauteur;
 
-    public VueRogneeDTO(int x, int y, int largeur, int hauteur) {
-        this.x = x;
-        this.y = y;
+    public VueRogneeDTO(int positionX, int positionY, int largeur, int hauteur) {
+        this.positionX = positionX;
+        this.positionY = positionY;
         this.largeur = largeur;
         this.hauteur = hauteur;
     }
 
-    public int getX() {
-        return this.x;
+    public int getPositionX() {
+        return this.positionX;
     }
 
-    public int getY() {
-        return this.y;
+    public int getPositionY() {
+        return this.positionY;
     }
 
     public int getLargeur() {
