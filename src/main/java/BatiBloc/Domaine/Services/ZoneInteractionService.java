@@ -37,13 +37,7 @@ public final class ZoneInteractionService {
         this.zoneSelectionnee = ZoneService.selectionnerZone(zones, p);
         return this.zoneSelectionnee;
     }
-// la logique de suppression appartient au contrôleur
-//    public void supprimer(List<Zone> zones) {
-//        if (modeZoneSelectionnee != null) {
-//            zones.remove(modeZoneSelectionnee);
-//            modeZoneSelectionnee = null;
-//        }
-//    }
+
 
     public void deplacer(double dx, double dy) {
         if (this.zoneSelectionnee != null) {

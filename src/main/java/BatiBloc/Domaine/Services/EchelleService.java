@@ -10,7 +10,4 @@ public final class EchelleService {
         return Echelle.parse(texte);
     }
 
-    public static double convertirEnPixels(Echelle echelle, double zoom, double valeurEnPouces) {
-        return valeurEnPouces * zoom * echelle.getPouces();
-    }
 }

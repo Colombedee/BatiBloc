@@ -1,5 +1,8 @@
 package BatiBloc.Domaine.Controleur;
 
+import static BatiBloc.Domaine.Constantes.ConstantesBloc.COUT_UNITAIRE_PAR_BLOC_DEFAUT;
+import static BatiBloc.Domaine.Constantes.ConstantesVue.DPI_RENDU;
+import static BatiBloc.Domaine.Constantes.ConstantesVue.ECHELLE_DEFAUT;
 import BatiBloc.Domaine.Dto.*;
 import BatiBloc.Domaine.Modeles.*;
 import BatiBloc.Domaine.Modeles.Formes.*;
@@ -31,7 +34,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
  * Réécriture propre du MainController.
  *
  * 1) Réorganisation de la classe en sections cohérentes :
- *    - constantes et état interne
+ *    - état interne
  *    - undo / redo
  *    - gestion des vues
  *    - import / export
@@ -61,14 +64,6 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 
 public class MainController {
 
-    // =========================
-    // Constantes
-    // =========================
-
-    private static final float DPI_RENDU = 150.0f; // Échelle par défaut 1 pixel = 1/150 pouce
-    private static final double DPI_ECRAN = 96.0;
-    private static final double ECHELLE_DEFAUT = 1.0 / DPI_ECRAN;
-    private static final double COUT_UNITAIRE_PAR_BLOC_DEFAUT = 20.0;
 
     // =========================
     // État du projet
