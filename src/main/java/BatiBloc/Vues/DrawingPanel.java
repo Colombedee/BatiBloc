@@ -646,9 +646,11 @@ public class DrawingPanel extends JPanel implements IPanelAffichage {
             int[] xs = pts.stream().mapToInt(p -> (int) p.getX()).toArray();
             int[] ys = pts.stream().mapToInt(p -> (int) p.getY()).toArray();
             
-            Color couleur = zone.getType() == TypeZoneDTO.ARMATURE_CLASSIQUE
-                    ? new Color (34, 139, 34, 80)
-                    : new Color (0, 0, 255, 80);
+            Color couleur = switch (zone.getType()) {
+                case ARMATURE_CLASSIQUE -> new Color(34, 139, 34, 80);   // vert
+                case ARMATURE_BLOCS -> new Color(0, 0, 255, 80);         // bleu
+                case OUVERTURE -> new Color(255, 165, 0, 100);           // orange
+            };
             
             g2d.setColor(couleur);
             g2d.fillPolygon(xs, ys, pts.size());
@@ -671,7 +673,7 @@ public class DrawingPanel extends JPanel implements IPanelAffichage {
             int bw = (int) Math.round(bloc.getLargeur());
             int bh = (int) Math.round(bloc.getHauteur());
 
-            if (Double.isNaN(dernierY) || Math.abs(bloc.getPositionX() - dernierY) > 0.5) {
+            if (Double.isNaN(dernierY) || Math.abs(bloc.getPositionY() - dernierY) > 0.5) {
                 dernierY = bloc.getPositionY();
                 indexRangee++;
             }

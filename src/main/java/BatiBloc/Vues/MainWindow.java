@@ -489,6 +489,14 @@ public class MainWindow extends JFrame {
             this.drawingPanel.setModeSuppressionZone(false); 
             this.drawingPanel.setTypeZoneEnCours(zone);
             this.typeChoisi = true;
+            
+            // Gestion des ouvertures : une ouverture est rectangulaire par défaut.
+            if (zone == TypeZoneDTO.OUVERTURE) {
+                this.selectForme(this.btn_formeRectangle);
+                this.drawingPanel.setFormeEnCours(TypeFormeDTO.RECTANGLE);
+                this.formeChoisie = true;
+            }
+            
             this.verifierModeDessin();
         });
     }

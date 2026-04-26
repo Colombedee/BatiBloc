@@ -20,7 +20,10 @@ public final class ZoneService {
             return null;
         }
 
-        for (Zone z : zones) {
+        // On parcourt à l'envers pour sélectionner la zone la plus récente, donc visuellement celle qui est au-dessus.
+        for (int i = zones.size() - 1; i >= 0; i--) {
+            Zone z = zones.get(i);
+            
             if (z != null && GeometryService.pointDansZone(p, z)) {
                 return z;
             }

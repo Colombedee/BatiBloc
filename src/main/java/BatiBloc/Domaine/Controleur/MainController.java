@@ -395,6 +395,11 @@ public class MainController {
         if (this.indexVueCourante < 0 || type == null || forme == null || points == null || points.isEmpty()) {
             return;
         }
+        
+        // Gestion des ouvertures :une ouverture doit rester rectangulaire.
+        if (type == TypeZoneDTO.OUVERTURE && forme != TypeFormeDTO.RECTANGLE) {
+            return;
+        }
 
         List<Point2D.Double> pts = convertirVersPoints2D(points);
         Forme formeModele = creerForme(forme, pts);
