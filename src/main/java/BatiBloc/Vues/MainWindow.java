@@ -1,6 +1,7 @@
 package BatiBloc.Vues;
 
 import BatiBloc.Domaine.Controleur.MainController;
+import BatiBloc.Domaine.Services.ExportFichierService.TypeExport;
 import BatiBloc.Domaine.Dto.VueDTO;
 import BatiBloc.Domaine.Dto.TypeZoneDTO;
 import BatiBloc.Domaine.Dto.TypeFormeDTO;
@@ -44,6 +45,7 @@ public class MainWindow extends JFrame {
     
     private enum ActionVue { EXPORT, DELETE }
     private ActionVue actionVue;
+    private TypeExport typeExportChoisi = TypeExport.PDF;  // Stocke le type d'export choisi
     private boolean formeChoisie = false;
     private boolean modeRognage = false;
     private boolean modeSuppressionZone = false;
@@ -163,19 +165,19 @@ public class MainWindow extends JFrame {
     }
     
     private void initLabelsProjet() {
-    this.lbl_blocsTotauxProjet = new JLabel();
-    this.lbl_coutTotalProjet   = new JLabel();
+        this.lbl_blocsTotauxProjet = new JLabel();
+        this.lbl_coutTotalProjet   = new JLabel();
 
-    this.lbl_blocsTotauxProjet.setMaximumSize(new Dimension(140, 30));
-    this.lbl_blocsTotauxProjet.setMinimumSize(new Dimension(140, 30));
-    this.lbl_blocsTotauxProjet.setPreferredSize(new java.awt.Dimension(140, 30));
+        this.lbl_blocsTotauxProjet.setMaximumSize(new Dimension(140, 30));
+        this.lbl_blocsTotauxProjet.setMinimumSize(new Dimension(140, 30));
+        this.lbl_blocsTotauxProjet.setPreferredSize(new java.awt.Dimension(140, 30));
 
-    this.lbl_coutTotalProjet.setMaximumSize(new Dimension(140, 30));
-    this.lbl_coutTotalProjet.setMinimumSize(new Dimension(140, 30));
-    this.lbl_coutTotalProjet.setPreferredSize(new Dimension(140, 30));
+        this.lbl_coutTotalProjet.setMaximumSize(new Dimension(140, 30));
+        this.lbl_coutTotalProjet.setMinimumSize(new Dimension(140, 30));
+        this.lbl_coutTotalProjet.setPreferredSize(new Dimension(140, 30));
 
-    this.panel_menu.add(this.lbl_blocsTotauxProjet);
-    this.panel_menu.add(this.lbl_coutTotalProjet);
+        this.panel_menu.add(this.lbl_blocsTotauxProjet);
+        this.panel_menu.add(this.lbl_coutTotalProjet);
     }
 
     private void initListeBoutonsVue() {
@@ -223,8 +225,7 @@ public class MainWindow extends JFrame {
         Rectangle zoneImage = this.drawingPanel.convertirSelectionEcranVersImage(zoneAffichage);
         if (zoneImage == null) return;
 
-        this.controleur.rognerVueCourante(new VueRogneeDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height)
-        );
+        this.controleur.rognerVueCourante(new VueRogneeDTO(zoneImage.x, zoneImage.y, zoneImage.width, zoneImage.height));
 
         this.modeRognage = false;
         this.drawingPanel.setModeRognage(false);
@@ -362,27 +363,27 @@ public class MainWindow extends JFrame {
     }
 
     private void appliquerDimensionsBloc() {
-    String txtL = this.txt_largeurBloc.getText().trim();
-    String txtH = this.txt_hauteurBloc.getText().trim();
-    if (txtL.isEmpty() || txtH.isEmpty()) return;
+        String txtL = this.txt_largeurBloc.getText().trim();
+        String txtH = this.txt_hauteurBloc.getText().trim();
+        if (txtL.isEmpty() || txtH.isEmpty()) return;
 
-    double largeur = parserMesureImperiale(txtL);
-    double hauteur = parserMesureImperiale(txtH);
+        double largeur = parserMesureImperiale(txtL);
+        double hauteur = parserMesureImperiale(txtH);
 
-    if (largeur < 6.0) {
-        this.txt_largeurBloc.setText("");
-        this.txt_largeurBloc.requestFocusInWindow();
-        return;
+        if (largeur < 6.0) {
+            this.txt_largeurBloc.setText("");
+            this.txt_largeurBloc.requestFocusInWindow();
+            return;
+        }
+        if (hauteur < 6.0) {
+            this.txt_hauteurBloc.setText("");
+            this.txt_hauteurBloc.requestFocusInWindow();
+            return;
+        }
+
+        this.controleur.modifierDimensionsBloc(largeur, hauteur);
+        this.rafraichirUI();
     }
-    if (hauteur < 6.0) {
-        this.txt_hauteurBloc.setText("");
-        this.txt_hauteurBloc.requestFocusInWindow();
-        return;
-    }
-
-    this.controleur.modifierDimensionsBloc(largeur, hauteur);
-    this.rafraichirUI();
-}
 
     private void initListeners() {
         this.initBoutonsPrincipal();
@@ -398,7 +399,7 @@ public class MainWindow extends JFrame {
         this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
         this.addAction(this.btn_importerPdf, () -> {
             this.clearAllSelections();
-            this.controleur.importerPdf();
+            this.controleur.importerFichier();
             this.rafraichirUI();
         });
         this.addAction(this.btn_ajouterVue, () -> {
@@ -406,34 +407,63 @@ public class MainWindow extends JFrame {
             this.controleur.ajouterVue();
             this.rafraichirUI();
         });
+        
         this.btn_exporterPdf.addActionListener(e -> {
             this.clearAllSelections();
-            this.actionVue = ActionVue.EXPORT;
-            this.afficherSelectionVues(this.actionVue);
+            this.choisirTypeExport();
         });
+        
         this.btn_supprimerVue.addActionListener(e -> {
             this.clearAllSelections();
             this.actionVue = ActionVue.DELETE;
             this.afficherSelectionVues(this.actionVue);
         });
+        
         this.btn_rognerVue.addActionListener(e -> {
             this.clearAllSelections();
             this.modeRognage = !this.modeRognage;
             this.drawingPanel.setModeRognage(this.modeRognage);
             this.btn_rognerVue.setText(this.modeRognage ? this.getTexte("button.activeCropping") : this.getTexte("button.cropView"));
         });
+        
         this.btn_changerLangue.addActionListener(e -> {
             this.clearAllSelections();
             this.langueCourante = (this.langueCourante.equals(Locale.FRENCH)) ? Locale.ENGLISH : Locale.FRENCH;
             this.majInterface();
         });
+        
         this.btn_simulation.addActionListener(e -> {
             this.clearAllSelections();
             this.lancerSimulation();
         });
     }
+    
+    /**
+     * Affiche une boîte de dialogue pour choisir le type d'export
+     */
+    private void choisirTypeExport() {
+        String[] options = {"PDF", "PNG", "Projet (.batibloc)"};
+        int choix = JOptionPane.showOptionDialog(this,
+            "Choisissez le format d'export :",
+            "Export",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]);
+        
+        switch (choix) {
+            case 0 -> this.typeExportChoisi = TypeExport.PDF;
+            case 1 -> this.typeExportChoisi = TypeExport.PNG;
+            case 2 -> this.typeExportChoisi = TypeExport.PROJET;
+            default -> { return; }
+        }
+        
+        this.actionVue = ActionVue.EXPORT;
+        this.afficherSelectionVues(this.actionVue);
+    }
 
-    private void addAction(AbstractButton button, Runnable action){
+    private void addAction(AbstractButton button, Runnable action) {
         button.addActionListener(e -> {
             action.run();
             this.rafraichirUI();
@@ -733,15 +763,17 @@ public class MainWindow extends JFrame {
             if (this.casesVues.get(i).isSelected()) indices.add(i);
         }
         if (!indices.isEmpty()) {
-            if (ActionVue.DELETE.equals(this.actionVue)) this.controleur.supprimerVues(indices);
-            else this.controleur.exporterVues(indices);
+            if (ActionVue.DELETE.equals(this.actionVue)) {
+                this.controleur.supprimerVues(indices);
+            } else if (ActionVue.EXPORT.equals(this.actionVue)) {
+                this.controleur.exporterFichier(indices, this.typeExportChoisi);
+            }
         }
         this.fermerSelection();
     }
 
     private void fermerSelection() {
         this.retirerPanneauVues();
-        this.actionVue = null;
         this.rafraichirUI();
     }
 
@@ -799,8 +831,7 @@ public class MainWindow extends JFrame {
              + "(?:(\\d+(?:\\.\\d+)?)\\s*" + pouce + ")?\\s*"
              + "(?:(\\d+)\\s*/\\s*(\\d+))?";
 
-        Matcher m =
-           Pattern.compile(regex).matcher(texte);
+        Matcher m = Pattern.compile(regex).matcher(texte);
 
         if (m.find()) {
             if (m.group(1) != null) {

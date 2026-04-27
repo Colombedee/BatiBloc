@@ -6,35 +6,41 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ExportFichierService {
 
-    public static File fichierExporteDTO() {
+    public enum TypeExport {
+        PDF,
+        PNG,
+        PROJET
+    }
 
-        File repertoire = new File("C:\\");
+    public static File fichierExporteDTO(TypeExport type) {
+        JFileChooser fichierChoisi = new JFileChooser();
 
-        JFileChooser fichierChoisi = new JFileChooser((File) null);
-
-        if (repertoire.exists()) {
-            fichierChoisi.setCurrentDirectory(repertoire);
+        switch (type) {
+            case PDF:
+                fichierChoisi.setDialogTitle("Exporter en PDF");
+                fichierChoisi.setFileFilter(new FileNameExtensionFilter("PDF (*.pdf)", "pdf"));
+                break;
+            case PNG:
+                fichierChoisi.setDialogTitle("Exporter en PNG");
+                fichierChoisi.setFileFilter(new FileNameExtensionFilter("PNG (*.png)", "png"));
+                break;
+            case PROJET:
+                fichierChoisi.setDialogTitle("Exporter le projet");
+                fichierChoisi.setFileFilter(new FileNameExtensionFilter("Projet BâtiBloc (*.batibloc)", "batibloc"));
+                break;
         }
 
-        FileNameExtensionFilter filtrePdf = new FileNameExtensionFilter("PDF (*.pdf)", "pdf");
-        FileNameExtensionFilter filtrePng = new FileNameExtensionFilter("PNG (*.png)", "png");
-        
-        fichierChoisi.addChoosableFileFilter(filtrePdf);
-        fichierChoisi.addChoosableFileFilter(filtrePng);
-        fichierChoisi.setFileFilter(filtrePdf);
-
-        fichierChoisi.setDialogTitle("exportType");
-        int resultat = fichierChoisi.showSaveDialog(null);
-
-        if (resultat == JFileChooser.APPROVE_OPTION) {
+        if (fichierChoisi.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
             File fichier = fichierChoisi.getSelectedFile();
-            String chemin = fichier.getAbsolutePath();
-            
-            String extension = "pdf";
-            if (fichierChoisi.getFileFilter() == filtrePng) {
-                extension = "png";
+            String extension = "";
+
+            switch (type) {
+                case PDF: extension = "pdf"; break;
+                case PNG: extension = "png"; break;
+                case PROJET: extension = "batibloc"; break;
             }
 
+            String chemin = fichier.getAbsolutePath();
             if (!chemin.toLowerCase().endsWith("." + extension)) {
                 fichier = new File(chemin + "." + extension);
             }

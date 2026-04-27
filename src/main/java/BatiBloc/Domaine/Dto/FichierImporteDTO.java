@@ -1,5 +1,7 @@
 package BatiBloc.Domaine.Dto;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 public class FichierImporteDTO {
@@ -18,5 +20,13 @@ public class FichierImporteDTO {
 
     public boolean isPDF() {
         return this.contenu instanceof PDDocument;
+    }
+
+    public boolean isProjet() {
+        return this.contenu instanceof File;
+    }
+
+    public boolean isPNG() {
+        return this.contenu instanceof BufferedImage;
     }
 }
