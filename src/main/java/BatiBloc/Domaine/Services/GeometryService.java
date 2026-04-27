@@ -19,9 +19,6 @@ public final class GeometryService {
 
     private GeometryService() {}
 
-    /**
-     * Représente un segment horizontal [xMin, xMax].
-     */
     public record SegmentHorizontal(double xMin, double xMax) {
         public double largeur() {
             return Math.max(0.0, xMax - xMin);

@@ -3,12 +3,14 @@ package BatiBloc.Domaine.Controleur;
 import static BatiBloc.Domaine.Constantes.ConstantesBloc.COUT_UNITAIRE_PAR_BLOC_DEFAUT;
 import static BatiBloc.Domaine.Constantes.ConstantesVue.DPI_RENDU;
 import static BatiBloc.Domaine.Constantes.ConstantesVue.ECHELLE_DEFAUT;
+
 import BatiBloc.Domaine.Dto.*;
 import BatiBloc.Domaine.Modeles.*;
-import BatiBloc.Domaine.Modeles.Formes.*;
+import BatiBloc.Domaine.Modeles.Formes.Forme;
 import BatiBloc.Domaine.Modeles.Zones.*;
 import BatiBloc.Domaine.Services.*;
 import BatiBloc.Domaine.Services.ExportFichierService.TypeExport;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import javax.imageio.ImageIO;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -29,12 +32,10 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
-
 /**
  * 
  * @author william, nicky, emmanuella, colombe, eliazardson
  */
-
 public class MainController {
 
     // =========================
@@ -46,9 +47,17 @@ public class MainController {
     private double largeurBlocDefaut = 96.0;
     private double hauteurBlocDefaut = 12.0;
 
+    // =========================
+    // Services
+    // =========================
+
     private final ZoneInteractionService interactionService = new ZoneInteractionService();
     private final UndoRedoService<ProjetMemento> undoRedoManager = new UndoRedoService<>();
     private final OuvertureService ouvertureService = new OuvertureService();
+    private final RenduImageService renduService = new RenduImageService();
+    private final ZoneMappingService mappingService = new ZoneMappingService();
+    private final CopieProfondeService copieService = new CopieProfondeService();
+    private final SimulationFacadeService simulationFacade = new SimulationFacadeService();
 
     // =========================
     // Memento
@@ -78,7 +87,7 @@ public class MainController {
 
     private ProjetMemento creerMemento() {
         return new ProjetMemento(
-                copierVues(this.projetVues),
+                copieService.copierVues(this.projetVues),
                 this.indexVueCourante,
                 this.largeurBlocDefaut,
                 this.hauteurBlocDefaut
@@ -89,7 +98,7 @@ public class MainController {
         if (memento == null) return;
 
         this.projetVues.clear();
-        this.projetVues.addAll(copierVues(memento.vues));
+        this.projetVues.addAll(copieService.copierVues(memento.vues));
         this.indexVueCourante = memento.indexVueCourante;
         this.largeurBlocDefaut = memento.largeurBlocDefaut;
         this.hauteurBlocDefaut = memento.hauteurBlocDefaut;
@@ -310,7 +319,8 @@ public class MainController {
                 Vue vue = this.projetVues.get(index);
                 synchroniserArmaturesAutomatiques(vue);
 
-                BufferedImage image = genererImageAvecZones(vue);
+                // Délégation au service de rendu
+                BufferedImage image = renduService.genererImageAvecZones(vue);
                 PDPage page = new PDPage(new PDRectangle(image.getWidth(), image.getHeight()));
                 document.addPage(page);
 
@@ -329,20 +339,16 @@ public class MainController {
         File dossier = ExportFichierService.fichierExporteDTO(TypeExport.PNG);
         if (dossier == null) return;
 
-        // Pour PNG, on crée un dossier et on y met les images
         if (indices.size() == 1) {
-            // Une seule vue -> exporter directement le fichier
             try {
                 Vue vue = this.projetVues.get(indices.get(0));
                 synchroniserArmaturesAutomatiques(vue);
-
-                BufferedImage image = genererImageAvecZones(vue);
+                BufferedImage image = renduService.genererImageAvecZones(vue);
                 ImageIO.write(image, "png", dossier);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            // Plusieurs vues -> créer un dossier
             String baseName = dossier.getAbsolutePath();
             if (baseName.endsWith(".png")) {
                 baseName = baseName.substring(0, baseName.length() - 4);
@@ -355,8 +361,7 @@ public class MainController {
                 try {
                     Vue vue = this.projetVues.get(index);
                     synchroniserArmaturesAutomatiques(vue);
-
-                    BufferedImage image = genererImageAvecZones(vue);
+                    BufferedImage image = renduService.genererImageAvecZones(vue);
                     File fichier = new File(dir, "vue_" + (index + 1) + ".png");
                     ImageIO.write(image, "png", fichier);
                 } catch (IOException e) {
@@ -367,7 +372,6 @@ public class MainController {
     }
 
     private void exporterProjet(List<Integer> indices) {
-        // Pour l'export projet, on sauvegarde tout le projet
         File fichierSortie = ExportFichierService.fichierExporteDTO(TypeExport.PROJET);
         if (fichierSortie == null) return;
         sauvegarderProjet(fichierSortie);
@@ -401,7 +405,6 @@ public class MainController {
         for (Vue vue : this.projetVues) {
             try {
                 byte[] imageData = ProjetPersistenceService.imageVersBytes(vue.getImage());
-
                 synchroniserArmaturesAutomatiques(vue);
 
                 List<ZoneProjetDTO> zonesDTO = new ArrayList<>();
@@ -411,7 +414,7 @@ public class MainController {
 
                     zonesDTO.add(new ZoneProjetDTO(
                             this.hauteurBlocDefaut, this.largeurBlocDefaut, 0.0,
-                            pointsDTO, typeForme(zone.getForme()), typeZone(zone)
+                            pointsDTO, mappingService.typeForme(zone.getForme()), mappingService.typeZone(zone)
                     ));
                 }
 
@@ -442,8 +445,8 @@ public class MainController {
                     List<Point2D.Double> points = zoneDTO.points().stream()
                             .map(p -> new Point2D.Double(p.positionX(), p.positionY())).toList();
 
-                    Forme forme = creerForme(zoneDTO.forme(), points);
-                    Zone zone = creerZone(zoneDTO.type(), forme, points);
+                    Forme forme = mappingService.creerForme(zoneDTO.forme(), points);
+                    Zone zone = mappingService.creerZone(zoneDTO.type(), forme, points);
                     if (zone != null) vue.ajouterZone(zone);
                 }
                 this.projetVues.add(vue);
@@ -475,17 +478,15 @@ public class MainController {
 
     public void ajouterZone(TypeZoneDTO type, TypeFormeDTO forme, List<Point> points) {
         if (this.indexVueCourante < 0 || type == null || forme == null || points == null || points.isEmpty()) return;
-
-        // Gestion des ouvertures : une ouverture reste rectangulaire.
-        if (type == TypeZoneDTO.OUVERTURE && forme != TypeFormeDTO.RECTANGLE) {
-            return;
-        }
+        if (type == TypeZoneDTO.OUVERTURE && forme != TypeFormeDTO.RECTANGLE) return;
 
         List<Point2D.Double> pts = convertirVersPoints2D(points);
-        Forme formeModele = creerForme(forme, pts);
+        
+        // Délégation au service de mapping
+        Forme formeModele = mappingService.creerForme(forme, pts);
         if (formeModele == null) return;
 
-        Zone zone = creerZone(type, formeModele, pts);
+        Zone zone = mappingService.creerZone(type, formeModele, pts);
         if (zone == null) return;
 
         this.enregistrerEtatAvantModification();
@@ -595,7 +596,8 @@ public class MainController {
             }
         }
 
-        return new SimulationService().simulerToutesLesZones(zonesASimuler, this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
+        return new SimulationService().simulerToutesLesZones(zonesASimuler, 
+                this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
     }
 
     public void modifierDimensionsBloc(double largeur, double hauteur) {
@@ -609,12 +611,9 @@ public class MainController {
 
     public SimulationResultatDTO simulerVueCourante(double prixUnitaireBloc) {
         if (this.indexVueCourante < 0) return null;
-
         Vue vue = this.projetVues.get(this.indexVueCourante);
         synchroniserArmaturesAutomatiques(vue);
-
-        return new SimulationService().simulerToutesLesZones(
-                vue.getZones(),
+        return simulationFacade.simulerVue(vue, 
                 this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
     }
 
@@ -630,13 +629,10 @@ public class MainController {
 
     private SimulationResultatDTO simulerVueCouranteInterne(double prixUnitaireBloc) {
         if (this.indexVueCourante < 0) return null;
-
         Vue vue = this.projetVues.get(this.indexVueCourante);
         synchroniserArmaturesAutomatiques(vue);
-
-        return new SimulationService().simulerToutesLesZones(
-                vue.getZones(),
-                this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
+        return simulationFacade.simulerVue(vue, this.hauteurBlocDefaut, 
+                this.largeurBlocDefaut, prixUnitaireBloc);
     }
 
     public int getNombreBlocsProjet(double prixUnitaireBloc) {
@@ -649,15 +645,8 @@ public class MainController {
 
     private SimulationResultatDTO simulerProjetInterne(double prixUnitaireBloc) {
         synchroniserArmaturesAutomatiquesToutesLesVues();
-
-        List<List<Zone>> zonesParVue = this.projetVues.stream().map(Vue::getZones).toList();
-
-        return new SimulationService().simulerProjet(
-                zonesParVue,
-                this.hauteurBlocDefaut,
-                this.largeurBlocDefaut,
-                prixUnitaireBloc
-        );
+        return simulationFacade.simulerProjet(this.projetVues, 
+                this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
     }
 
     // =========================
@@ -696,112 +685,16 @@ public class MainController {
 
         for (Zone z : vue.getZones()) {
             zoneDtos.add(new ZoneDTO(z == selectionnee, convertirBlocs(z),
-                    convertirVersPoints(z.getPoints()), typeForme(z.getForme()), typeZone(z)));
+                    convertirVersPoints(z.getPoints()), 
+                    mappingService.typeForme(z.getForme()), 
+                    mappingService.typeZone(z)));
         }
 
         return new VueDTO(vue.getImage(), vue.getEchelle().getPouces(), index, zoneDtos);
     }
 
     // =========================
-    // Copie profonde
-    // =========================
-
-    private List<Vue> copierVues(List<Vue> vuesSource) {
-        if (vuesSource == null) return new ArrayList<>();
-        return vuesSource.stream().map(this::copierVue).toList();
-    }
-
-    private Vue copierVue(Vue vueSource) {
-        Vue copie = new Vue(copierImage(vueSource.getImage()));
-        copie.setEchelle(vueSource.getEchelle());
-        copie.setZoom(vueSource.getZoom());
-
-        Zone zoneSelectionneeSource = vueSource.getZoneSelectionnee();
-        Zone zoneSelectionneeCopie = null;
-
-        for (Zone zoneSource : vueSource.getZones()) {
-            Zone zoneCopie = copierZone(zoneSource);
-            if (zoneCopie != null) {
-                copie.ajouterZone(zoneCopie);
-                if (zoneSource == zoneSelectionneeSource) zoneSelectionneeCopie = zoneCopie;
-            }
-        }
-        copie.definirZoneSelectionnee(zoneSelectionneeCopie);
-        return copie;
-    }
-
-    private Zone copierZone(Zone zoneSource) {
-        if (zoneSource == null) return null;
-
-        List<Point2D.Double> pts = copierPoints2D(zoneSource.getPoints());
-        Forme formeCopie = copierForme(zoneSource.getForme(), pts);
-
-        if (zoneSource instanceof ArmatureClassique armatureClassique) {
-            return new ArmatureClassique(formeCopie, pts, armatureClassique.isAutomatique());
-        }
-        if (zoneSource instanceof ArmatureBlocs) return new ArmatureBlocs(formeCopie, pts);
-        if (zoneSource instanceof Ouverture) return new Ouverture(formeCopie, pts);
-        return null;
-    }
-
-    private Forme copierForme(Forme formeSource, List<Point2D.Double> pts) {
-        if (formeSource instanceof Rectangle) return new Rectangle(pts);
-        if (formeSource instanceof Triangle) return new Triangle(pts);
-        return new TriangleTronque(pts);
-    }
-
-    private BufferedImage copierImage(BufferedImage imageSource) {
-        if (imageSource == null) return null;
-
-        int type = imageSource.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : imageSource.getType();
-        BufferedImage copie = new BufferedImage(imageSource.getWidth(), imageSource.getHeight(), type);
-        Graphics2D g2d = copie.createGraphics();
-        g2d.drawImage(imageSource, 0, 0, null);
-        g2d.dispose();
-        return copie;
-    }
-
-    private List<Point2D.Double> copierPoints2D(List<Point2D.Double> src) {
-        if (src == null) return new ArrayList<>();
-        return src.stream().map(p -> new Point2D.Double(p.x, p.y)).toList();
-    }
-
-    // =========================
-    // Création / typage domaine
-    // =========================
-
-    private Forme creerForme(TypeFormeDTO type, List<Point2D.Double> pts) {
-        return switch (type) {
-            case RECTANGLE -> new Rectangle(pts);
-            case TRIANGLE -> new Triangle(pts);
-            case TRIANGLE_TRONQUE -> new TriangleTronque(pts);
-            default -> null;
-        };
-    }
-
-    private Zone creerZone(TypeZoneDTO type, Forme forme, List<Point2D.Double> pts) {
-        return switch (type) {
-            case ARMATURE_CLASSIQUE -> new ArmatureClassique(forme, pts);
-            case ARMATURE_BLOCS -> new ArmatureBlocs(forme, pts);
-            case OUVERTURE -> new Ouverture(forme, pts);
-            default -> null;
-        };
-    }
-
-    private TypeZoneDTO typeZone(Zone zone) {
-        if (zone instanceof ArmatureClassique) return TypeZoneDTO.ARMATURE_CLASSIQUE;
-        if (zone instanceof ArmatureBlocs) return TypeZoneDTO.ARMATURE_BLOCS;
-        return TypeZoneDTO.OUVERTURE;
-    }
-
-    private TypeFormeDTO typeForme(Forme forme) {
-        if (forme instanceof Rectangle) return TypeFormeDTO.RECTANGLE;
-        if (forme instanceof Triangle) return TypeFormeDTO.TRIANGLE;
-        return TypeFormeDTO.TRIANGLE_TRONQUE;
-    }
-
-    // =========================
-    // Conversions de points
+    // Conversions de points (utilitaires)
     // =========================
 
     private List<Point2D.Double> convertirVersPoints2D(List<Point> points) {
@@ -810,37 +703,5 @@ public class MainController {
 
     private List<Point> convertirVersPoints(List<Point2D.Double> points) {
         return points.stream().map(p -> new Point((int) Math.round(p.x), (int) Math.round(p.y))).toList();
-    }
-
-    // =========================
-    // Génération image export
-    // =========================
-
-    private BufferedImage genererImageAvecZones(Vue vue) {
-        BufferedImage original = vue.getImage();
-        if (original == null) return null;
-
-        BufferedImage resultat = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = resultat.createGraphics();
-        g.drawImage(original, 0, 0, null);
-
-        for (Zone z : vue.getZones()) {
-            List<Point2D.Double> pts = z.getPoints();
-            int[] xs = pts.stream().mapToInt(p -> (int) p.x).toArray();
-            int[] ys = pts.stream().mapToInt(p -> (int) p.y).toArray();
-
-            Color couleur;
-            if (z instanceof ArmatureClassique) couleur = new Color(34, 139, 34, 80);
-            else if (z instanceof ArmatureBlocs) couleur = new Color(0, 0, 255, 80);
-            else couleur = new Color(255, 165, 0, 80);
-
-            g.setColor(couleur);
-            g.fillPolygon(xs, ys, pts.size());
-            g.setColor(couleur.darker());
-            g.setStroke(new java.awt.BasicStroke(2));
-            g.drawPolygon(xs, ys, pts.size());
-        }
-        g.dispose();
-        return resultat;
     }
 }

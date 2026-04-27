@@ -443,26 +443,40 @@ public class MainWindow extends JFrame {
      * Affiche une boîte de dialogue pour choisir le type d'export
      */
     private void choisirTypeExport() {
-        String[] options = {"PDF", "PNG", "Projet (.batibloc)"};
-        int choix = JOptionPane.showOptionDialog(this,
-            "Choisissez le format d'export :",
-            "Export",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]);
-        
+        String[] options = {
+            this.getTexte("exportDialog.option.pdf"),
+            this.getTexte("exportDialog.option.png"),
+            this.getTexte("exportDialog.option.project")
+        };
+
+        int choix = JOptionPane.showOptionDialog(
+                this,
+                this.getTexte("exportDialog.message"),
+                this.getTexte("exportDialog.title"),
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
         switch (choix) {
-            case 0 -> this.typeExportChoisi = TypeExport.PDF;
-            case 1 -> this.typeExportChoisi = TypeExport.PNG;
-            case 2 -> this.typeExportChoisi = TypeExport.PROJET;
-            default -> { return; }
+            case 0 ->
+                this.typeExportChoisi = TypeExport.PDF;
+            case 1 ->
+                this.typeExportChoisi = TypeExport.PNG;
+            case 2 ->
+                this.typeExportChoisi = TypeExport.PROJET;
+            default -> {
+                return;
+            }
         }
-        
+
         this.actionVue = ActionVue.EXPORT;
         this.afficherSelectionVues(this.actionVue);
     }
+
+
 
     private void addAction(AbstractButton button, Runnable action) {
         button.addActionListener(e -> {

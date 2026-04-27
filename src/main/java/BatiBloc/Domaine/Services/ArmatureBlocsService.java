@@ -13,15 +13,8 @@ import java.util.Map;
 
 /**
  *
- * @author nicky // modifier par @roneh pour la gestion des ouvertures et la fusion des zone
- *
- * Corrections apportées :
- * - compatibilité avec le projet actuel : aucun appel à setHauteur(...) ;
- * - compatibilité avec ConstructeurRangeeService via construireSegment(...) ;
- * - conservation d'une surcharge simuler(...) sans ouvertures pour ne pas casser
- *   le code existant ;
- * - prise en charge des segments multiples par rangée pour triangles,
- *   triangles tronqués et ouvertures.
+ * @author nicky
+ * modifier par @roneh pour la gestion des ouvertures et la fusion des zone
  */
 public class ArmatureBlocsService {
 
@@ -350,7 +343,7 @@ public class ArmatureBlocsService {
 
             /*
              * Correction importante :
-             * on utilise construireSegment(...) et non construire(...),
+             * on utilise construireSegment(...),
              * car le ConstructeurRangeeService actuel attend aussi
              * la position x de départ du segment.
              */
