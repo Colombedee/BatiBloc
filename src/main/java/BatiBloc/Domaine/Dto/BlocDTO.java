@@ -8,12 +8,12 @@ public final class BlocDTO {
     private final double positionY;
     private final double prix;
 
-    public BlocDTO(double hauteur, double largeur, double positionX,
-            double positionY, double prix) {
-        this.hauteur = hauteur;
-        this.largeur = largeur;
+    public BlocDTO(double positionX, double positionY, double largeur,
+            double hauteur, double prix) {
         this.positionX = positionX;
         this.positionY = positionY;
+        this.largeur = largeur;
+        this.hauteur = hauteur;
         this.prix = prix;
     }
     

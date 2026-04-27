@@ -8,11 +8,11 @@ public class VueRogneeDTO {
     private final int positionY;
 
 
-    public VueRogneeDTO(int hauteur,  int largeur, int positionX, int positionY ) {
-        this.hauteur = hauteur;
-        this.largeur = largeur;
+    public VueRogneeDTO(int positionX, int positionY, int largeur, int hauteur) {
         this.positionX = positionX;
-        this.positionY = positionY; 
+        this.positionY = positionY;
+        this.largeur = largeur;
+        this.hauteur = hauteur;
     }
 
     public int getPositionX() {
