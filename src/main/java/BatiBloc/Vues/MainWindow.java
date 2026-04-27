@@ -1,5 +1,6 @@
 package BatiBloc.Vues;
 
+import java.io.File;
 import BatiBloc.Domaine.Controleur.MainController;
 import BatiBloc.Domaine.Services.ExportFichierService.TypeExport;
 import BatiBloc.Domaine.Dto.VueDTO;
@@ -398,11 +399,14 @@ public class MainWindow extends JFrame {
     private void initBoutonsPrincipal() {
         this.addAction(this.btn_annulerAction, this.controleur::annulerAction);
         this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
-        this.addAction(this.btn_importerPdf, () -> {
-            this.clearAllSelections();
-            this.controleur.importerFichier();
-            this.rafraichirUI();
-        });
+        this.btn_importerPdf.addActionListener(e -> {
+          this.clearAllSelections();
+          File fichier = FileDialogService.afficherDialogueOuverture();
+          if (fichier != null) {
+              this.controleur.importerFichier(fichier);
+              this.rafraichirUI();
+          }
+      });
         this.addAction(this.btn_ajouterVue, () -> {
             this.clearAllSelections();
             this.controleur.ajouterVue();

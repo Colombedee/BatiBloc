@@ -1,51 +1,78 @@
 package BatiBloc.Domaine.Services;
-
 import java.io.File;
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
+
+/**
+ * Service métier pour gérer les exports de fichiers.
+ * Responsabilités : validation et gestion des extensions.
+ * 
+ * NOTE: La sélection du fichier (JFileChooser) doit être gérée 
+ * par le contrôleur ou une classe dédiée à l'interface utilisateur.
+ */
 
 public class ExportFichierService {
 
     public enum TypeExport {
-        PDF,
-        PNG,
-        PROJET
+
+        PDF("pdf", "Exporter en PDF"),
+        PNG("png", "Exporter en PNG"),
+        PROJET("batibloc", "Exporter le projet");
+
+        private final String extension;
+        private final String titre;
+
+        TypeExport(String extension, String titre) {
+            this.extension = extension;
+            this.titre = titre;
+        }
+
+        public String getExtension() {
+            return extension;
+        }
+
+        public String getTitre() {
+            return titre;
+        }
     }
 
-    public static File fichierExporteDTO(TypeExport type) {
-        JFileChooser fichierChoisi = new JFileChooser();
-
-        switch (type) {
-            case PDF:
-                fichierChoisi.setDialogTitle("Exporter en PDF");
-                fichierChoisi.setFileFilter(new FileNameExtensionFilter("PDF (*.pdf)", "pdf"));
-                break;
-            case PNG:
-                fichierChoisi.setDialogTitle("Exporter en PNG");
-                fichierChoisi.setFileFilter(new FileNameExtensionFilter("PNG (*.png)", "png"));
-                break;
-            case PROJET:
-                fichierChoisi.setDialogTitle("Exporter le projet");
-                fichierChoisi.setFileFilter(new FileNameExtensionFilter("Projet BâtiBloc (*.batibloc)", "batibloc"));
-                break;
+    /**
+     * Valide et prépare le fichier avec la bonne extension.
+     * 
+     * @param fichier Le fichier sélectionné (sans extension garantie)
+     * @param type Le type d'export
+     * @return Le fichier avec l'extension correcte
+     */
+    public static File validerFichierExport(File fichier, TypeExport type) {
+        if (fichier == null || type == null) {
+            return null;
         }
+        
+                String chemin = fichier.getAbsolutePath();
+        String extension = type.getExtension();
 
-        if (fichierChoisi.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-            File fichier = fichierChoisi.getSelectedFile();
-            String extension = "";
-
-            switch (type) {
-                case PDF: extension = "pdf"; break;
-                case PNG: extension = "png"; break;
-                case PROJET: extension = "batibloc"; break;
-            }
-
-            String chemin = fichier.getAbsolutePath();
-            if (!chemin.toLowerCase().endsWith("." + extension)) {
-                fichier = new File(chemin + "." + extension);
-            }
-            return fichier;
+        if (!chemin.toLowerCase().endsWith("." + extension)) {
+            return new File(chemin + "." + extension);
         }
-        return null;
+        return fichier;
+    }
+
+    /**
+     * Retourne l'extension associée au type d'export.
+     * 
+     * @param type Le type d'export
+     * @return L'extension sans le point
+     */
+    public static String getExtension(TypeExport type) {
+        return type != null ? type.getExtension() : null;
+    }
+
+    /**
+     * Retourne le titre du dialogue pour le type d'export.
+     * 
+     * @param type Le type d'export
+     * @return Le titre du dialogue
+     */
+    public static String getTitreDialogue(TypeExport type) {
+        return type != null ? type.getTitre() : null;
     }
 }
+        

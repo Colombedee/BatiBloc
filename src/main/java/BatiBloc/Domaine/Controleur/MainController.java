@@ -1,4 +1,5 @@
 package BatiBloc.Domaine.Controleur;
+import BatiBloc.Vues.FileDialogService;
 
 import static BatiBloc.Domaine.Constantes.ConstantesBloc.COUT_UNITAIRE_PAR_BLOC_DEFAUT;
 import static BatiBloc.Domaine.Constantes.ConstantesVue.DPI_RENDU;
@@ -240,18 +241,33 @@ public class MainController {
     // Import (PDF, PNG, Projet)
     // =========================
 
-    public void importerFichier() {
-        FichierImporteDTO fichier = ImportFichierService.importer();
-        if (fichier == null) return;
+    /**
+     * Importe un fichier sélectionné (PDF, PNG, ou projet BâtiBloc).
+     * 
+     * @param fichierSelectionne Le fichier à importer (pas de dialogue)
+     */
+    public void importerFichier(File fichierSelectionne) {
+        if (fichierSelectionne == null || !fichierSelectionne.exists()) {
+            return;
+        }
 
-        this.enregistrerEtatAvantModification();
+        try {
+            FichierImporteDTO fichier = ImportFichierService.chargerFichier(fichierSelectionne);
+            if (fichier == null) return;
 
-        if (fichier.isPDF()) {
-            importerPdf((PDDocument) fichier.getContent());
-        } else if (fichier.isPNG()) {
-            importerPng((BufferedImage) fichier.getContent());
-        } else if (fichier.isProjet()) {
-            chargerProjet((File) fichier.getContent());
+
+            this.enregistrerEtatAvantModification();
+            if (fichier.isPDF()) {
+                importerPdf((PDDocument) fichier.getContent());
+            } else if (fichier.isPNG()) {
+                importerPng((BufferedImage) fichier.getContent());
+            } else if (fichier.isProjet()) {
+                chargerProjet((File) fichier.getContent());
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'import du fichier: " + e.getMessage());
+            e.printStackTrace();
+
         }
     }
 
@@ -295,22 +311,30 @@ public class MainController {
     public void exporterFichier(List<Integer> indices, TypeExport type) {
         if (indices == null || indices.isEmpty()) return;
 
+        File fichierDestination = FileDialogService.afficherDialogueSauvegarde(type);
+        if (fichierDestination == null) return;
+
         switch (type) {
-            case PDF:
-                exporterPdf(indices);
-                break;
-            case PNG:
-                exporterPng(indices);
-                break;
-            case PROJET:
-                exporterProjet(indices);
-                break;
+            case PDF    -> exporterPdf(indices, fichierDestination);
+            case PNG    -> exporterPng(indices, fichierDestination);
+            case PROJET -> exporterProjet(indices, fichierDestination);
         }
     }
 
-    private void exporterPdf(List<Integer> indices) {
-        File fichierSortie = ExportFichierService.fichierExporteDTO(TypeExport.PDF);
-        if (fichierSortie == null) return;
+     /**
+     * Exporte les vues sélectionnées en PDF.
+     * 
+     * @param indices Indices des vues à exporter
+     * @param fichierSortie Fichier de destination (pas de dialogue)
+     */
+    public void exporterPdf(List<Integer> indices, File fichierSortie) {
+        if (fichierSortie == null || indices == null || indices.isEmpty()) {
+            return;
+        }
+
+        // Valider et ajouter l'extension si nécessaire
+        fichierSortie = ExportFichierService.validerFichierExport(fichierSortie, ExportFichierService.TypeExport.PDF);
+
 
         try (PDDocument document = new PDDocument()) {
             for (int index : indices) {
@@ -330,14 +354,29 @@ public class MainController {
                 }
             }
             document.save(fichierSortie);
+            System.out.println("PDF exporté: " + fichierSortie.getAbsolutePath());
+
         } catch (IOException e) {
+            System.err.println("Erreur lors de l'export PDF: " + e.getMessage());
+
             e.printStackTrace();
         }
     }
 
-    private void exporterPng(List<Integer> indices) {
-        File dossier = ExportFichierService.fichierExporteDTO(TypeExport.PNG);
-        if (dossier == null) return;
+     /**
+     * Exporte les vues sélectionnées en PNG.
+     * 
+     * @param indices Indices des vues à exporter
+     * @param fichierOuDossier Fichier ou dossier de destination (pas de dialogue)
+     */
+    public void exporterPng(List<Integer> indices, File fichierOuDossier) {
+        if (fichierOuDossier == null || indices == null || indices.isEmpty()) {
+            return;
+        }
+
+        // Valider et ajouter l'extension si nécessaire
+        File dossier = ExportFichierService.validerFichierExport(fichierOuDossier, ExportFichierService.TypeExport.PNG);
+
 
         if (indices.size() == 1) {
             try {
@@ -345,7 +384,10 @@ public class MainController {
                 synchroniserArmaturesAutomatiques(vue);
                 BufferedImage image = renduService.genererImageAvecZones(vue);
                 ImageIO.write(image, "png", dossier);
+                System.out.println("PNG exporté: " + dossier.getAbsolutePath());
+
             } catch (IOException e) {
+                System.err.println("Erreur lors de l'export PNG: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
@@ -364,16 +406,28 @@ public class MainController {
                     BufferedImage image = renduService.genererImageAvecZones(vue);
                     File fichier = new File(dir, "vue_" + (index + 1) + ".png");
                     ImageIO.write(image, "png", fichier);
+                    System.out.println("PNG exporté: " + fichier.getAbsolutePath());
                 } catch (IOException e) {
+                    System.err.println("Erreur lors de l'export PNG: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    private void exporterProjet(List<Integer> indices) {
-        File fichierSortie = ExportFichierService.fichierExporteDTO(TypeExport.PROJET);
-        if (fichierSortie == null) return;
+    /**
+     * Exporte le projet en fichier .batibloc.
+     * 
+     * @param indices Non utilisé (le projet entier est exporté)
+     * @param fichierSortie Fichier de destination (pas de dialogue)
+     */
+    public void exporterProjet(List<Integer> indices, File fichierSortie) {
+        if (fichierSortie == null) {
+            return;
+        }
+
+        // Valider et ajouter l'extension si nécessaire
+        fichierSortie = ExportFichierService.validerFichierExport(fichierSortie, ExportFichierService.TypeExport.PROJET);
         sauvegarderProjet(fichierSortie);
     }
 
