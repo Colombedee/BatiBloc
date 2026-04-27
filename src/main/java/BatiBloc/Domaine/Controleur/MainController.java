@@ -61,6 +61,19 @@ public class MainController {
     private final SimulationFacadeService simulationFacade = new SimulationFacadeService();
 
     // =========================
+    // Sauvegarde avant de quitter
+    // =========================
+    private boolean modifieDepuisSauvegarde = false;
+
+    public boolean isModifieDepuisSauvegarde() {
+        return this.modifieDepuisSauvegarde;
+    }
+
+    public void marquerCommeSauvegarde() {
+        this.modifieDepuisSauvegarde = false;
+    }
+    
+    // =========================
     // Memento
     // =========================
 
@@ -84,6 +97,7 @@ public class MainController {
 
     private void enregistrerEtatAvantModification() {
         this.undoRedoManager.enregistrerEtatAvantModification(this::creerMemento);
+        this.modifieDepuisSauvegarde = true; 
     }
 
     private ProjetMemento creerMemento() {
@@ -429,12 +443,13 @@ public class MainController {
         // Valider et ajouter l'extension si nécessaire
         fichierSortie = ExportFichierService.validerFichierExport(fichierSortie, ExportFichierService.TypeExport.PROJET);
         sauvegarderProjet(fichierSortie);
+        this.modifieDepuisSauvegarde = false;
     }
 
     // =========================
     // Sauvegarde / Chargement de projet
     // =========================
-
+    
     private void sauvegarderProjet(File fichier) {
         try {
             ProjetDTO projetDTO = construireProjetDTO();

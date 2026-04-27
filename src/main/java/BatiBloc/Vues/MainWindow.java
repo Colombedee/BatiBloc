@@ -2,6 +2,7 @@ package BatiBloc.Vues;
 
 import java.io.File;
 import BatiBloc.Domaine.Controleur.MainController;
+import BatiBloc.Domaine.Services.ExportFichierService;
 import BatiBloc.Domaine.Services.ExportFichierService.TypeExport;
 import BatiBloc.Domaine.Dto.VueDTO;
 import BatiBloc.Domaine.Dto.TypeZoneDTO;
@@ -75,6 +76,7 @@ public class MainWindow extends JFrame {
     public MainWindow(MainController controleur) {
         this.controleur = controleur;
         this.initComponents();
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         this.initGroupButton();
         this.initFormulaire();        
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -157,6 +159,7 @@ public class MainWindow extends JFrame {
         this.majInterface(); 
         this.initPlaceholders();
         this.initListeners();
+        this.initFermeture();
         this.rafraichirUI();
     }
 
@@ -396,6 +399,53 @@ public class MainWindow extends JFrame {
         this.initLabelFocus();
     }
 
+    private void initFermeture() {
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                gererFermeture();
+            }
+        });
+    }
+
+    private void gererFermeture() {
+        if (!this.controleur.isModifieDepuisSauvegarde()) {
+            dispose();
+            System.exit(0);
+            return;
+        }
+
+        String[] options = {
+            this.getTexte("closeDialog.save"),
+            this.getTexte("closeDialog.noSave"),
+            this.getTexte("closeDialog.cancel")
+        };
+
+        int choix = JOptionPane.showOptionDialog(
+            this,
+            this.getTexte("closeDialog.message"),
+            this.getTexte("closeDialog.title"),
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.WARNING_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
+
+        if (choix == 0) {
+            File fichier = FileDialogService.afficherDialogueSauvegarde(
+                ExportFichierService.TypeExport.PROJET
+            );
+            if (fichier != null) {
+                this.controleur.exporterProjet(null, fichier);
+                dispose();
+                System.exit(0);
+            }
+        } else if (choix == 1) { 
+            dispose();
+            System.exit(0);
+        }
+    }
     private void initBoutonsPrincipal() {
         this.addAction(this.btn_annulerAction, this.controleur::annulerAction);
         this.addAction(this.btn_retablirAction, this.controleur::retablirAction);
