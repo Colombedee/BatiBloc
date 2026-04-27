@@ -50,6 +50,7 @@ public class MainWindow extends JFrame {
     private boolean modeRognage = false;
     private boolean modeSuppressionZone = false;
     private boolean typeChoisi = false;
+    private TypeZoneDTO typeZoneSelectionnee = null;
     private DrawingPanel drawingPanel;
     private JButton btnAnnulerModif;
     private JButton btnConfirmerModif;
@@ -518,6 +519,7 @@ public class MainWindow extends JFrame {
             this.modeSuppressionZone = false;                                     
             this.drawingPanel.setModeSuppressionZone(false); 
             this.drawingPanel.setTypeZoneEnCours(zone);
+            this.typeZoneSelectionnee = zone;
             this.typeChoisi = true;
             
             // Gestion des ouvertures : une ouverture est rectangulaire par défaut.
@@ -539,6 +541,15 @@ public class MainWindow extends JFrame {
 
     private void addFormeBoutonListener(JButton button, TypeFormeDTO forme) {
         button.addActionListener(e -> {
+            // Gestion des ouvertures : une ouverture reste rectangulaire.
+            if (this.typeZoneSelectionnee == TypeZoneDTO.OUVERTURE && forme != TypeFormeDTO.RECTANGLE) {
+                this.selectForme(this.btn_formeRectangle);
+                this.drawingPanel.setFormeEnCours(TypeFormeDTO.RECTANGLE);
+                this.formeChoisie = true;
+                this.verifierModeDessin();
+                return;
+            }
+
             this.selectForme(button);
             this.drawingPanel.setFormeEnCours(forme);
             this.formeChoisie = true;
@@ -567,6 +578,7 @@ public class MainWindow extends JFrame {
     private void arreterDessin() {
         this.drawingPanel.setModeAjoutZone(false);
         this.typeChoisi = false;
+        this.typeZoneSelectionnee = null;
         this.formeChoisie = false;
         this.modeSuppressionZone = false;                        
         this.drawingPanel.setModeSuppressionZone(false); 

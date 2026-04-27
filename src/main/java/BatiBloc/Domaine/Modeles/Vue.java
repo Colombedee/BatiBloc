@@ -2,6 +2,8 @@ package BatiBloc.Domaine.Modeles;
 
 import BatiBloc.Domaine.Constantes.ConstantesEchelle;
 import BatiBloc.Domaine.Constantes.ConstantesVue;
+import BatiBloc.Domaine.Modeles.Zones.ArmatureClassique;
+import BatiBloc.Domaine.Modeles.Zones.Ouverture;
 import BatiBloc.Domaine.Modeles.Zones.Zone;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -62,15 +64,62 @@ public class Vue {
         return List.copyOf(this.zones);
     }
 
+    public List<Zone> getZonesSansArmaturesAutomatiques() {
+        return this.zones.stream()
+                .filter(zone -> !(zone instanceof ArmatureClassique armatureClassique
+                        && armatureClassique.isAutomatique()))
+                .toList();
+    }
+
     public void ajouterZone(Zone zone) {
-        this.zones.add(zone);
+        if (zone != null) {
+            this.zones.add(zone);
+        }
     }
 
     public void supprimerZone(Zone zone) {
         if (zone == this.zoneSelectionnee) {
             this.zoneSelectionnee = null;
         }
-        zones.remove(zone);
+        this.zones.remove(zone);
+    }
+
+    public void supprimerArmaturesAutomatiques() {
+        this.zones.removeIf(zone -> {
+            boolean estAutomatique = zone instanceof ArmatureClassique armatureClassique
+                    && armatureClassique.isAutomatique();
+
+            if (estAutomatique && zone == this.zoneSelectionnee) {
+                this.zoneSelectionnee = null;
+            }
+
+            return estAutomatique;
+        });
+    }
+
+    public void insererZonesAvantOuvertures(List<? extends Zone> zonesAInserer) {
+        if (zonesAInserer == null || zonesAInserer.isEmpty()) {
+            return;
+        }
+
+        int indexInsertion = indexAvantPremiereOuverture();
+
+        for (Zone zone : zonesAInserer) {
+            if (zone != null) {
+                this.zones.add(indexInsertion, zone);
+                indexInsertion++;
+            }
+        }
+    }
+
+    private int indexAvantPremiereOuverture() {
+        for (int i = 0; i < this.zones.size(); i++) {
+            if (this.zones.get(i) instanceof Ouverture) {
+                return i;
+            }
+        }
+
+        return this.zones.size();
     }
 
     public Zone getZoneSelectionnee() {

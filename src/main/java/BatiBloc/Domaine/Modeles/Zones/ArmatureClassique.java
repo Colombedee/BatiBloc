@@ -6,7 +6,18 @@ import java.util.List;
 
 public class ArmatureClassique extends Zone {
 
+    private final boolean automatique;
+
     public ArmatureClassique(Forme forme, List<Point2D.Double> points) {
+        this(forme, points, false);
+    }
+
+    public ArmatureClassique(Forme forme, List<Point2D.Double> points, boolean automatique) {
         super(forme, points);
+        this.automatique = automatique;
+    }
+
+    public boolean isAutomatique() {
+        return this.automatique;
     }
 }

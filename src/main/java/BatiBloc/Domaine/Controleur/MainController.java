@@ -48,6 +48,7 @@ public class MainController {
 
     private final ZoneInteractionService interactionService = new ZoneInteractionService();
     private final UndoRedoService<ProjetMemento> undoRedoManager = new UndoRedoService<>();
+    private final OuvertureService ouvertureService = new OuvertureService();
 
     // =========================
     // Memento
@@ -93,6 +94,7 @@ public class MainController {
         this.largeurBlocDefaut = memento.largeurBlocDefaut;
         this.hauteurBlocDefaut = memento.hauteurBlocDefaut;
         this.interactionService.reinitialiser();
+        synchroniserArmaturesAutomatiquesToutesLesVues();
     }
 
     public void annulerAction() {
@@ -305,7 +307,10 @@ public class MainController {
             for (int index : indices) {
                 if (index < 0 || index >= this.projetVues.size()) continue;
 
-                BufferedImage image = genererImageAvecZones(this.projetVues.get(index));
+                Vue vue = this.projetVues.get(index);
+                synchroniserArmaturesAutomatiques(vue);
+
+                BufferedImage image = genererImageAvecZones(vue);
                 PDPage page = new PDPage(new PDRectangle(image.getWidth(), image.getHeight()));
                 document.addPage(page);
 
@@ -328,7 +333,10 @@ public class MainController {
         if (indices.size() == 1) {
             // Une seule vue -> exporter directement le fichier
             try {
-                BufferedImage image = genererImageAvecZones(this.projetVues.get(indices.get(0)));
+                Vue vue = this.projetVues.get(indices.get(0));
+                synchroniserArmaturesAutomatiques(vue);
+
+                BufferedImage image = genererImageAvecZones(vue);
                 ImageIO.write(image, "png", dossier);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -345,7 +353,10 @@ public class MainController {
             for (int index : indices) {
                 if (index < 0 || index >= this.projetVues.size()) continue;
                 try {
-                    BufferedImage image = genererImageAvecZones(this.projetVues.get(index));
+                    Vue vue = this.projetVues.get(index);
+                    synchroniserArmaturesAutomatiques(vue);
+
+                    BufferedImage image = genererImageAvecZones(vue);
                     File fichier = new File(dir, "vue_" + (index + 1) + ".png");
                     ImageIO.write(image, "png", fichier);
                 } catch (IOException e) {
@@ -391,8 +402,10 @@ public class MainController {
             try {
                 byte[] imageData = ProjetPersistenceService.imageVersBytes(vue.getImage());
 
+                synchroniserArmaturesAutomatiques(vue);
+
                 List<ZoneProjetDTO> zonesDTO = new ArrayList<>();
-                for (Zone zone : vue.getZones()) {
+                for (Zone zone : vue.getZonesSansArmaturesAutomatiques()) {
                     List<PointProjetDTO> pointsDTO = zone.getPoints().stream()
                             .map(p -> new PointProjetDTO(p.x, p.y)).toList();
 
@@ -439,6 +452,7 @@ public class MainController {
             }
         }
         this.interactionService.reinitialiser();
+        synchroniserArmaturesAutomatiquesToutesLesVues();
     }
 
     // =========================
@@ -462,6 +476,11 @@ public class MainController {
     public void ajouterZone(TypeZoneDTO type, TypeFormeDTO forme, List<Point> points) {
         if (this.indexVueCourante < 0 || type == null || forme == null || points == null || points.isEmpty()) return;
 
+        // Gestion des ouvertures : une ouverture reste rectangulaire.
+        if (type == TypeZoneDTO.OUVERTURE && forme != TypeFormeDTO.RECTANGLE) {
+            return;
+        }
+
         List<Point2D.Double> pts = convertirVersPoints2D(points);
         Forme formeModele = creerForme(forme, pts);
         if (formeModele == null) return;
@@ -470,7 +489,10 @@ public class MainController {
         if (zone == null) return;
 
         this.enregistrerEtatAvantModification();
-        this.projetVues.get(this.indexVueCourante).ajouterZone(zone);
+
+        Vue vue = this.projetVues.get(this.indexVueCourante);
+        vue.ajouterZone(zone);
+        synchroniserArmaturesAutomatiques(vue);
     }
 
     public void supprimerZone(int indexZone) {
@@ -483,6 +505,7 @@ public class MainController {
         this.enregistrerEtatAvantModification();
         Zone aSupprimer = zones.get(indexZone);
         vue.supprimerZone(aSupprimer);
+        synchroniserArmaturesAutomatiques(vue);
 
         if (this.interactionService.getZoneSelectionnee() == aSupprimer) {
             this.interactionService.reinitialiser();
@@ -503,6 +526,7 @@ public class MainController {
 
         this.enregistrerEtatAvantModification();
         this.interactionService.deplacer(dx, dy);
+        synchroniserArmaturesAutomatiques(this.projetVues.get(this.indexVueCourante));
     }
 
     public void redimensionnerZoneSelectionnee(int indexPoignee, int dx, int dy) {
@@ -511,6 +535,7 @@ public class MainController {
 
         this.enregistrerEtatAvantModification();
         this.interactionService.redimensionner(indexPoignee, dx, dy);
+        synchroniserArmaturesAutomatiques(this.projetVues.get(this.indexVueCourante));
     }
 
     public void redimensionnerParBoundingBox(int indexPoignee, int dx, int dy) {
@@ -519,6 +544,29 @@ public class MainController {
 
         this.enregistrerEtatAvantModification();
         this.interactionService.redimensionnerParBoundingBox(indexPoignee, dx, dy);
+        synchroniserArmaturesAutomatiques(this.projetVues.get(this.indexVueCourante));
+    }
+
+    // =========================
+    // Synchronisation des ouvertures
+    // =========================
+
+    private void synchroniserArmaturesAutomatiques(Vue vue) {
+        this.ouvertureService.synchroniserArmaturesAutomatiques(
+                vue,
+                this.hauteurBlocDefaut,
+                this.largeurBlocDefaut
+        );
+
+        if (vue != null && vue.getZoneSelectionnee() == null) {
+            this.interactionService.setZoneSelctionnee(null);
+        }
+    }
+
+    private void synchroniserArmaturesAutomatiquesToutesLesVues() {
+        for (Vue vue : this.projetVues) {
+            synchroniserArmaturesAutomatiques(vue);
+        }
     }
 
     // =========================
@@ -533,6 +581,8 @@ public class MainController {
         if (this.indexVueCourante < 0) return null;
 
         Vue vue = this.projetVues.get(this.indexVueCourante);
+        synchroniserArmaturesAutomatiques(vue);
+
         Zone zone = this.interactionService.getZoneSelectionnee();
         if (zone == null) return null;
 
@@ -550,15 +600,21 @@ public class MainController {
 
     public void modifierDimensionsBloc(double largeur, double hauteur) {
         if (largeur <= 0 || hauteur <= 0) return;
+
         this.enregistrerEtatAvantModification();
         this.largeurBlocDefaut = largeur;
         this.hauteurBlocDefaut = hauteur;
+        synchroniserArmaturesAutomatiquesToutesLesVues();
     }
 
     public SimulationResultatDTO simulerVueCourante(double prixUnitaireBloc) {
         if (this.indexVueCourante < 0) return null;
+
+        Vue vue = this.projetVues.get(this.indexVueCourante);
+        synchroniserArmaturesAutomatiques(vue);
+
         return new SimulationService().simulerToutesLesZones(
-                this.projetVues.get(this.indexVueCourante).getZones(),
+                vue.getZones(),
                 this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
     }
 
@@ -574,8 +630,12 @@ public class MainController {
 
     private SimulationResultatDTO simulerVueCouranteInterne(double prixUnitaireBloc) {
         if (this.indexVueCourante < 0) return null;
+
+        Vue vue = this.projetVues.get(this.indexVueCourante);
+        synchroniserArmaturesAutomatiques(vue);
+
         return new SimulationService().simulerToutesLesZones(
-                this.projetVues.get(this.indexVueCourante).getZones(),
+                vue.getZones(),
                 this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
     }
 
@@ -588,8 +648,16 @@ public class MainController {
     }
 
     private SimulationResultatDTO simulerProjetInterne(double prixUnitaireBloc) {
+        synchroniserArmaturesAutomatiquesToutesLesVues();
+
         List<List<Zone>> zonesParVue = this.projetVues.stream().map(Vue::getZones).toList();
-        return new SimulationService().simulerProjet(zonesParVue, this.hauteurBlocDefaut, this.largeurBlocDefaut, prixUnitaireBloc);
+
+        return new SimulationService().simulerProjet(
+                zonesParVue,
+                this.hauteurBlocDefaut,
+                this.largeurBlocDefaut,
+                prixUnitaireBloc
+        );
     }
 
     // =========================
@@ -598,10 +666,16 @@ public class MainController {
 
     public VueDTO getVueCourante() {
         if (this.indexVueCourante < 0) return null;
-        return construireVueDTO(this.projetVues.get(this.indexVueCourante), this.indexVueCourante);
+
+        Vue vue = this.projetVues.get(this.indexVueCourante);
+        synchroniserArmaturesAutomatiques(vue);
+
+        return construireVueDTO(vue, this.indexVueCourante);
     }
 
     public List<VueDTO> getVues() {
+        synchroniserArmaturesAutomatiquesToutesLesVues();
+
         List<VueDTO> dtos = new ArrayList<>();
         for (int i = 0; i < this.projetVues.size(); i++) {
             dtos.add(construireVueDTO(this.projetVues.get(i), i));
@@ -662,7 +736,9 @@ public class MainController {
         List<Point2D.Double> pts = copierPoints2D(zoneSource.getPoints());
         Forme formeCopie = copierForme(zoneSource.getForme(), pts);
 
-        if (zoneSource instanceof ArmatureClassique) return new ArmatureClassique(formeCopie, pts);
+        if (zoneSource instanceof ArmatureClassique armatureClassique) {
+            return new ArmatureClassique(formeCopie, pts, armatureClassique.isAutomatique());
+        }
         if (zoneSource instanceof ArmatureBlocs) return new ArmatureBlocs(formeCopie, pts);
         if (zoneSource instanceof Ouverture) return new Ouverture(formeCopie, pts);
         return null;
