@@ -38,9 +38,6 @@ public final class VueDTO {
 
     public String getNomVue(Locale locale) {
         ResourceBundle bundle = ResourceBundle.getBundle("i18n.messages", locale);
-        return MessageFormat.format(
-                bundle.getString("panel.viewName"),
-                this.index + 1
-        );
+        return MessageFormat.format(bundle.getString("panel.viewName"), this.index + 1);
     }
 }

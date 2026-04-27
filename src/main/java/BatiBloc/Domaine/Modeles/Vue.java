@@ -118,7 +118,6 @@ public class Vue {
                 return i;
             }
         }
-
         return this.zones.size();
     }
 

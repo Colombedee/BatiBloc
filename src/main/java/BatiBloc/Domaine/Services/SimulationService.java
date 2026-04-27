@@ -36,11 +36,11 @@ public class SimulationService {
             double prixUnitaireBloc
     ) {
         if (zones == null || zones.isEmpty()) {
-            return new SimulationResultatDTO(0, 0.0);
+            return new SimulationResultatDTO(0.0, 0);
         }
 
         if (hauteurBloc <= 0 || largeurBloc <= 0 || prixUnitaireBloc < 0) {
-            return new SimulationResultatDTO(0, 0.0);
+            return new SimulationResultatDTO(0.0, 0);
         }
 
         List<Ouverture> ouvertures = zones.stream()
@@ -69,7 +69,7 @@ public class SimulationService {
                     .sum();
         }
 
-        return new SimulationResultatDTO(totalBlocs, prixTotal);
+        return new SimulationResultatDTO(prixTotal, totalBlocs);
     }
     
     /** //@roneh
@@ -83,7 +83,7 @@ public class SimulationService {
         double prixUnitaireBloc) 
     {
     if (zonesParVue == null || zonesParVue.isEmpty()) {
-        return new SimulationResultatDTO(0, 0.0);
+        return new SimulationResultatDTO(0.0, 0);
     }
 
     int totalBlocs = 0;
@@ -96,6 +96,6 @@ public class SimulationService {
         prixTotal  += r.getPrixTotal();
     }
 
-    return new SimulationResultatDTO(totalBlocs, prixTotal);
+    return new SimulationResultatDTO(prixTotal, totalBlocs);
    }
 }
