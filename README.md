@@ -6,7 +6,7 @@ Application de bureau Java qui aide à préparer la construction de façades à 
 
 ---
 
-<img width="980" height="579" alt="image" src="https://github.com/user-attachments/assets/5a0abdf7-8274-4593-98b4-8e7dc6bda5e1" />
+<img width="980" height="579" alt="Apercu de BatiBloc" src="https://github.com/user-attachments/assets/5a0abdf7-8274-4593-98b4-8e7dc6bda5e1" />
 
 ---
 
